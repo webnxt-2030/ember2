@@ -35,7 +35,7 @@ function getRateLimitConfig(
   if (apiKey && apiKey === process.env.INDEXER_API_KEY) return null
 
   if (pathname.startsWith('/api/upload')) {
-    return { limit: 5, windowMs: 60_000, bucket: 'upload' }
+    return { limit: 10, windowMs: 60_000, bucket: 'upload' }
   }
   if (pathname.startsWith('/api/auth')) {
     return { limit: 5, windowMs: 60_000, bucket: 'auth' }
