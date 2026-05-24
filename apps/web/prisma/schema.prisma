@@ -1,11 +1,350 @@
-// Prisma schema for Ember
-// Full schema will be defined in a later issue
-
+// apps/web/prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
+  runtime  = "nodejs"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+// ─── Auth (Better Auth schema, with role extension) ────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String?
+  image         String?
+  passwordHash  String?
+  role          UserRole  @default(BACKER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  wallets         Wallet[]
+  orgMemberships  OrganizationMember[]
+  contributions   Contribution[]
+  activityLogs    ActivityLog[]   @relation("ActorLogs")
+
+  @@index([role])
+}
+
+model Account {
+  id            String    @id @default(cuid())
+  userId        String
+  providerId    String
+  accountId     String
+  accessToken   String?
+  refreshToken  String?
+  idToken       String?
+  expiresAt     DateTime?
+  password      String?
+  scope         String?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, value])
+}
+
+enum UserRole {
+  BACKER
+  ORG_OWNER
+  SUPER_ADMIN
+}
+
+// ─── Wallets ───────────────────────────────────────────────────────────────
+model Wallet {
+  id         String   @id @default(cuid())
+  userId     String
+  address    String   @db.Citext
+  isPrimary  Boolean  @default(false)
+  verifiedAt DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([address])
+  @@index([userId])
+}
+
+// ─── Organizations ────────────────────────────────────────────────────────
+model Organization {
+  id              String             @id @default(cuid())
+  slug            String             @unique
+  title           String
+  description     String
+  logoUrl         String?
+  website         String?
+  receivingWallet String             @db.Citext
+  verifiedStatus  VerificationStatus @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  members  OrganizationMember[]
+  projects Project[]
+
+  @@index([verifiedStatus])
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrgRole      @default(OWNER)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+enum OrgRole {
+  OWNER
+}
+
+// ─── Projects ──────────────────────────────────────────────────────────────
+model Project {
+  id               String        @id @default(cuid())
+  organizationId   String
+  slug             String        @unique
+  title            String
+  summary          String
+  description      String
+  pictures         String[]
+  socialLinks      Json
+  backingLinks     String[]
+  targetAmount     Decimal       @db.Decimal(20, 6)
+  fundingDeadline  DateTime?
+  votingPeriodDays Int           @default(7)
+  rewardCurveType  RewardCurve   @default(LINEAR)
+  milestoneBps     Int[]
+  escrowAddress    String?       @db.Citext
+  nftAddress       String?       @db.Citext
+  status           ProjectStatus @default(DRAFT)
+  totalRaised      Decimal       @default(0) @db.Decimal(20, 6)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  publishedAt      DateTime?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  milestones    Milestone[]
+  contributions Contribution[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+enum RewardCurve {
+  LINEAR
+  EXPONENTIAL
+  BINARY
+  CUSTOM
+}
+
+enum ProjectStatus {
+  DRAFT
+  LIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+model Milestone {
+  id              String          @id @default(cuid())
+  projectId       String
+  index           Int
+  title           String
+  description     String
+  deliverableDate DateTime?
+  bps             Int
+  status          MilestoneStatus @default(PENDING)
+  updateUri       String?
+  voteStartAt     DateTime?
+  voteEndAt       DateTime?
+  weightYes       Decimal         @default(0) @db.Decimal(20, 6)
+  weightNo        Decimal         @default(0) @db.Decimal(20, 6)
+  passed          Boolean?
+  claimedAt       DateTime?
+  claimedTxHash   String?
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  votes   MilestoneVote[]
+
+  @@unique([projectId, index])
+  @@index([status])
+}
+
+enum MilestoneStatus {
+  PENDING
+  AUTO_RELEASED
+  VOTING
+  PASSED
+  FAILED
+  CLAIMED
+}
+
+model Contribution {
+  id            String   @id @default(cuid())
+  projectId     String
+  backerId      String?
+  walletAddress String   @db.Citext
+  amount        Decimal  @db.Decimal(20, 6)
+  m0Share       Decimal  @db.Decimal(20, 6)
+  nftTokenId    String
+  nftContract   String   @db.Citext
+  txHash        String   @unique
+  blockNumber   BigInt
+  contributedAt DateTime
+  createdAt     DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  backer  User?   @relation(fields: [backerId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([walletAddress])
+  @@index([backerId])
+}
+
+model MilestoneVote {
+  id            String     @id @default(cuid())
+  milestoneId   String
+  walletAddress String     @db.Citext
+  choice        VoteChoice
+  weight        Decimal    @db.Decimal(20, 6)
+  txHash        String     @unique
+  votedAt       DateTime
+
+  milestone Milestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@unique([milestoneId, walletAddress])
+  @@index([milestoneId])
+}
+
+enum VoteChoice {
+  YES
+  NO
+}
+
+// ─── Activity Log ─────────────────────────────────────────────────────────
+model ActivityLog {
+  id          String       @id @default(cuid())
+  actorUserId String?
+  actorWallet String?      @db.Citext
+  type        ActivityType
+  targetType  String?
+  targetId    String?
+  metadata    Json
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+
+  actor User? @relation("ActorLogs", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([type])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+enum ActivityType {
+  USER_SIGNED_UP
+  USER_SIGNED_IN
+  USER_SIGNED_OUT
+  WALLET_LINKED
+  WALLET_UNLINKED
+  ORG_CREATED
+  ORG_UPDATED
+  ORG_VERIFIED
+  ORG_REJECTED
+  ORG_MEMBER_ADDED
+  ORG_MEMBER_REMOVED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  PROJECT_PUBLISHED
+  PROJECT_PAUSED
+  PROJECT_CANCELLED
+  PROJECT_COMPLETED
+  CONTRIBUTION_RECEIVED
+  MILESTONE_SUBMITTED
+  MILESTONE_VOTE_CAST
+  MILESTONE_RESOLVED
+  MILESTONE_CLAIMED
+  EMAIL_SENT
+  EMAIL_FAILED
+  ADMIN_ACTION
+}
+
+// ─── Email Notifications ──────────────────────────────────────────────────
+model EmailNotification {
+  id        String        @id @default(cuid())
+  to        String
+  template  EmailTemplate
+  payload   Json
+  status    EmailStatus   @default(QUEUED)
+  resendId  String?       @unique
+  error     String?
+  sentAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([status])
+}
+
+enum EmailTemplate {
+  WELCOME
+  CONTRIBUTION_RECEIVED
+  MILESTONE_UPDATED
+  MILESTONE_VOTE_OPEN
+  MILESTONE_VOTE_COMING_SOON
+  MILESTONE_VOTE_OUTCOME
+  MILESTONE_CLAIMED
+  ORG_VERIFIED
+  ORG_REJECTED
+  ADMIN_INVITATION
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+// ─── Indexer ──────────────────────────────────────────────────────────────
+model IndexerCursor {
+  id        String   @id @default(cuid())
+  contract  String   @db.Citext
+  eventName String
+  lastBlock BigInt
+  updatedAt DateTime @updatedAt
+
+  @@unique([contract, eventName])
 }
