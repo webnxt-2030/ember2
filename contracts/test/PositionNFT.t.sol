@@ -11,7 +11,8 @@ contract PositionNFTTest is Test {
     string  baseURI = "https://app.ember.example/api/nft/";
 
     function setUp() public {
-        nft = new PositionNFT(escrow, baseURI);
+        nft = new PositionNFT(baseURI);
+        nft.initEscrow(escrow);
     }
 
     // -----------------------------------------------------------------------
