@@ -14,3 +14,7 @@ runs = 256
 
 [profile.default.invariant]
 runs = 256
+
+[etherscan]
+morph = { key = "${MORPH_EXPLORER_API_KEY}", url = "https://explorer.morphl2.io/api", chain = 2818 }
+morph-hoodi = { key = "${MORPH_EXPLORER_API_KEY}", url = "https://explorer-holesky.morphl2.io/api", chain = 2810 }
