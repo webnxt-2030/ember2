@@ -13,4 +13,4 @@ via_ir = false
 runs = 256
 
 [profile.default.invariant]
-runs = 64
+runs = 256
