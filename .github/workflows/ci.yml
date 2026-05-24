@@ -71,7 +71,7 @@ jobs:
         # Fails on high/critical vulnerabilities
 
   contracts-test:
-    name: Forge Tests (placeholder)
+    name: Forge Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,14 +79,13 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Run forge test (placeholder)
+      - name: Run forge test with gas report
         run: |
           cd contracts
-          echo "Foundry tests will be wired in Sprint 2"
-          # forge test
+          forge test --gas-report
 
   contracts-slither:
-    name: Slither Static Analysis (placeholder)
+    name: Slither Static Analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +93,31 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-      - name: Run slither (placeholder)
-        run: |
-          echo "Slither will be wired in Sprint 2"
-          # pip install slither-analyzer && slither contracts/
+      - name: Install Slither
+        run: pip install slither-analyzer
+      - name: Run Slither
+        run: slither contracts/ --config-file contracts/slither.config.json
+        continue-on-error: true  # TODO: remove once findings are triaged
+
+  contracts-gen-abis:
+    name: Generate ABIs
+    runs-on: ubuntu-latest
+    needs: [contracts-test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Generate ABIs
+        run: pnpm gen:abis
+      - name: Check no uncommitted ABI changes
+        run: git diff --exit-code packages/shared/src/abis/ || (echo "ABIs are out of date — run pnpm gen:abis and commit" && exit 1)
