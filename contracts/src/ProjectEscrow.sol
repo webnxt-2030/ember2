@@ -21,12 +21,14 @@ contract ProjectEscrow is ReentrancyGuard {
     error AlreadyVoted();
     error NotABacker();
     error VotingNotEnded();
+    error MilestoneNotPassed();
 
     // ─── Events ──────────────────────────────────────────────────────────────
     event Contributed(address indexed backer, uint256 amount, uint256 tokenId, uint256 m0Share);
     event MilestoneSubmitted(uint256 indexed milestoneIndex, string updateURI, uint64 voteEndAt);
     event Voted(uint256 indexed milestoneIndex, address indexed voter, bool yes, uint256 weight);
     event MilestoneResolved(uint256 indexed milestoneIndex, bool passed, uint256 weightYes, uint256 weightNo);
+    event MilestoneClaimed(uint256 indexed milestoneIndex, uint256 amount);
 
     // ─── Types ───────────────────────────────────────────────────────────────
     enum Status { PENDING, AUTO_RELEASED, VOTING, PASSED, FAILED, CLAIMED }
@@ -164,6 +166,24 @@ contract ProjectEscrow is ReentrancyGuard {
         m.status = passed ? Status.PASSED : Status.FAILED;
 
         emit MilestoneResolved(milestoneIndex, passed, m.weightYes, m.weightNo);
+    }
+
+    // ─── Claim Milestone ─────────────────────────────────────────────────────
+    function claimMilestone(uint256 milestoneIndex) external nonReentrant {
+        if (msg.sender != organizationWallet) revert OnlyOrg();
+        if (milestoneIndex == 0) revert MilestoneM0();
+        if (milestoneIndex >= milestoneBps.length) revert MilestoneIndexOutOfBounds();
+
+        MilestoneState storage m = _milestones[milestoneIndex];
+        if (m.status != Status.PASSED) revert MilestoneNotPassed();
+
+        uint256 amount = m.allocated;
+        m.status    = Status.CLAIMED;
+        m.allocated = 0;  // clear allocation after transfer
+
+        usdt.safeTransfer(organizationWallet, amount);
+
+        emit MilestoneClaimed(milestoneIndex, amount);
     }
 
     // ─── Views ───────────────────────────────────────────────────────────────
