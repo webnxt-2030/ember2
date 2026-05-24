@@ -1,3 +1,4 @@
-// @ember/shared — shared TypeScript types, ABIs, and constants
+export * from "./logger.js";
+export * from "./constants.js";
 export * from "./types/index.js";
 export * from "./abis/index.js";

@@ -8,6 +8,14 @@
       "types": "./src/index.ts",
       "import": "./dist/index.js"
     },
+    "./logger": {
+      "types": "./src/logger.ts",
+      "import": "./dist/logger.js"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "import": "./dist/constants.js"
+    },
     "./types": {
       "types": "./src/types/index.ts",
       "import": "./dist/types/index.js"
@@ -22,12 +30,19 @@
   "scripts": {
     "build": "tsc --outDir dist",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "lint": "eslint .",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "pino": "^9.14.0"
+  },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "eslint": "^9.27.0",
+    "pino-pretty": "^13.0.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.0"
+    "typescript-eslint": "^8.33.0",
+    "vitest": "^3.0.0"
   }
 }

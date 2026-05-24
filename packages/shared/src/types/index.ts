@@ -1,16 +1,46 @@
-// Shared TypeScript types for the Ember dApp
-// Full type definitions will be added in Issue #4
-
 export type Address = `0x${string}`;
 
-export type ChainId = 2818 | 2810; // Morph Mainnet | Morph Hoodi Testnet
+export type ChainId = 2818 | 2810;
 
-export type RewardCurve = "LINEAR" | "EXPONENTIAL" | "BINARY" | "CUSTOM";
+export enum UserRole {
+  BACKER = "BACKER",
+  ORG_OWNER = "ORG_OWNER",
+  SUPER_ADMIN = "SUPER_ADMIN",
+}
 
-export type ProjectStatus = "DRAFT" | "LIVE" | "FUNDED" | "COMPLETED" | "CANCELLED";
+export enum ProjectStatus {
+  DRAFT = "DRAFT",
+  LIVE = "LIVE",
+  COMPLETED = "COMPLETED",
+  PAUSED = "PAUSED",
+  CANCELLED = "CANCELLED",
+}
 
-export type MilestoneStatus = "PENDING" | "SUBMITTED" | "VOTING" | "APPROVED" | "REJECTED";
+export enum MilestoneStatus {
+  PENDING = "PENDING",
+  AUTO_RELEASED = "AUTO_RELEASED",
+  VOTING = "VOTING",
+  PASSED = "PASSED",
+  FAILED = "FAILED",
+  CLAIMED = "CLAIMED",
+}
 
-export type UserRole = "BACKER" | "ORG_OWNER" | "SUPER_ADMIN";
+export enum RewardCurve {
+  LINEAR = "LINEAR",
+  EXPONENTIAL = "EXPONENTIAL",
+  BINARY = "BINARY",
+  CUSTOM = "CUSTOM",
+}
+
+export enum VoteChoice {
+  YES = "YES",
+  NO = "NO",
+}
+
+export enum VerificationStatus {
+  PENDING = "PENDING",
+  VERIFIED = "VERIFIED",
+  REJECTED = "REJECTED",
+}
 
 export type OrgVerifiedStatus = "UNVERIFIED" | "VERIFIED" | "REJECTED";
