@@ -34,7 +34,7 @@ export default function MilestoneVoteOutcome({
       </Text>
       {passed ? (
         <Text style={{ fontSize: 15, color: '#4f4543', lineHeight: '1.6', margin: '0 0 24px 0' }}>
-          Funds have been released to the Org Owner. The next milestone is in progress.
+          The Org Owner can now claim the funds for this milestone.
         </Text>
       ) : (
         <Text style={{ fontSize: 15, color: '#4f4543', lineHeight: '1.6', margin: '0 0 24px 0' }}>

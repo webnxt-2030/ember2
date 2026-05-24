@@ -11,7 +11,7 @@ export interface MilestoneVoteComingSoonProps {
 }
 
 export const subject = (props: MilestoneVoteComingSoonProps) =>
-  `Vote opens tomorrow: ${props.milestoneTitle}`
+  `Milestone due soon: ${props.milestoneTitle}`
 
 export default function MilestoneVoteComingSoon({
   name: _name,
@@ -21,7 +21,7 @@ export default function MilestoneVoteComingSoon({
   projectUrl,
 }: MilestoneVoteComingSoonProps): React.ReactElement {
   return (
-    <EmailLayout preview={`${projectName} — your vote opens in 24h.`}>
+    <EmailLayout preview={`${projectName} — milestone due ${deliverableDate}.`}>
       <Heading style={{ fontSize: 24, fontWeight: 700, color: '#1c1b1a', margin: '0 0 16px 0', letterSpacing: '-0.01em' }}>
         Vote opening soon: {milestoneTitle}
       </Heading>
