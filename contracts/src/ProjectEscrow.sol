@@ -12,9 +12,22 @@ contract ProjectEscrow is ReentrancyGuard {
     // ─── Errors ──────────────────────────────────────────────────────────────
     error ZeroAmount();
     error InvalidBps();
+    error OnlyOrg();
+    error MilestoneNotVoting();
+    error MilestoneAlreadyVoting();
+    error MilestoneM0();
+    error MilestoneIndexOutOfBounds();
+    error VotingWindowClosed();
+    error VotingWindowOpen();
+    error AlreadyVoted();
+    error NotABacker();
+    error VotingNotEnded();
 
     // ─── Events ──────────────────────────────────────────────────────────────
     event Contributed(address indexed backer, uint256 amount, uint256 tokenId, uint256 m0Share);
+    event MilestoneSubmitted(uint256 indexed milestoneIndex, string updateURI, uint64 voteEndAt);
+    event Voted(uint256 indexed milestoneIndex, address indexed voter, bool yes, uint256 weight);
+    event MilestoneResolved(uint256 indexed milestoneIndex, bool passed, uint256 weightYes, uint256 weightNo);
 
     // ─── Types ───────────────────────────────────────────────────────────────
     enum Status { PENDING, AUTO_RELEASED, VOTING, PASSED, FAILED, CLAIMED }
@@ -22,8 +35,12 @@ contract ProjectEscrow is ReentrancyGuard {
     struct MilestoneState {
         Status   status;
         uint256  allocated;
-        // vote fields will be added in issues #17/#18:
-        // uint64 voteStartAt; uint64 voteEndAt; uint256 weightYes; uint256 weightNo; string updateURI; mapping(address => bool) hasVoted;
+        uint64   voteStartAt;
+        uint64   voteEndAt;
+        uint256  weightYes;
+        uint256  weightNo;
+        string   updateURI;
+        mapping(address => bool) hasVoted;
     }
 
     // ─── State ───────────────────────────────────────────────────────────────
@@ -80,6 +97,73 @@ contract ProjectEscrow is ReentrancyGuard {
         uint256 tokenId = nft.mint(msg.sender, amount, m0Share);
 
         emit Contributed(msg.sender, amount, tokenId, m0Share);
+    }
+
+    // ─── Submit Milestone ────────────────────────────────────────────────────
+    function submitMilestone(uint256 milestoneIndex, string calldata updateURI)
+        external
+        nonReentrant
+    {
+        if (msg.sender != organizationWallet) revert OnlyOrg();
+        if (milestoneIndex == 0) revert MilestoneM0();
+        if (milestoneIndex >= milestoneBps.length) revert MilestoneIndexOutOfBounds();
+
+        MilestoneState storage m = _milestones[milestoneIndex];
+        Status s = m.status;
+        if (s == Status.VOTING || s == Status.PASSED || s == Status.CLAIMED) {
+            revert MilestoneAlreadyVoting();
+        }
+        // Allow re-submit after FAILED (SPEC §3.5)
+
+        uint64 start = uint64(block.timestamp);
+        uint64 end   = start + votingPeriod;
+
+        m.status      = Status.VOTING;
+        m.voteStartAt = start;
+        m.voteEndAt   = end;
+        m.updateURI   = updateURI;
+        m.weightYes   = 0;
+        m.weightNo    = 0;
+
+        emit MilestoneSubmitted(milestoneIndex, updateURI, end);
+    }
+
+    // ─── Vote ─────────────────────────────────────────────────────────────────
+    function vote(uint256 milestoneIndex, bool yes) external nonReentrant {
+        if (milestoneIndex == 0) revert MilestoneM0();
+        MilestoneState storage m = _milestones[milestoneIndex];
+
+        if (m.status != Status.VOTING) revert MilestoneNotVoting();
+        if (block.timestamp >= m.voteEndAt) revert VotingWindowClosed();
+
+        uint256 weight = totalContributedBy[msg.sender];
+        if (weight == 0) revert NotABacker();
+        if (m.hasVoted[msg.sender]) revert AlreadyVoted();
+
+        m.hasVoted[msg.sender] = true;
+        if (yes) {
+            m.weightYes += weight;
+        } else {
+            m.weightNo += weight;
+        }
+
+        emit Voted(milestoneIndex, msg.sender, yes, weight);
+    }
+
+    // ─── Resolve Milestone ───────────────────────────────────────────────────
+    function resolveMilestone(uint256 milestoneIndex) external {
+        if (milestoneIndex == 0) revert MilestoneM0();
+        MilestoneState storage m = _milestones[milestoneIndex];
+
+        if (m.status != Status.VOTING) revert MilestoneNotVoting();
+        if (block.timestamp < m.voteEndAt) revert VotingNotEnded();
+
+        // SPEC §7.2 invariant 6: passed = weightNo * 2 < totalContributed
+        // (strict majority NO required to fail; abstain counts as YES)
+        bool passed = m.weightNo * 2 < totalContributed;
+        m.status = passed ? Status.PASSED : Status.FAILED;
+
+        emit MilestoneResolved(milestoneIndex, passed, m.weightYes, m.weightNo);
     }
 
     // ─── Views ───────────────────────────────────────────────────────────────
