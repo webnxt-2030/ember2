@@ -14,22 +14,31 @@ contract PositionNFT is ERC721 {
         uint64  contributedAt; // block.timestamp at mint
     }
 
-    address public immutable escrow;
+    address public escrow;               // set once by factory via initEscrow()
+    address private immutable _factory;  // the deployer; only it may call initEscrow
     string  public baseURI;
     uint256 private _nextTokenId;
 
     mapping(uint256 => Position) private _positions;
 
     error OnlyEscrow();
+    error EscrowAlreadySet();
 
     modifier onlyEscrow() {
         if (msg.sender != escrow) revert OnlyEscrow();
         _;
     }
 
-    constructor(address escrow_, string memory baseURI_) ERC721("Ember Position", "EPOS") {
-        escrow  = escrow_;
-        baseURI = baseURI_;
+    constructor(string memory baseURI_) ERC721("Ember Position", "EPOS") {
+        baseURI  = baseURI_;
+        _factory = msg.sender;
+    }
+
+    /// @notice Called once by the factory to wire the escrow after both contracts are deployed.
+    function initEscrow(address escrow_) external {
+        if (msg.sender != _factory) revert OnlyEscrow();
+        if (escrow != address(0))   revert EscrowAlreadySet();
+        escrow = escrow_;
     }
 
     function mint(address to, uint256 amount, uint256 m0Share)

@@ -34,30 +34,8 @@ contract ProjectEscrowContributeTest is Test {
 
     // Helper: deploy escrow + NFT with given bps, wire them together
     function _deployWithBps(uint16[] memory bps) internal {
-        usdt = new MockUSDT();
-
-        // Deploy NFT pointing to address(this) temporarily — we need escrow address first.
-        // Use CREATE2-style ordering: deploy a placeholder, then escrow, then reset.
-        // Simpler: deploy escrow with dummy nft address first is not possible since NFT is immutable.
-        // Solution: compute escrow address before deploying, deploy NFT with that address, then escrow.
-
-        // Step 1 — compute the address escrow will have if deployed next from this test contract.
-        // In Forge tests each deploy increments nonce starting from 1.
-        // We already deployed usdt (nonce 1 used → nonce is now 2).
-        // nft will be nonce 2 → 3. escrow will be nonce 3 → 4.
-        // So we need to figure out the address of the escrow before deploying nft.
-
-        // Approach: deploy escrow via a two-step trick using a dummy nft first,
-        // then deploy the real NFT using escrow.address.
-
-        // Simplest approach: deploy NFT with the escrow address pre-computed.
-        address deployer = address(this);
-        uint256 nonce    = vm.getNonce(deployer);
-
-        // nft will be at nonce, escrow at nonce+1
-        address futureEscrow = vm.computeCreateAddress(deployer, nonce + 1);
-
-        nft    = new PositionNFT(futureEscrow, BASE_URI);
+        usdt   = new MockUSDT();
+        nft    = new PositionNFT(BASE_URI);
         escrow = new ProjectEscrow(
             address(usdt),
             address(nft),
@@ -65,8 +43,7 @@ contract ProjectEscrowContributeTest is Test {
             bps,
             VOTING_PERIOD
         );
-
-        require(address(escrow) == futureEscrow, "escrow address mismatch");
+        nft.initEscrow(address(escrow));
     }
 
     // ──────────────────────────────────────────────────────────────────────────

@@ -40,15 +40,8 @@ contract ProjectEscrowClaimTest is Test {
         bps = new uint16[](4);
         bps[0] = 2500; bps[1] = 2500; bps[2] = 2500; bps[3] = 2500;
 
-        usdt = new MockUSDT();
-
-        address deployer = address(this);
-        uint256 nonce    = vm.getNonce(deployer);
-
-        // nft at nonce, escrow at nonce+1
-        address futureEscrow = vm.computeCreateAddress(deployer, nonce + 1);
-
-        nft    = new PositionNFT(futureEscrow, BASE_URI);
+        usdt   = new MockUSDT();
+        nft    = new PositionNFT(BASE_URI);
         escrow = new ProjectEscrow(
             address(usdt),
             address(nft),
@@ -56,8 +49,7 @@ contract ProjectEscrowClaimTest is Test {
             bps,
             VOTING_PERIOD
         );
-
-        require(address(escrow) == futureEscrow, "escrow address mismatch");
+        nft.initEscrow(address(escrow));
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
