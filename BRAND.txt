@@ -1,0 +1,695 @@
+# BRAND.md — Ember
+
+> **The product is called Ember.** Not "Project Ember," not "Ember Protocol," not "Ember Finance." Just **Ember**. Internal codenames are dead.
+
+---
+
+## Table of Contents
+
+1. [Brand Essence](#1-brand-essence)
+2. [Positioning](#2-positioning)
+3. [Naming & Capitalization](#3-naming--capitalization)
+4. [Voice & Tone](#4-voice--tone)
+5. [Logo](#5-logo)
+6. [Color System](#6-color-system)
+7. [Typography](#7-typography)
+8. [Spacing, Layout & Radius](#8-spacing-layout--radius)
+9. [Elevation & Shadows](#9-elevation--shadows)
+10. [Iconography](#10-iconography)
+11. [Components](#11-components)
+12. [Imagery](#12-imagery)
+13. [Motion](#13-motion)
+14. [Status & Semantic Patterns](#14-status--semantic-patterns)
+15. [Accessibility](#15-accessibility)
+16. [Do / Don't](#16-do--dont)
+17. [Tailwind Reference](#17-tailwind-reference)
+
+---
+
+## 1. Brand Essence
+
+**Ember** = the small, persistent glow that becomes a fire. A single backed pledge. A milestone delivered. The thing that catches.
+
+The name does a lot of work. It signals:
+- **Warmth** — backing someone's idea is a human act, not a financial transaction
+- **Permanence** — embers don't go out; smart contracts don't forget
+- **Origin** — every successful project started as someone willing to commit first
+- **Restraint** — embers, not infernos. Quiet competence over hype.
+
+The product itself is a non-custodial, milestone-based crowdfunding platform on Morph L2. But the brand isn't "DeFi crowdfunding." It's the answer to *"how do I back something and not get burned?"* — a question with an obvious, intentional pun.
+
+## 2. Positioning
+
+**One-line positioning:**
+> Ember is institutional-grade onchain crowdfunding where funds release as creators deliver — not before.
+
+**The hero line:**
+> Fund the future, one milestone at a time.
+
+**Three things we are:**
+1. **Trust-first.** Cryptographic guarantees, not platform promises.
+2. **Algorithmic.** Code decides fund release. No human discretion. No customer-service-as-justice.
+3. **Stablecoin-native.** USDC on Morph. No tokens you've never heard of. No price volatility on a pledge.
+
+**Three things we are not:**
+1. **A token launch platform.** We do not sell access. We do not run sales. We do not airdrop.
+2. **An investment marketplace.** Pledges are utility, not securities. We do not narrate upside.
+3. **A Web2 storefront with a wallet skin.** The blockchain is load-bearing, not decorative.
+
+---
+
+## 3. Naming & Capitalization
+
+- **Product name:** Ember (not "ember," not "EMBER")
+- **Never** "Project Ember" in customer-facing copy
+- **Lowercase only** in URLs, code identifiers, and CLI commands: `ember.app`, `ember-cli`, `@ember/contracts`
+- **Acceptable variants in marketing:** "Ember" (preferred), "Ember Platform" (when disambiguation needed against the word "ember"), never "the Ember"
+- **Possessive:** "Ember's escrow contract" ✓ — "The Ember escrow contract" ✓ — "An Ember escrow contract" ✓
+
+**Avoid:**
+- ❌ "Project Ember" (internal-only, dead now)
+- ❌ "EMBR" (we don't have a token)
+- ❌ "Ember.fi", "Ember.xyz" branding (just Ember)
+
+**Tagline placements:**
+- Hero: "Fund the future, one milestone at a time."
+- Short: "Crowdfunding that delivers."
+- Boilerplate footer: "Ember. Secured by Morph L2."
+
+---
+
+## 4. Voice & Tone
+
+Ember writes the way a competent engineer talks to a smart founder: **direct, specific, confident, never patronizing**.
+
+### Voice characteristics
+
+| Attribute | What it means | Example |
+|---|---|---|
+| **Direct** | Lead with the point. Cut hedges. | ✓ "Funds release when milestones are verified." ✗ "Generally speaking, our smart contracts may release funds upon successful milestone verification." |
+| **Specific** | Numbers and mechanisms over adjectives. | ✓ "85% of backers approved Milestone 1." ✗ "The community overwhelmingly approved." |
+| **Confident** | State the position. Don't apologize for it. | ✓ "We don't hold your funds." ✗ "We're proud to say that Ember is non-custodial." |
+| **Crypto-fluent** | Use the right terms. Explain on demand. | ✓ "TVL" with a tooltip ✗ Avoiding "TVL" because it might confuse |
+| **Warm, not soft** | Human, but never cute. | ✓ "Welcome back. Two milestones need your vote." ✗ "Hey friend! 👋 Got some cool stuff for ya 🔥" |
+
+### Tone by surface
+
+- **Marketing pages:** Aspirational but specific. Lead with proof points.
+- **Product UI:** Functional and quiet. Let actions speak. Avoid exclamation marks.
+- **Empty states:** Encouraging but practical. Tell users what to do, not how they should feel.
+- **Errors:** Honest about what went wrong. Specific about how to fix it. Never blame the user.
+- **Legal & disclaimers:** Plain English. We're not hiding anything.
+- **Emails:** Short. Subject line says everything. Body confirms it.
+
+### Words we use
+
+- **Pledge** (not "donate" — they get something; not "invest" — they're not buying a security)
+- **Backer** (not "investor," not "user," not "customer")
+- **Creator** (not "campaigner," not "founder")
+- **Campaign** (not "project" when referring to the funding instance; "project" is fine for the underlying thing being built)
+- **Milestone** (the unit of trust)
+- **Tranche** (in technical contexts only; "fund release" in customer-facing copy)
+- **Escrow** (this is what holds funds — say it)
+- **Onchain** (one word; not "on-chain")
+
+### Words we don't use
+
+- ❌ **"Investors"** (creates securities-law ambiguity)
+- ❌ **"ROI" / "returns" / "yield" / "profit"** (we're not selling expected returns)
+- ❌ **"Game-changing," "revolutionary," "disrupting"** (vague and unearned)
+- ❌ **"Trustless"** (overloaded; say "trust-protected" or "non-custodial")
+- ❌ **"Web3," "DeFi" as descriptors of the product** (technologies, not value propositions)
+- ❌ **Emojis in product UI** (sparingly OK in social; never in app)
+
+---
+
+## 5. Logo
+
+The wordmark is **"Ember"** set in Inter ExtraBold (800), letter-spacing -0.01em. The mark color is the **primary** color (`#b72301`) on light surfaces and **primary-fixed-dim** (`#ffb4a4`) on dark surfaces.
+
+Optionally, a square icon mark sits to the left of the wordmark. The icon is a stylized glowing ember — a soft-edged warm-red shape. Always pair with the wordmark in headers; the icon alone is reserved for favicons, app icons, and tight spaces.
+
+### Clear space
+
+Minimum clear space around the logo lockup equals the height of the lowercase "e" in the wordmark.
+
+### Minimum size
+
+- Wordmark only: 64px wide minimum (web), 16pt minimum (print)
+- Icon + wordmark lockup: 96px wide minimum
+
+### Don't
+
+- ❌ Don't recolor the wordmark to anything other than primary, primary-fixed-dim, on-surface (black), or on-primary (white on solid primary background)
+- ❌ Don't stretch, skew, or rotate
+- ❌ Don't apply drop shadows or glows to the wordmark itself (the icon mark may have a subtle glow as an integral part of the mark)
+- ❌ Don't place on busy photographic backgrounds without a solid scrim
+
+---
+
+## 6. Color System
+
+Ember uses a **Material Design 3-inspired token system** with warm, fire-aligned primaries and a forest-green tertiary for verified/successful states. The system is structured so a dark mode can be added cleanly post-MVP via `data-theme="dark"`.
+
+### Primary — Ember Red
+
+The signature color. Used for primary actions, brand mark, active milestones, and "live" indicators.
+
+| Token | Hex | Use |
+|---|---|---|
+| `primary` | `#b72301` | Buttons, links, active states, brand mark |
+| `on-primary` | `#ffffff` | Text/icons on top of primary backgrounds |
+| `primary-container` | `#ff5733` | Decorative warm accents, hero highlights |
+| `on-primary-container` | `#580c00` | Text on primary-container |
+| `primary-fixed` | `#ffdad3` | Soft primary backgrounds (badges, hover states) |
+| `primary-fixed-dim` | `#ffb4a4` | Dark mode primary, icon-marks on dark |
+| `on-primary-fixed` | `#3d0600` | Text on primary-fixed |
+| `on-primary-fixed-variant` | `#8c1800` | Secondary text on primary-fixed |
+| `inverse-primary` | `#ffb4a4` | Primary for inverse surfaces |
+| `surface-tint` | `#b72301` | Subtle primary cast on elevated surfaces |
+
+### Secondary — Neutral Gray
+
+Used sparingly for tertiary actions, muted UI, and dividers that need warmth.
+
+| Token | Hex | Use |
+|---|---|---|
+| `secondary` | `#5f5e5f` | Subdued text, tertiary actions |
+| `on-secondary` | `#ffffff` | Text on secondary |
+| `secondary-container` | `#e2dfe0` | Tag backgrounds, chip fills |
+| `on-secondary-container` | `#636263` | Text on secondary-container |
+| `secondary-fixed` | `#e5e2e3` | Fixed neutral surface |
+| `secondary-fixed-dim` | `#c8c6c7` | Dimmed neutral surface |
+
+### Tertiary — Verified Green
+
+Used **only** for success, verification, "passed," "completed," "released," "approved." Never for primary actions.
+
+| Token | Hex | Use |
+|---|---|---|
+| `tertiary` | `#006c4b` | "Completed" status, verified badges |
+| `on-tertiary` | `#ffffff` | Text on tertiary |
+| `tertiary-container` | `#00a574` | Brighter success backgrounds |
+| `on-tertiary-container` | `#003120` | Text on tertiary-container |
+| `tertiary-fixed` | `#68fcbf` | Soft success backgrounds |
+| `tertiary-fixed-dim` | `#45dfa4` | Dimmed mint accents |
+
+### Error — Destructive Red
+
+Distinct from primary. Used for rejection, refund warnings, validation failures.
+
+| Token | Hex | Use |
+|---|---|---|
+| `error` | `#ba1a1a` | Error text, destructive buttons, rejected votes |
+| `on-error` | `#ffffff` | Text on error |
+| `error-container` | `#ffdad6` | Error backgrounds, soft warnings |
+| `on-error-container` | `#93000a` | Text on error-container |
+
+### Surfaces — The 9-step Neutral Ramp
+
+The page sits at `background`. Cards layer up from `surface-container-lowest` (white) through five steps to `surface-container-highest`. This gives every layout a clean sense of elevation without shadows.
+
+| Token | Hex | Use |
+|---|---|---|
+| `background` | `#f8f9fa` | Page background |
+| `surface` | `#f8f9fa` | Same as background, used for top app bar |
+| `surface-bright` | `#f8f9fa` | Bright accent surface |
+| `surface-dim` | `#d9dadb` | Subtle dimmed surface |
+| `surface-container-lowest` | `#ffffff` | Card backgrounds, primary content surface |
+| `surface-container-low` | `#f3f4f5` | Subtle layered cards |
+| `surface-container` | `#edeeef` | Mid-layer surface |
+| `surface-container-high` | `#e7e8e9` | Elevated chip/badge backgrounds |
+| `surface-container-highest` | `#e1e3e4` | Highest neutral elevation |
+| `surface-variant` | `#e1e3e4` | Form field backgrounds, progress bar tracks |
+| `inverse-surface` | `#2e3132` | Toast backgrounds, dark callouts |
+| `inverse-on-surface` | `#f0f1f2` | Text on inverse-surface |
+
+### Text & Outlines
+
+| Token | Hex | Use |
+|---|---|---|
+| `on-background` | `#191c1d` | Primary body text |
+| `on-surface` | `#191c1d` | Text on surface and surface-container-* |
+| `on-surface-variant` | `#5b403a` | Muted text, captions (warm gray-brown) |
+| `outline` | `#8f7069` | Strong dividers, input borders (warm taupe) |
+| `outline-variant` | `#e4beb6` | Subtle dividers, card borders (warm pink-gray) |
+
+### Color usage rules
+
+1. **One primary action per view.** Multiple `primary` buttons on a single screen is a UX failure.
+2. **Tertiary (green) only for verified/success/completed.** Never for "next" or "continue" — that's primary.
+3. **Error red and primary red are different colors.** They look distinct on screen. Don't substitute.
+4. **Use the surface ramp instead of shadows** to create depth. Layered surfaces > drop shadows.
+5. **Body text is `on-surface` (`#191c1d`).** Captions and metadata are `on-surface-variant` (`#5b403a`).
+6. **Borders are `outline-variant` by default** (subtle, warm). Use `outline` only when emphasis is needed (form inputs, segmented controls).
+
+---
+
+## 7. Typography
+
+Ember uses **Inter** as a single-family system, with weight and size carrying all the hierarchy. No display serif. No mono in marketing copy (mono is reserved for wallet addresses, code, and technical labels).
+
+### Type scale
+
+| Token | Size / Line | Weight | Letter-spacing | Use |
+|---|---|---|---|---|
+| `display-lg` | 48 / 56 | 700 | -0.02em | Hero on desktop |
+| `display-lg-mobile` | 36 / 44 | 700 | -0.02em | Hero on mobile |
+| `headline-lg` | 32 / 40 | 600 | -0.01em | Page titles |
+| `headline-md` | 24 / 32 | 600 | 0 | Section titles, card titles |
+| `body-lg` | 18 / 28 | 400 | 0 | Lead paragraphs, hero subhead |
+| `body-md` | 16 / 24 | 400 | 0 | Default body |
+| `label-md` | 14 / 20 | 500 | 0.01em | Buttons, form labels, nav |
+| `label-sm` | 12 / 16 | 600 | 0 | Eyebrow labels, badges, metadata |
+
+### Mono (technical contexts only)
+
+Use **JetBrains Mono** at 13–14px for: wallet addresses, transaction hashes, contract names, code snippets, indexer references. Do **not** use mono in marketing copy or headlines.
+
+### Typography rules
+
+1. **No more than three sizes on a single card.** Hierarchy through size, not color.
+2. **Eyebrow labels are uppercase, `label-sm`, `tracking-wider` (≈0.05em).** Used to anchor sections.
+3. **Numbers in `display-lg` weight 700** for stats panels. Never use serif numerals.
+4. **Wallet addresses always truncated:** `0x74a...8f92`. Full address available on click.
+5. **Don't justify text.** Left-align. Center-align only for hero copy and stats blocks.
+6. **Line length:** body text ≤ 70 characters per line on desktop, ≤ 45 on mobile.
+
+---
+
+## 8. Spacing, Layout & Radius
+
+### Spacing tokens
+
+| Token | Value | Use |
+|---|---|---|
+| `base` | 8px | The base unit. All spacing is a multiple. |
+| `gutter` | 24px | Grid gutter between cards/columns |
+| `margin-mobile` | 16px | Outer page padding on mobile |
+| `margin-desktop` | 64px | Outer page padding on desktop |
+| `max-width` | 1280px | Maximum content width |
+
+**Rule:** all custom spacing snaps to an 8px grid. 4px is only allowed for icon-text gaps and tight typographic adjustments.
+
+### Layout patterns
+
+- **Containers:** `max-w-[1280px] mx-auto px-4 md:px-16`
+- **Grid:** 12-column at desktop, gutter 24px. Most layouts use 7/5 or 8/4 splits for content + sidebar, and 1/3 grids for card rows.
+- **Vertical rhythm:** Section padding `py-24` on marketing pages, `py-12` inside the app shell.
+- **Sticky header height:** 80px (`h-20`) — keep this constant.
+
+### Border radius
+
+| Token | Value | Use |
+|---|---|---|
+| `DEFAULT` | 2px | Almost never — too small for the brand |
+| `lg` | 4px | Small chips, tight badges |
+| `xl` | 8px | Buttons, inputs, small cards |
+| `full` | 12px | Cards, modals, panels, primary buttons |
+| (Tailwind) `rounded-full` | 9999px | Avatars, progress bars, status dots, pills |
+
+**Default radius for product surfaces is `rounded-xl` (8px)** for buttons and inputs, **`rounded-2xl` (16px)** for hero cards and large containers, **`rounded-full`** for pills and avatars.
+
+---
+
+## 9. Elevation & Shadows
+
+Ember leans on **surface layering** over shadows. Shadows are used sparingly and only for "lifted" interactive elements.
+
+| Level | Treatment | Use |
+|---|---|---|
+| 0 | Flat on background | Page sections |
+| 1 | `bg-surface-container-lowest` + `border-outline-variant` | Default cards |
+| 2 | Level 1 + `shadow-sm` | Hover state on cards |
+| 3 | Level 1 + `shadow-md` | Primary CTAs |
+| 4 | Level 1 + `shadow-lg shadow-primary/20` | Hero CTAs, featured cards |
+| 5 | Level 1 + `shadow-2xl shadow-primary/10` | Hero illustration card |
+
+**Rule:** never stack shadows on adjacent elements. If two cards sit side by side, both are level 1 — the elevation difference between them is zero.
+
+---
+
+## 10. Iconography
+
+Ember uses **Material Symbols Outlined** as the sole icon system. Outlined by default; switch to filled (`'FILL' 1`) only for status emphasis (e.g., `shield_locked` in the hero, active milestone flags).
+
+### Rules
+
+- Icon size matches the line-height of adjacent text:
+  - Next to `label-sm` → 14–16px
+  - Next to `label-md` / `body-md` → 20px
+  - Next to `headline-md` → 24px
+  - Standalone in feature cards → 24–32px
+- Icons inherit text color unless they're carrying their own semantic color (success = tertiary, error = error)
+- Use `aria-hidden="true"` on decorative icons; pair with text or `aria-label` for interactive icons
+- Don't mix Material Symbols with another icon set (lucide, heroicons, etc.) in the same view
+
+### Canonical icon vocabulary
+
+| Concept | Icon |
+|---|---|
+| Wallet | `account_balance_wallet` |
+| Escrow / locked funds | `account_balance` |
+| Backer | `group` |
+| Time remaining | `schedule` |
+| Settings | `settings` |
+| Update / announcement | `campaign` |
+| Message / inbox | `mail` |
+| Network layer | `layers` |
+| Verified / shield | `shield_locked` (filled when emphasized) |
+| Active flag / milestone | `flag` (filled when active) |
+| Voting | `how_to_vote` |
+| Payment | `payments` |
+| Submit proof | `cloud_upload` |
+| Trending up | `trending_up` |
+| Completed | `check` (inside a tertiary circle) |
+| In progress | `sync` (inside a primary circle) |
+| Locked future state | `lock` |
+| Onward navigation | `arrow_forward` |
+
+---
+
+## 11. Components
+
+### Buttons
+
+| Variant | Style | Use |
+|---|---|---|
+| **Primary** | `bg-primary text-on-primary rounded-xl px-6 py-3 font-label-md shadow-sm hover:bg-surface-tint` | One per view. The single highest-priority action. |
+| **Primary, hero** | Primary + `px-8 py-4 shadow-lg shadow-primary/20 hover:scale-[0.98]` | Hero CTAs only. |
+| **Outline** | `bg-surface text-on-surface border border-outline rounded-xl px-6 py-3 hover:bg-surface-container-low` | Secondary action. Lives next to primary. |
+| **Outline, primary-tinted** | `text-primary border border-primary rounded-xl px-6 py-3 hover:bg-primary-fixed` | Tertiary-prominence creator actions (e.g., "Launch Project") |
+| **Ghost** | `text-on-surface hover:bg-surface-container-low rounded-xl px-4 py-2` | Inline actions, nav items |
+| **Destructive** | `bg-error text-on-error rounded-xl ...` | Cancel campaign, take-down (admin), withdraw confirmations |
+
+**Button rules:**
+- All buttons use `rounded-xl` (8px). Pills (`rounded-full`) are reserved for status badges.
+- Minimum touch target: 44×44px (height: `py-3` minimum)
+- Disabled state: `opacity-50 cursor-not-allowed` — no pointer events
+- Loading state: replace text with spinner; keep width stable to prevent layout shift
+
+### Cards
+
+The default card is a **Level 1 surface**:
+
+```html
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+  ...
+</div>
+```
+
+- **Featured/hero card:** `rounded-2xl shadow-2xl shadow-primary/10`
+- **Subtle card (sidebar widget):** `bg-surface-container-lowest border border-outline-variant rounded-xl p-6`
+- **Active card (e.g., active milestone):** add `border-2 border-primary-fixed-dim`
+
+### Status badges (pills)
+
+| Status | Style |
+|---|---|
+| **Completed** | `bg-surface-container-low text-tertiary` |
+| **Active / In progress** | `bg-primary-fixed text-on-primary-fixed-variant` |
+| **Awaiting / Pending** | `bg-surface-container-high text-on-surface-variant` |
+| **Locked / Future** | `bg-surface-container-high text-on-surface-variant` + lock icon |
+| **Failed / Rejected** | `bg-error-container text-on-error-container` |
+
+All pills: `px-2 py-1 rounded text-label-sm font-semibold`.
+
+### Status dots
+
+A 6–8px circle preceding a status label. Color matches the semantic state. Use `animate-pulse` only on `primary` dots that indicate live/active action requiring user attention.
+
+### Progress bars
+
+```html
+<div class="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+  <div class="h-full bg-primary rounded-full" style="width: 49%"></div>
+</div>
+```
+
+- Track is always `bg-surface-variant`
+- Fill is `bg-primary` (funding progress), `bg-tertiary` (success/completion), or split (for voting results — tertiary YES / error NO)
+- Height `h-2`. `h-1` for compact contexts, `h-3` only for hero progress visualizations
+
+### Inputs
+
+```html
+<input class="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 font-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+```
+
+- Default border `outline`
+- Focus: `border-primary` + soft primary ring
+- Error: `border-error` + helper text below in `text-error`
+- Label is always visible above the input. No placeholder-as-label.
+
+### Timeline (milestone tracker)
+
+The vertical timeline is one of Ember's signature components. Pattern:
+
+- Left rail: 2px line in `border-surface-container-high`
+- Status markers: 16–20px circles on the rail, colored by milestone state
+- Each card sits to the right of its marker, with `ml-8` and the rail anchored at `ml-4`
+- Active milestone gets `border-2 border-primary-fixed-dim` + shadow
+
+---
+
+## 12. Imagery
+
+Ember does **not** use stock photography of "happy team members at laptops" or generic crypto-bro futurism. Visual support comes from:
+
+1. **Functional UI mockups** — show the product doing its job (e.g., the hero escrow card). The product *is* the imagery.
+2. **Abstract gradient surfaces** — warm gradients (primary → primary-container) at low opacity, often combined with `mix-blend-luminosity` over subtle textures for campaign-card backgrounds where no creator-supplied image exists.
+3. **Creator-supplied images** — campaign covers and milestone proofs come from creators. We render them edge-to-edge inside the card with `object-cover`, no decorative overlays.
+
+### Image rules
+
+- Avatars: circular, with `border border-outline-variant`
+- Campaign covers: 16:9 aspect, `object-cover`, `rounded-t-xl` if at top of card
+- All product imagery on dark backgrounds gets a subtle warm cast — never cold blue tint
+- Decorative gradient backdrops: keep opacity ≤ 0.5 so foreground text stays AAA-contrast
+
+---
+
+## 13. Motion
+
+Ember motion is **subtle and purposeful**. We don't bounce. We don't spring. We don't celebrate.
+
+| Motion | Use | Spec |
+|---|---|---|
+| `transition-colors` | Hover state on links, buttons, nav | 200ms ease |
+| `transition-transform` | Card image zoom on hover | 500ms ease |
+| `hover:scale-[0.98]` | Primary CTA press feedback | 150ms ease-out |
+| `animate-pulse` | Live/awaiting-action indicators only | Default Tailwind |
+| `transition-opacity` | Fade in skeleton → loaded content | 300ms ease |
+
+**Don't:**
+- Animate page loads with full-page wipes
+- Use parallax on marketing pages
+- Animate dollar amounts counting up — display the final number immediately
+
+---
+
+## 14. Status & Semantic Patterns
+
+This is how Ember communicates state across the product. **Consistency here is the brand.**
+
+| State | Color | Icon | Pill Style | Example |
+|---|---|---|---|---|
+| Live (pledging open) | `primary` | live dot, pulsing | n/a — usually shown as banner | Hero card label |
+| Funded (goal hit) | `primary` | `check_circle` | `primary-fixed` | "Funded · 14 days remaining" |
+| Milestone in progress | `primary` | `sync` (in primary circle) | `primary-fixed` | Active milestone card |
+| Proof submitted | `primary` | `cloud_upload` | `primary-fixed` | "Awaiting vote" |
+| Voting | `primary` | `how_to_vote` | `primary-fixed` + pulsing dot | Open vote |
+| Approved / completed | `tertiary` | `check` | `bg-surface-container-low text-tertiary` | Past milestone |
+| Released | `tertiary` | `payments` | inline metadata | "20% Funds Released" |
+| Rejected | `error` | `close` | `error-container` | Failed milestone |
+| Refunded | `error` (dimmed) | `arrow_back` | `error-container` | Pledge refund |
+| Locked / future | `on-surface-variant` (60% opacity) | `lock` | `surface-container-high` | Future milestone |
+
+---
+
+## 15. Accessibility
+
+Ember meets **WCAG 2.1 AA** at minimum. The brand system was designed around contrast.
+
+- **Body text on background:** `#191c1d` on `#f8f9fa` = **~16.5:1** ✓ AAA
+- **Primary on white:** `#b72301` on `#ffffff` = **~6.8:1** ✓ AA (and AAA for large text)
+- **On-primary on primary:** `#ffffff` on `#b72301` = **~6.8:1** ✓ AA
+- **On-surface-variant on background:** `#5b403a` on `#f8f9fa` = **~8.6:1** ✓ AAA
+
+### Rules
+
+- Never use color alone to communicate status — always pair with an icon or text
+- All interactive elements have a visible focus ring (`focus:ring-2 focus:ring-primary/40`)
+- Buttons and links have minimum 44×44px touch targets
+- Form errors are announced to screen readers via `aria-describedby`
+- Animations respect `prefers-reduced-motion`
+
+---
+
+## 16. Do / Don't
+
+### Voice
+
+✓ "Funds release in tranches as milestones are verified."
+✗ "Embers's revolutionary milestone tech is changing crowdfunding forever! 🔥🚀"
+
+✓ "You're backing a project — not buying a security."
+✗ "Get in early on the next big thing."
+
+### Visual
+
+✓ Single primary button per view; outline button as secondary
+✗ Three red buttons side by side
+
+✓ Status pill: `bg-surface-container-low text-tertiary` for "Completed"
+✗ Status pill: solid bright green with white text
+
+✓ Layered surfaces using the 9-step ramp
+✗ Heavy drop shadows on every card
+
+### Logo
+
+✓ Wordmark + primary color + clear space respected
+✗ Wordmark on a busy photo, recolored teal
+
+### Iconography
+
+✓ Material Symbols Outlined throughout
+✗ Mixing Material Symbols with Lucide or emoji in the same view
+
+---
+
+## 17. Tailwind Reference
+
+The full Tailwind config is the source of truth. Here is the canonical theme extension that the mocks ship with — copy this directly into `tailwind.config.ts`:
+
+```ts
+import type { Config } from "tailwindcss";
+
+export default {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        // Primary
+        primary: "#b72301",
+        "on-primary": "#ffffff",
+        "primary-container": "#ff5733",
+        "on-primary-container": "#580c00",
+        "primary-fixed": "#ffdad3",
+        "primary-fixed-dim": "#ffb4a4",
+        "on-primary-fixed": "#3d0600",
+        "on-primary-fixed-variant": "#8c1800",
+        "inverse-primary": "#ffb4a4",
+        "surface-tint": "#b72301",
+
+        // Secondary
+        secondary: "#5f5e5f",
+        "on-secondary": "#ffffff",
+        "secondary-container": "#e2dfe0",
+        "on-secondary-container": "#636263",
+        "secondary-fixed": "#e5e2e3",
+        "secondary-fixed-dim": "#c8c6c7",
+        "on-secondary-fixed": "#1b1b1c",
+        "on-secondary-fixed-variant": "#474647",
+
+        // Tertiary (verified green)
+        tertiary: "#006c4b",
+        "on-tertiary": "#ffffff",
+        "tertiary-container": "#00a574",
+        "on-tertiary-container": "#003120",
+        "tertiary-fixed": "#68fcbf",
+        "tertiary-fixed-dim": "#45dfa4",
+        "on-tertiary-fixed": "#002114",
+        "on-tertiary-fixed-variant": "#005137",
+
+        // Error
+        error: "#ba1a1a",
+        "on-error": "#ffffff",
+        "error-container": "#ffdad6",
+        "on-error-container": "#93000a",
+
+        // Surfaces
+        background: "#f8f9fa",
+        surface: "#f8f9fa",
+        "surface-bright": "#f8f9fa",
+        "surface-dim": "#d9dadb",
+        "surface-variant": "#e1e3e4",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f3f4f5",
+        "surface-container": "#edeeef",
+        "surface-container-high": "#e7e8e9",
+        "surface-container-highest": "#e1e3e4",
+        "inverse-surface": "#2e3132",
+        "inverse-on-surface": "#f0f1f2",
+
+        // Text & lines
+        "on-background": "#191c1d",
+        "on-surface": "#191c1d",
+        "on-surface-variant": "#5b403a",
+        outline: "#8f7069",
+        "outline-variant": "#e4beb6",
+      },
+      borderRadius: {
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        full: "0.75rem",
+      },
+      spacing: {
+        gutter: "24px",
+        base: "8px",
+        "margin-mobile": "16px",
+        "margin-desktop": "64px",
+        "max-width": "1280px",
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+      },
+      fontSize: {
+        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "display-lg-mobile": ["36px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" }],
+        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "600" }],
+      },
+    },
+  },
+  plugins: [require("@tailwindcss/forms"), require("@tailwindcss/container-queries")],
+} satisfies Config;
+```
+
+### Fonts to load (Next.js)
+
+```ts
+// src/app/layout.tsx
+import { Inter, JetBrains_Mono } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono", display: "swap" });
+```
+
+### Material Symbols (load once in root layout)
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+```
+
+---
+
+## A note for the coding agent
+
+When implementing UI per SPEC.md and AGENT.md, this document **supersedes** any styling defaults in those files. Where AGENT.md says "use Tailwind v4," this document is what Tailwind is being themed with. Where AGENT.md says "shadcn/ui primitives, customized to brand," **this is the brand** you customize to.
+
+Three operational reminders:
+1. **No new colors.** If you can't find a token here, you don't need it.
+2. **No new font sizes.** If you can't find a token here, design wants to talk first.
+3. **Material Symbols only.** No Lucide, no Heroicons, no emoji icons — even if AGENT.md mentioned them as defaults. The mocks established Material Symbols, so we ship Material Symbols.
+
+---
+
+*End of BRAND.md*
