@@ -8,7 +8,7 @@ export interface WelcomeProps {
   name: string
 }
 
-export const subject = 'Welcome to Ember.'
+export const subject = (_props: WelcomeProps) => 'Welcome to Ember.'
 
 export default function Welcome({ name }: WelcomeProps): React.ReactElement {
   return (
