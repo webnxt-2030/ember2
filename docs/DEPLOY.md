@@ -5,7 +5,7 @@
 | Service | Type | Notes |
 |---|---|---|
 | `web` | Next.js (Node) | Exposes HTTP. Volume `uploads` mounted at `/data/uploads`. |
-| `indexer` | Node.js process | No public port. Needs `FACTORY_ADDRESS` before starting. |
+| `indexer` | Node.js process | No public port. Higher restart retries (10) because chain-event reconnect can take longer than a web server. Needs `FACTORY_ADDRESS` before starting. |
 | `postgres` | Railway Postgres plugin | Provides `DATABASE_URL`. |
 | `redis` | Railway Redis plugin | Provides `REDIS_URL`. |
 
@@ -43,6 +43,8 @@ pnpm --filter @ember/web exec prisma migrate deploy
 ### 4. Seed the database (one-time only)
 
 Seed the bootstrap super-admin account. **Run this exactly once — it is not idempotent.**
+
+> **Note:** The seed script (`apps/web/prisma/seed.ts`) is implemented as part of Sprint 1 (Issue #8). Ensure it exists before running this step.
 
 ```bash
 railway run --service web pnpm --filter @ember/web exec prisma db seed
