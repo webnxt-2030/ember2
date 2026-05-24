@@ -17,7 +17,8 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "corepack enable"
+    "prepare": "corepack enable",
+    "gen:abis": "cd contracts && forge build && cd .. && node scripts/gen-abis.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
