@@ -256,6 +256,7 @@ contract ProjectEscrowVoteTest is Test {
         );
 
         // Re-submit the failed milestone — should succeed (re-opens VOTING)
+        uint64 resubmitTs = uint64(block.timestamp);
         vm.prank(orgWallet);
         escrow.submitMilestone(1, "ipfs://QmResubmit");
 
@@ -263,6 +264,27 @@ contract ProjectEscrowVoteTest is Test {
             uint256(escrow.milestoneStatus(1)),
             uint256(ProjectEscrow.Status.VOTING),
             "milestone should be back in VOTING after re-submit"
+        );
+
+        // Warp into the new voting window (before it ends)
+        vm.warp(resubmitTs + 1);
+
+        // backer voted in round 1 — must be able to vote again in round 2
+        vm.prank(backer);
+        escrow.vote(1, false); // should NOT revert with AlreadyVoted
+
+        // backer2 also votes NO again
+        vm.prank(backer2);
+        escrow.vote(1, false);
+
+        // Resolve round 2
+        vm.warp(resubmitTs + VOTING_PERIOD + 1);
+        escrow.resolveMilestone(1);
+
+        assertEq(
+            uint256(escrow.milestoneStatus(1)),
+            uint256(ProjectEscrow.Status.FAILED),
+            "round 2 should also FAIL with all NO votes"
         );
     }
 }

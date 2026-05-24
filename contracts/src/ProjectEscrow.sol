@@ -18,7 +18,6 @@ contract ProjectEscrow is ReentrancyGuard {
     error MilestoneM0();
     error MilestoneIndexOutOfBounds();
     error VotingWindowClosed();
-    error VotingWindowOpen();
     error AlreadyVoted();
     error NotABacker();
     error VotingNotEnded();
@@ -39,8 +38,9 @@ contract ProjectEscrow is ReentrancyGuard {
         uint64   voteEndAt;
         uint256  weightYes;
         uint256  weightNo;
+        uint256  voteRound;
         string   updateURI;
-        mapping(address => bool) hasVoted;
+        mapping(uint256 => mapping(address => bool)) hasVotedInRound;
     }
 
     // ─── State ───────────────────────────────────────────────────────────────
@@ -102,7 +102,6 @@ contract ProjectEscrow is ReentrancyGuard {
     // ─── Submit Milestone ────────────────────────────────────────────────────
     function submitMilestone(uint256 milestoneIndex, string calldata updateURI)
         external
-        nonReentrant
     {
         if (msg.sender != organizationWallet) revert OnlyOrg();
         if (milestoneIndex == 0) revert MilestoneM0();
@@ -124,6 +123,7 @@ contract ProjectEscrow is ReentrancyGuard {
         m.updateURI   = updateURI;
         m.weightYes   = 0;
         m.weightNo    = 0;
+        m.voteRound  += 1;
 
         emit MilestoneSubmitted(milestoneIndex, updateURI, end);
     }
@@ -138,9 +138,9 @@ contract ProjectEscrow is ReentrancyGuard {
 
         uint256 weight = totalContributedBy[msg.sender];
         if (weight == 0) revert NotABacker();
-        if (m.hasVoted[msg.sender]) revert AlreadyVoted();
+        if (m.hasVotedInRound[m.voteRound][msg.sender]) revert AlreadyVoted();
 
-        m.hasVoted[msg.sender] = true;
+        m.hasVotedInRound[m.voteRound][msg.sender] = true;
         if (yes) {
             m.weightYes += weight;
         } else {
