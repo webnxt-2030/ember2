@@ -16,8 +16,11 @@ Railway Postgres takes daily snapshots with 7-day retention automatically.
 **Verify restore:**
 ```bash
 curl https://<your-domain>/api/ready
-# → {"status":"ok"}
+# → {"status":"ok","checks":{"db":"ok","redis":"ok"}}
+# If DB or Redis is degraded: {"status":"degraded","checks":{"db":"ok","redis":"error"}}
 ```
+
+To redeploy services after updating `DATABASE_URL`: Railway dashboard → select the service → **Deploy** button, or push a new commit to the connected branch.
 
 Spot-check one row per critical table:
 ```sql
@@ -94,6 +97,9 @@ cast send \
 
 ### Email stuck in QUEUED state
 
+> **Note:** Email worker and admin panel are implemented in Sprint 6 (Issues #49, #58).
+
+Once implemented:
 1. In Railway → `web` service logs → search for `[email-worker]` errors.
 2. Use admin panel: `/admin/emails` → find the failed email → Retry.
 3. Or via API:
