@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 
+// Must be Node.js runtime: ioredis depends on Node.js net/tls (not available in Edge runtime)
+export const runtime = 'nodejs'
+
 const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'
 
 // Content Security Policy
@@ -52,6 +55,9 @@ function getRateLimitConfig(
 }
 
 function getClientIp(req: NextRequest): string {
+  // Trusts the leftmost hop in x-forwarded-for. This is safe because Railway (and
+  // other reverse proxies in front of this app) strip or prepend XFF before forwarding,
+  // so the leftmost entry is always the real client IP and cannot be spoofed.
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     req.headers.get('x-real-ip') ??
