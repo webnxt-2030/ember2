@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/cn'
 import { Container } from './container'
 import { Button } from '@/components/ui/button'
+import { ConnectButton } from '@/components/wallet/connect-button'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -37,7 +38,7 @@ export function Header() {
 
         {/* Desktop Right */}
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost">Connect Wallet</Button>
+          <ConnectButton />
           <Button variant="primary" asChild>
             <Link href="/projects">Get Started</Link>
           </Button>
@@ -46,7 +47,7 @@ export function Header() {
         {/* Mobile Hamburger */}
         <button
           className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-on-surface hover:bg-surface-container-low transition-colors"
-          onClick={() => setMobileMenuOpen((v) => !v)}
+          onClick={() => { setMobileMenuOpen((v) => !v); }}
           aria-label="Toggle menu"
         >
           <span className="material-symbols-outlined text-[24px]">
@@ -67,15 +68,15 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className="px-4 py-3 text-body-md text-on-surface rounded-xl hover:bg-surface-container-low transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => { setMobileMenuOpen(false); }}
               >
                 {link.label}
               </Link>
             ))}
             <div className="mt-3 pt-3 border-t border-outline-variant flex flex-col gap-2">
-              <Button variant="ghost" className="justify-start">Connect Wallet</Button>
+              <ConnectButton className="justify-start" />
               <Button variant="primary" asChild>
-                <Link href="/projects" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                <Link href="/projects" onClick={() => { setMobileMenuOpen(false); }}>Get Started</Link>
               </Button>
             </div>
           </Container>
