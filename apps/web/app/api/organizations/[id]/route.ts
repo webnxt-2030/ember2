@@ -77,7 +77,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         data: ownerEmails.map((email: string) => ({
           to: email,
           template: emailTemplate,
-          payload: { orgId: id, orgTitle: org.title, reason: reason ?? null },
+          payload: {
+            orgName: org.title,
+            orgUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://ember.app'}/admin/organizations/${id}`,
+            reason: reason ?? undefined,
+          },
           status: 'QUEUED' as const,
         })),
       })
