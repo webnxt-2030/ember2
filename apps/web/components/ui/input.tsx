@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
+  label: string
   error?: string
   containerClassName?: string
 }
@@ -18,14 +18,12 @@ export function Input({
 
   return (
     <div className={cn('flex flex-col gap-1.5', containerClassName)}>
-      {label && (
-        <label
-          htmlFor={inputId}
-          className="text-label-md text-on-surface font-medium"
-        >
-          {label}
-        </label>
-      )}
+      <label
+        htmlFor={inputId}
+        className="text-label-md text-on-surface font-medium"
+      >
+        {label}
+      </label>
       <input
         id={inputId}
         className={cn(

@@ -4,13 +4,13 @@ type BadgeStatus = 'completed' | 'active' | 'pending' | 'failed'
 
 const statusClasses: Record<BadgeStatus, string> = {
   completed:
-    'bg-surface-container-low text-tertiary px-2 py-1 rounded text-label-sm font-semibold',
+    'bg-surface-container-low text-tertiary px-2 py-1 rounded-full text-label-sm font-semibold',
   active:
-    'bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded text-label-sm font-semibold',
+    'bg-primary-fixed text-on-primary-fixed-variant px-2 py-1 rounded-full text-label-sm font-semibold',
   pending:
-    'bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-label-sm font-semibold',
+    'bg-surface-container-high text-on-surface-variant px-2 py-1 rounded-full text-label-sm font-semibold',
   failed:
-    'bg-error-container text-on-error-container px-2 py-1 rounded text-label-sm font-semibold',
+    'bg-error-container text-on-error-container px-2 py-1 rounded-full text-label-sm font-semibold',
 }
 
 interface BadgeProps {
