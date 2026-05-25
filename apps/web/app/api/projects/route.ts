@@ -4,10 +4,35 @@ import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { ValidationError, ConflictError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
-import { milestoneBpsSchema, slugSchema } from '@ember/shared'
+import { listLiveProjects } from '@/lib/db/projects'
+import { milestoneBpsSchema, slugSchema, projectListQuerySchema } from '@ember/shared'
 import { z } from 'zod'
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+
+  const parsed = projectListQuerySchema.safeParse({
+    page: searchParams.get('page') ?? undefined,
+    pageSize: searchParams.get('pageSize') ?? undefined,
+    status: searchParams.get('status') ?? undefined,
+  })
+
+  if (!parsed.success) {
+    return errorResponse(
+      new ValidationError('Validation failed', parsed.error.issues),
+      req,
+    )
+  }
+
+  const result = await listLiveProjects({
+    page: parsed.data.page,
+    pageSize: parsed.data.pageSize,
+  })
+
+  return okResponse(result)
+}
 
 const milestoneInputSchema = z.object({
   title: z.string().min(1).max(200),
