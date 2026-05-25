@@ -37,7 +37,7 @@ export function Input({
         {...props}
       />
       {error && (
-        <p className="text-label-sm text-on-error-container">{error}</p>
+        <p className="text-label-sm text-error">{error}</p>
       )}
     </div>
   )

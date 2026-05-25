@@ -6,7 +6,7 @@ const variantClasses: Record<CardVariant, string> = {
   default:
     'bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm',
   featured:
-    'bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl shadow-primary/10',
+    'bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-2xl shadow-primary/10',
   active:
     'bg-surface-container-lowest border-2 border-primary-fixed-dim rounded-xl p-6 shadow-sm',
 }

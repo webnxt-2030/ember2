@@ -1,7 +1,5 @@
 import { cn } from '@/lib/cn'
 
-type ProgressVariant = 'default' | 'success' | 'split'
-
 interface ProgressDefaultProps {
   variant?: 'default' | 'success'
   value: number

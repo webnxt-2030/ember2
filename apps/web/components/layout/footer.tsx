@@ -15,8 +15,7 @@ export function Footer() {
           {/* Left: Wordmark + tagline */}
           <div className="flex flex-col gap-1">
             <span
-              className="text-primary text-[1.25rem] leading-none select-none"
-              style={{ fontWeight: 800, letterSpacing: '-0.01em' }}
+              className="text-primary text-[1.25rem] leading-none select-none font-extrabold tracking-[-0.01em]"
             >
               Ember
             </span>

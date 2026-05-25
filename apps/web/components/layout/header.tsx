@@ -22,7 +22,6 @@ export function Header() {
         <Link
           href="/"
           className="text-primary text-[1.5rem] font-extrabold tracking-[-0.01em] leading-none select-none"
-          style={{ fontWeight: 800 }}
         >
           Ember
         </Link>
@@ -39,7 +38,7 @@ export function Header() {
         {/* Desktop Right */}
         <div className="hidden md:flex items-center gap-3">
           <Button variant="ghost">Connect Wallet</Button>
-          <Button variant="primary">
+          <Button variant="primary" asChild>
             <Link href="/projects">Get Started</Link>
           </Button>
         </div>
