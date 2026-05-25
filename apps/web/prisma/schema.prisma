@@ -337,6 +337,7 @@ enum EmailTemplate {
 
 enum EmailStatus {
   QUEUED
+  PROCESSING
   SENT
   FAILED
 }

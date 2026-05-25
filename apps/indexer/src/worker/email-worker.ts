@@ -42,6 +42,11 @@ async function pollPendingEmails() {
 
   logger.debug({ count: pending.length }, "Email worker: polling queue");
 
+  await prisma.emailNotification.updateMany({
+    where: { id: { in: pending.map((r) => r.id) } },
+    data: { status: "PROCESSING" },
+  });
+
   const queue = getEmailQueue();
 
   await queue.addBulk(
@@ -54,6 +59,7 @@ async function pollPendingEmails() {
         payload: row.payload as Record<string, unknown>,
       },
       opts: {
+        jobId: row.id,
         attempts: MAX_RETRIES,
         backoff: { type: "exponential", delay: 30_000 },
         removeOnComplete: { count: 100 },
@@ -73,7 +79,11 @@ async function processEmailJob(job: { data: EmailJob }): Promise<void> {
 
     await prisma.emailNotification.update({
       where: { id },
-      data: { status: "SENT", resendId, sentAt: new Date() },
+      data: {
+        status: "SENT",
+        resendId: resendId ?? null,
+        sentAt: new Date(),
+      },
     });
 
     logger.info({ emailId: id, resendId }, "Email worker: sent");
