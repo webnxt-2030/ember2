@@ -19,7 +19,7 @@ export const publicClient = createPublicClient({
 export const keeperWallet = createWalletClient({
   account: privateKeyToAccount(indexerEnv.KEEPER_PRIVATE_KEY as `0x${string}`),
   chain: morphMainnet,
-  transport: http(indexerEnv.NEXT_PUBLIC_MORPH_RPC_URL),
+  transport: http(indexerEnv.MORPH_RPC_URL),
 });
 
 export { indexerEnv } from "./env.js";
