@@ -1,3 +1,5 @@
+import { Resend } from "resend";
+
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "Ember <no-reply@ember.app>";
 const WEB_APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -8,7 +10,7 @@ export interface EmailJob {
   payload: Record<string, unknown>;
 }
 
-export async function sendEmail(job: EmailJob): Promise<{ resendId: string }> {
+export async function sendEmail(job: EmailJob): Promise<{ resendId: string | null }> {
   const INDEXER_API_KEY = process.env.INDEXER_API_KEY;
   const response = await fetch(`${WEB_APP_URL}/api/internal/email/render`, {
     method: "POST",
@@ -26,8 +28,6 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string }> {
 
   const { html, subject } = await response.json() as { html: string; subject: string };
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { Resend } = require("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const result = await resend.send({
@@ -41,5 +41,5 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string }> {
     throw new Error(`Resend error: ${result.error.message}`);
   }
 
-  return { resendId: result.data?.id ?? "" };
+  return { resendId: result.data?.id ?? null };
 }
