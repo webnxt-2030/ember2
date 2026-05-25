@@ -2,6 +2,7 @@ import { Resend } from "resend";
 
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "Ember <no-reply@ember.app>";
 const WEB_APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export interface EmailJob {
   id: string;
@@ -27,8 +28,6 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string | nul
   }
 
   const { html, subject } = await response.json() as { html: string; subject: string };
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
 
   const result = await resend.send({
     from: EMAIL_FROM,
