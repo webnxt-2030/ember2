@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { ValidationError, NotFoundError } from '@/lib/errors'
+import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { milestoneBpsSchema, slugSchema } from '@ember/shared'
 import { z } from 'zod'
@@ -137,6 +137,14 @@ export async function PATCH(
       )
     }
     const data = parsed.data
+
+    // Check slug uniqueness before transaction
+    if (data.slug !== undefined && data.slug !== project.slug) {
+      const existingSlug = await prisma.project.findUnique({ where: { slug: data.slug } })
+      if (existingSlug) {
+        return errorResponse(new ConflictError(`Slug "${data.slug}" is already taken`), req)
+      }
+    }
 
     await prisma.$transaction(async (tx: TxClient) => {
       // Build project update object from provided fields only
