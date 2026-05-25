@@ -29,7 +29,7 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string | nul
 
   const { html, subject } = await response.json() as { html: string; subject: string };
 
-  const result = await resend.send({
+  const result = await resend.emails.send({
     from: EMAIL_FROM,
     to: job.to,
     subject,
