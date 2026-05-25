@@ -6,6 +6,7 @@ import {
   stopAllEscrowWatchers,
 } from "./watchers/escrow.js";
 import { startKeeper, stopKeeper } from "./keeper.js";
+import { startEmailWorker, stopEmailWorker } from "./worker/email-worker.js";
 
 async function main() {
   logger.info("Ember indexer starting...");
@@ -20,6 +21,8 @@ async function main() {
 
   startKeeper();
 
+  startEmailWorker();
+
   logger.info("Indexer ready");
 }
 
@@ -33,6 +36,7 @@ process.on("SIGTERM", () => {
   stopFactoryWatcher();
   stopAllEscrowWatchers();
   stopKeeper();
+  stopEmailWorker();
   process.exit(0);
 });
 
@@ -41,5 +45,6 @@ process.on("SIGINT", () => {
   stopFactoryWatcher();
   stopAllEscrowWatchers();
   stopKeeper();
+  stopEmailWorker();
   process.exit(0);
 });

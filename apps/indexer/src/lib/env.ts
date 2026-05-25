@@ -11,6 +11,8 @@ const schema = z.object({
     .enum(["trace", "debug", "info", "warn", "error", "fatal"])
     .default("info"),
   FACTORY_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
+  RESEND_API_KEY: z.string().min(1),
+  EMAIL_FROM: z.string().default("Ember <no-reply@ember.app>"),
 });
 
 export const indexerEnv = schema.parse(process.env);
