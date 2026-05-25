@@ -45,8 +45,9 @@ export async function handleVoted(args: {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.milestoneVote.create({
-      data: {
+    await tx.milestoneVote.upsert({
+      where: { txHash_logIndex: { txHash: txHash.toLowerCase(), logIndex } },
+      create: {
         milestoneId: milestone.id,
         walletAddress: voter.toLowerCase(),
         choice: yes ? "YES" : "NO",
@@ -55,6 +56,7 @@ export async function handleVoted(args: {
         logIndex,
         votedAt: new Date(),
       },
+      update: {},
     });
 
     await updateCursor(tx, contract, "Voted", blockNumber);
