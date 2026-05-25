@@ -38,8 +38,9 @@ export async function handleContributed(args: {
   });
 
   await prisma.$transaction(async (tx) => {
-    await tx.contribution.create({
-      data: {
+    await tx.contribution.upsert({
+      where: { txHash: txHash.toLowerCase() },
+      create: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
         walletAddress: backer.toLowerCase(),
@@ -52,25 +53,26 @@ export async function handleContributed(args: {
         blockNumber,
         contributedAt: new Date(),
       },
+      update: {},
     });
 
     await tx.emailNotification.createMany({
-      data:
-        backerUser
-          ? [
-              {
-                to: backerUser.email,
-                template: "CONTRIBUTION_RECEIVED",
-                payload: {
-                  projectId: project.id,
-                  backerAddress: backer.toLowerCase(),
-                  amount: amount.toString(),
-                  tokenId: tokenId.toString(),
-                },
-                status: "QUEUED",
+      data: backerUser
+        ? [
+            {
+              to: backerUser.email,
+              template: "CONTRIBUTION_RECEIVED",
+              payload: {
+                projectId: project.id,
+                backerAddress: backer.toLowerCase(),
+                amount: amount.toString(),
+                tokenId: tokenId.toString(),
               },
-            ]
-          : [],
+              status: "QUEUED",
+            },
+          ]
+        : [],
+      skipDuplicates: true,
     });
 
     await updateCursor(tx, contract, "Contributed", blockNumber);
