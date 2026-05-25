@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { computeMilestoneBps, validateMilestoneBps } from "./reward-curve.js";
 import { RewardCurve } from "./types/index.js";
-
-const BPS_TOTAL = 10_000;
+import { MILESTONE_BPS_TOTAL } from "./constants.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -20,7 +19,7 @@ describe("computeMilestoneBps – LINEAR", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.LINEAR, n);
-      expect(sum(bps), `n=${n}`).toBe(BPS_TOTAL);
+      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -46,7 +45,6 @@ describe("computeMilestoneBps – LINEAR", () => {
   });
 
   it("last element gets rounding residue for n=3", () => {
-    // floor(10000/3)=3333; last = 10000 - 3333*2 = 3334
     const bps = computeMilestoneBps(RewardCurve.LINEAR, 3);
     expect(bps).toEqual([3333, 3333, 3334]);
   });
@@ -54,15 +52,14 @@ describe("computeMilestoneBps – LINEAR", () => {
   it("handles edge case n=2", () => {
     const bps = computeMilestoneBps(RewardCurve.LINEAR, 2);
     expect(bps).toHaveLength(2);
-    expect(sum(bps)).toBe(BPS_TOTAL);
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
     expect(bps).toEqual([5000, 5000]);
   });
 
   it("handles edge case n=20", () => {
     const bps = computeMilestoneBps(RewardCurve.LINEAR, 20);
     expect(bps).toHaveLength(20);
-    expect(sum(bps)).toBe(BPS_TOTAL);
-    // 10000/20 = 500, no residue
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
     expect(bps).toEqual(Array(20).fill(500));
   });
 });
@@ -75,7 +72,7 @@ describe("computeMilestoneBps – EXPONENTIAL", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, n);
-      expect(sum(bps), `n=${n}`).toBe(BPS_TOTAL);
+      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -102,23 +99,24 @@ describe("computeMilestoneBps – EXPONENTIAL", () => {
     }
   });
 
-  it("each element is >= previous (non-decreasing) for n=5", () => {
-    const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, 5);
-    for (let i = 1; i < bps.length; i++) {
-      expect(bps[i]!).toBeGreaterThanOrEqual(bps[i - 1]!);
+  it("each element is >= previous (non-decreasing) for all n in [2..20]", () => {
+    for (let n = 2; n <= 20; n++) {
+      const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, n);
+      for (let i = 1; i < bps.length; i++) {
+        expect(bps[i]!, `n=${n} i=${i}`).toBeGreaterThanOrEqual(bps[i - 1]!);
+      }
     }
   });
 
   it("edge case n=2: weights [1,2] → [3333, 6667]", () => {
-    // weight total=3; bps[0]=floor(1*10000/3)=3333; bps[1]=10000-3333=6667
     const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, 2);
     expect(bps).toEqual([3333, 6667]);
-    expect(sum(bps)).toBe(BPS_TOTAL);
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
   });
 
   it("edge case n=20: sums to 10000", () => {
     const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, 20);
-    expect(sum(bps)).toBe(BPS_TOTAL);
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
     expect(bps).toHaveLength(20);
   });
 });
@@ -131,7 +129,7 @@ describe("computeMilestoneBps – BINARY", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.BINARY, n);
-      expect(sum(bps), `n=${n}`).toBe(BPS_TOTAL);
+      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -163,23 +161,21 @@ describe("computeMilestoneBps – BINARY", () => {
   });
 
   it("n=3: [0, 5000, 5000]", () => {
-    // floor(10000/2)=5000; last = 10000-5000=5000
     const bps = computeMilestoneBps(RewardCurve.BINARY, 3);
     expect(bps).toEqual([0, 5000, 5000]);
   });
 
   it("last element gets rounding residue when not evenly divisible", () => {
-    // n=4: 3 remaining slots; floor(10000/3)=3333; last=10000-3333*2=3334
     const bps = computeMilestoneBps(RewardCurve.BINARY, 4);
     expect(bps[0]).toBe(0);
-    expect(sum(bps)).toBe(BPS_TOTAL);
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
     expect(bps[3]).toBe(3334);
   });
 
   it("edge case n=20", () => {
     const bps = computeMilestoneBps(RewardCurve.BINARY, 20);
     expect(bps[0]).toBe(0);
-    expect(sum(bps)).toBe(BPS_TOTAL);
+    expect(sum(bps)).toBe(MILESTONE_BPS_TOTAL);
     expect(bps).toHaveLength(20);
   });
 });
@@ -199,7 +195,7 @@ describe("computeMilestoneBps – CUSTOM", () => {
 
   it("sums to 10000", () => {
     for (let n = 2; n <= 20; n++) {
-      expect(sum(computeMilestoneBps(RewardCurve.CUSTOM, n))).toBe(BPS_TOTAL);
+      expect(sum(computeMilestoneBps(RewardCurve.CUSTOM, n))).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 });

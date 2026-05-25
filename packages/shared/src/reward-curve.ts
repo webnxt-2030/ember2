@@ -19,6 +19,7 @@ export function computeMilestoneBps(curve: RewardCurve, n: number): number[] {
 
   switch (curve) {
     case RewardCurve.LINEAR:
+    // CUSTOM: equal distribution; user will override individual bps values via UI
     case RewardCurve.CUSTOM:
       return computeLinear(n);
 
@@ -35,10 +36,6 @@ export function computeMilestoneBps(curve: RewardCurve, n: number): number[] {
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Curve implementations
-// ---------------------------------------------------------------------------
 
 /** Evenly distributed. Each slot = floor(10000/n); last takes residue. */
 function computeLinear(n: number): number[] {
@@ -65,15 +62,10 @@ function computeExponential(n: number): number[] {
 
 /**
  * First milestone = 0 bps; remaining (n-1) milestones split 10000 evenly.
- * Special case n=2: [0, 10000].
- * For n>2: first=0, each of rest = floor(10000/(n-1)), last takes residue.
+ * first=0, each of rest = floor(10000/(n-1)), last takes residue.
  */
 function computeBinary(n: number): number[] {
   const bps = Array<number>(n).fill(0);
-  if (n === 2) {
-    bps[1] = MILESTONE_BPS_TOTAL;
-    return bps;
-  }
   const rest = n - 1;
   const base = Math.floor(MILESTONE_BPS_TOTAL / rest);
   for (let i = 1; i < n - 1; i++) {
@@ -83,10 +75,6 @@ function computeBinary(n: number): number[] {
   bps[n - 1] = MILESTONE_BPS_TOTAL - base * (rest - 1);
   return bps;
 }
-
-// ---------------------------------------------------------------------------
-// Validation helper
-// ---------------------------------------------------------------------------
 
 /**
  * Returns true iff:
