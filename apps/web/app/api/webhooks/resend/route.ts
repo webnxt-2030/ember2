@@ -7,24 +7,32 @@ import { z } from "zod";
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
 
 const resendEventSchema = z.object({
-  type: z.enum(["email.delivered", "email.delivered", "email.bounced", "email.complained"]),
+  type: z.enum(["email.delivered", "email.bounced", "email.complained"]),
   payload: z.object({
     id: z.string(),
   }),
 });
 
 async function verifyWebhookSignature(req: NextRequest, body: string): Promise<boolean> {
-  if (!WEBHOOK_SECRET) return true;
+  if (!WEBHOOK_SECRET) {
+    console.warn("[resend-webhook] RESEND_WEBHOOK_SECRET not set — skipping verification");
+    return true;
+  }
   const signature = req.headers.get("resend-webhook-signature");
   if (!signature) return false;
 
-  const encoder = new TextEncoder();
-  const data = encoder.encode(body);
-  const hashBuffer = await globalThis.crypto.subtle.digest("SHA256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const digest = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const keyData = new TextEncoder().encode(WEBHOOK_SECRET);
+  const key = await globalThis.crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+  const expected = "sha256=" + Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
 
-  return `sha256=${digest}` === signature;
+  return expected === signature;
 }
 
 export async function POST(req: NextRequest) {
