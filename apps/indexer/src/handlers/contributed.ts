@@ -8,9 +8,10 @@ export async function handleContributed(args: {
   contract: `0x${string}`;
   blockNumber: bigint;
   txHash: `0x${string}`;
+  logIndex: number;
   args: ContributedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
+  const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
   const { backer, amount, tokenId, m0Share } = eventArgs;
 
   const currentBlock = await publicClient.getBlockNumber();
@@ -47,6 +48,7 @@ export async function handleContributed(args: {
         nftTokenId: tokenId.toString(),
         nftContract: contract.toLowerCase(),
         txHash: txHash.toLowerCase(),
+        logIndex,
         blockNumber,
         contributedAt: new Date(),
       },

@@ -8,9 +8,10 @@ export async function handleVoted(args: {
   contract: `0x${string}`;
   blockNumber: bigint;
   txHash: `0x${string}`;
+  logIndex: number;
   args: VotedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
+  const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
   const { milestoneIndex, voter, yes, weight } = eventArgs;
 
   const currentBlock = await publicClient.getBlockNumber();
@@ -51,6 +52,7 @@ export async function handleVoted(args: {
         choice: yes ? "YES" : "NO",
         weight,
         txHash: txHash.toLowerCase(),
+        logIndex,
         votedAt: new Date(),
       },
     });

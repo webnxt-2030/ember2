@@ -8,6 +8,7 @@ export async function handleMilestoneSubmitted(args: {
   contract: `0x${string}`;
   blockNumber: bigint;
   txHash: `0x${string}`;
+  logIndex: number;
   args: MilestoneSubmittedArgs;
 }) {
   const { contract, blockNumber, txHash, args: eventArgs } = args;

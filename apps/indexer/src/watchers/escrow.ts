@@ -55,6 +55,7 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
     }) as unknown as {
       blockNumber: bigint;
       transactionHash: `0x${string}`;
+      logIndex: number;
       args: Parameters<typeof handler>[0]["args"];
     }[];
 
@@ -72,7 +73,7 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
 async function dispatchEvent(
   escrowAddress: `0x${string}`,
   eventName: typeof escrowEvents[number]["name"],
-  log: { blockNumber: bigint; transactionHash: `0x${string}`; args: Record<string, unknown> }
+  log: { blockNumber: bigint; transactionHash: `0x${string}`; logIndex: number; args: Record<string, unknown> }
 ) {
   switch (eventName) {
     case "Contributed":
@@ -80,6 +81,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
+        logIndex: log.logIndex,
         args: log.args as Parameters<typeof handleContributed>[0]["args"],
       });
       break;
@@ -88,6 +90,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
+        logIndex: log.logIndex,
         args: log.args as Parameters<typeof handleVoted>[0]["args"],
       });
       break;
@@ -96,6 +99,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
+        logIndex: log.logIndex,
         args: log.args as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
       });
       break;
@@ -104,6 +108,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
+        logIndex: log.logIndex,
         args: log.args as Parameters<typeof handleMilestoneResolved>[0]["args"],
       });
       break;
@@ -112,6 +117,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
+        logIndex: log.logIndex,
         args: log.args as Parameters<typeof handleMilestoneClaimed>[0]["args"],
       });
       break;
@@ -135,6 +141,7 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
         for (const log of logs as unknown as {
           blockNumber: bigint;
           transactionHash: `0x${string}`;
+          logIndex: number;
           args: Record<string, unknown>;
         }[]) {
           try {

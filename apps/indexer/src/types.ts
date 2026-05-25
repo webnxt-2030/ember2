@@ -39,3 +39,10 @@ export type ProjectCreatedArgs = {
   milestoneBps: readonly bigint[];
   votingPeriod: number;
 };
+
+export type EventHandlerContext = {
+  contract: `0x${string}`;
+  blockNumber: bigint;
+  txHash: `0x${string}`;
+  logIndex: number;
+};

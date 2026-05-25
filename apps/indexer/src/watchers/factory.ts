@@ -28,6 +28,7 @@ async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
   }) as unknown as Array<{
     blockNumber: bigint;
     transactionHash: `0x${string}`;
+    logIndex: number;
     args: Parameters<typeof handleProjectCreated>[0]["args"];
   }>;
 
@@ -36,6 +37,7 @@ async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
       contract: factoryAddress,
       blockNumber: event.blockNumber,
       txHash: event.transactionHash,
+      logIndex: event.logIndex,
       args: event.args,
     });
   }
@@ -68,6 +70,7 @@ export async function startFactoryWatcher() {
       for (const log of logs as unknown as Array<{
         blockNumber: bigint;
         transactionHash: `0x${string}`;
+        logIndex: number;
         args: Parameters<typeof handleProjectCreated>[0]["args"];
       }>) {
         try {
@@ -75,6 +78,7 @@ export async function startFactoryWatcher() {
             contract: factoryAddress,
             blockNumber: log.blockNumber,
             txHash: log.transactionHash,
+            logIndex: log.logIndex,
             args: log.args,
           });
         } catch (err) {

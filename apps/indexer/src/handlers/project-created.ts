@@ -8,6 +8,7 @@ export async function handleProjectCreated(args: {
   contract: `0x${string}`;
   blockNumber: bigint;
   txHash: `0x${string}`;
+  logIndex: number;
   args: ProjectCreatedArgs;
 }) {
   const { contract, blockNumber, txHash, args: eventArgs } = args;
