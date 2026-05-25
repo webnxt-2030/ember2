@@ -122,8 +122,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data: {
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
-      ...(logoUrl !== undefined && { logoUrl }),
-      ...(website !== undefined && { website }),
+      ...(logoUrl !== undefined && { logoUrl: logoUrl ?? null }),
+      ...(website !== undefined && { website: website ?? null }),
     },
   })
 
