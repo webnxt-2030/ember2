@@ -149,6 +149,14 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
   const totalBps = form.milestoneBps.reduce((a, b) => a + b, 0)
 
   async function handleSubmit() {
+    if (!form.title.trim() || !form.slug.trim() || !form.summary.trim() || !form.targetAmount.trim()) {
+      setError('Please fill in all required fields: title, slug, summary, and target amount.')
+      return
+    }
+    if (form.milestones.some(m => !m.title.trim())) {
+      setError('All milestones must have a title.')
+      return
+    }
     if (totalBps !== 10000) {
       setError('Milestone basis points must sum to 10,000')
       return
@@ -267,9 +275,9 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
           <CardContent className="pt-6 space-y-6">
             <div className="space-y-4">
               <label className="block text-label-md text-on-surface">
-                Picture URLs (up to 5)
+                Picture URLs (up to 10)
               </label>
-              {[0, 1, 2, 3, 4].map((i) => (
+              {Array.from({length: 10}, (_, i) => i).map((i) => (
                 <Input
                   key={i}
                   label={`Picture ${i + 1} URL`}
