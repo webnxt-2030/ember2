@@ -1,7 +1,7 @@
-import { watchContractEvent } from "/home/salt/Documents/VS_Code/ember2/apps/indexer/node_modules/viem/_esm/actions/public/watchContractEvent.js";
+import { publicClient } from "../lib/client.js";
+import { getAbiItem } from "viem";
 import { ProjectFactoryAbi } from "@ember/shared/abis.js";
 import { indexerEnv } from "../lib/env.js";
-import { publicClient } from "../lib/client.js";
 import { logger } from "../lib/logger.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
 import { getCursor } from "../lib/cursor.js";
@@ -12,26 +12,24 @@ const factoryAddress = indexerEnv.FACTORY_ADDRESS as `0x${string}`;
 
 let factoryStopFn: (() => void) | null = null;
 
-function findEventAbi(abi: readonly any[], name: string): any {
-  return abi.find((item: any) => item.type === "event" && item.name === name);
-}
-
 async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
   logger.info(
     { factory: factoryAddress, fromBlock, toBlock },
     "Factory: backfilling ProjectCreated events"
   );
 
-  const eventAbi = findEventAbi(ProjectFactoryAbi, "ProjectCreated");
-  if (!eventAbi) return;
-
-  const events = await (publicClient.getLogs as any)({
+  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as import("viem").AbiEvent;
+  const events = await publicClient.getLogs({
     address: factoryAddress,
-    event: eventAbi,
+    event: eventItem,
     fromBlock,
     toBlock,
     strict: true,
-  });
+  }) as unknown as Array<{
+    blockNumber: bigint;
+    transactionHash: `0x${string}`;
+    args: Parameters<typeof handleProjectCreated>[0]["args"];
+  }>;
 
   for (const event of events) {
     await handleProjectCreated({
@@ -59,18 +57,19 @@ export async function startFactoryWatcher() {
     await backfillFactory(fromBlock, toBlock);
   }
 
-  const eventAbi = findEventAbi(ProjectFactoryAbi, "ProjectCreated");
-  if (!eventAbi) {
-    logger.error("Factory: ProjectCreated event not found in ABI");
-    return;
-  }
+  const eventName = "ProjectCreated" as const;
 
-  factoryStopFn = watchContractEvent(publicClient, {
+  factoryStopFn = publicClient.watchContractEvent({
     address: factoryAddress,
-    event: eventAbi,
+    abi: ProjectFactoryAbi,
+    eventName,
     pollingInterval: POLLING_INTERVAL,
-    onLogs: async (logs: any[]) => {
-      for (const log of logs) {
+    onLogs: async (logs) => {
+      for (const log of logs as unknown as Array<{
+        blockNumber: bigint;
+        transactionHash: `0x${string}`;
+        args: Parameters<typeof handleProjectCreated>[0]["args"];
+      }>) {
         try {
           await handleProjectCreated({
             contract: factoryAddress,

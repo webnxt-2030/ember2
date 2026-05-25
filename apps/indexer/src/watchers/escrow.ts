@@ -1,4 +1,4 @@
-import { watchContractEvent } from "/home/salt/Documents/VS_Code/ember2/apps/indexer/node_modules/viem/_esm/actions/public/watchContractEvent.js";
+import { getAbiItem } from "viem";
 import { ProjectEscrowAbi } from "@ember/shared/abis.js";
 import { publicClient } from "../lib/client.js";
 import { logger } from "../lib/logger.js";
@@ -15,16 +15,12 @@ const POLLING_INTERVAL = 4_000;
 const escrowWatchers = new Map<string, () => void>();
 
 const escrowEvents = [
-  { name: "Contributed", handler: handleContributed },
-  { name: "Voted", handler: handleVoted },
-  { name: "MilestoneSubmitted", handler: handleMilestoneSubmitted },
-  { name: "MilestoneResolved", handler: handleMilestoneResolved },
-  { name: "MilestoneClaimed", handler: handleMilestoneClaimed },
-] as const;
-
-function findEventAbi(abi: readonly any[], name: string): any {
-  return abi.find((item: any) => item.type === "event" && item.name === name);
-}
+  { name: "Contributed" as const, handler: handleContributed },
+  { name: "Voted" as const, handler: handleVoted },
+  { name: "MilestoneSubmitted" as const, handler: handleMilestoneSubmitted },
+  { name: "MilestoneResolved" as const, handler: handleMilestoneResolved },
+  { name: "MilestoneClaimed" as const, handler: handleMilestoneClaimed },
+];
 
 async function getEscrowStartBlock(escrowAddress: `0x${string}`) {
   let earliest: bigint | null = null;
@@ -48,17 +44,19 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
     "Escrow: backfilling events"
   );
 
-  for (const { name } of escrowEvents) {
-    const eventAbi = findEventAbi(ProjectEscrowAbi, name);
-    if (!eventAbi) continue;
-
-    const events = await (publicClient.getLogs as any)({
+  for (const { name, handler } of escrowEvents) {
+    const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as import("viem").AbiEvent;
+    const events = await publicClient.getLogs({
       address: escrowAddress,
-      event: eventAbi,
+      event: eventItem,
       fromBlock,
       toBlock,
       strict: true,
-    });
+    }) as unknown as {
+      blockNumber: bigint;
+      transactionHash: `0x${string}`;
+      args: Parameters<typeof handler>[0]["args"];
+    }[];
 
     for (const event of events) {
       await dispatchEvent(escrowAddress, name, event);
@@ -73,17 +71,16 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
 
 async function dispatchEvent(
   escrowAddress: `0x${string}`,
-  eventName: string,
-  log: any
+  eventName: typeof escrowEvents[number]["name"],
+  log: { blockNumber: bigint; transactionHash: `0x${string}`; args: Record<string, unknown> }
 ) {
-  const args = log.args;
   switch (eventName) {
     case "Contributed":
       await handleContributed({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
-        args,
+        args: log.args as Parameters<typeof handleContributed>[0]["args"],
       });
       break;
     case "Voted":
@@ -91,7 +88,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
-        args,
+        args: log.args as Parameters<typeof handleVoted>[0]["args"],
       });
       break;
     case "MilestoneSubmitted":
@@ -99,7 +96,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
-        args,
+        args: log.args as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
       });
       break;
     case "MilestoneResolved":
@@ -107,7 +104,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
-        args,
+        args: log.args as Parameters<typeof handleMilestoneResolved>[0]["args"],
       });
       break;
     case "MilestoneClaimed":
@@ -115,7 +112,7 @@ async function dispatchEvent(
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
-        args,
+        args: log.args as Parameters<typeof handleMilestoneClaimed>[0]["args"],
       });
       break;
   }
@@ -129,15 +126,17 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
   const stopFns: (() => void)[] = [];
 
   for (const { name } of escrowEvents) {
-    const eventAbi = findEventAbi(ProjectEscrowAbi, name);
-    if (!eventAbi) continue;
-
-    const stopFn = watchContractEvent(publicClient, {
+    const stopFn = publicClient.watchContractEvent({
       address: escrowAddress,
-      event: eventAbi,
+      abi: ProjectEscrowAbi,
+      eventName: name,
       pollingInterval: POLLING_INTERVAL,
-      onLogs: async (logs: any[]) => {
-        for (const log of logs) {
+      onLogs: async (logs) => {
+        for (const log of logs as unknown as {
+          blockNumber: bigint;
+          transactionHash: `0x${string}`;
+          args: Record<string, unknown>;
+        }[]) {
           try {
             await dispatchEvent(escrowAddress, name, log);
           } catch (err) {
@@ -154,7 +153,7 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
   }
 
   const combinedStop = () => {
-    stopFns.forEach((fn) => fn());
+    stopFns.forEach((fn) => { fn(); });
     escrowWatchers.delete(escrowAddress);
   };
 

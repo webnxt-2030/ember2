@@ -23,7 +23,7 @@ async function main() {
   logger.info("Indexer ready");
 }
 
-main().catch((err) => {
+main().catch((err: unknown) => {
   logger.fatal({ err }, "Indexer fatal error");
   process.exit(1);
 });

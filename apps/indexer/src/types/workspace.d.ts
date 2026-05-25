@@ -27,9 +27,9 @@ declare module "@ember/shared/constants.js" {
 }
 
 declare module "@ember/shared/abis.js" {
-  export const ProjectFactoryAbi: readonly any[];
-  export const ProjectEscrowAbi: readonly any[];
-  export const PositionNFTAbi: readonly any[];
+  export const ProjectFactoryAbi: readonly unknown[];
+  export const ProjectEscrowAbi: readonly unknown[];
+  export const PositionNFTAbi: readonly unknown[];
 }
 
 declare module "../../web/lib/db.js" {
