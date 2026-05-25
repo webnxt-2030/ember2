@@ -183,8 +183,10 @@ Run `slither contracts/` in CI. Annotate accepted findings with `// slither-disa
 - Wait for `INDEXER_CONFIRMATIONS` (default 12) before persisting to DB.
 - Cursor per `(contract, eventName)` in `IndexerCursor`. On startup, replay from cursor to head.
 - All writes are **idempotent** keyed by `txHash + logIndex`. The indexer can crash and replay safely.
-- Email enqueue happens in the same DB transaction as the row insert. The BullMQ worker is a separate process; if you keep it inside the indexer container that's fine for v1.
+- Email queue: `BullMQ` worker polls `EmailNotification` table every 10s for `QUEUED` rows, enqueues to Redis, worker processes with 5 concurrency + exponential backoff (max 3 retries), calls `sendEmail()` which fetches render from `web app /api/internal/email/render` then sends via Resend; DB status updated to `SENT` on success, `FAILED` on final failure. Shutdown calls `stopEmailWorker()`.
 - Keeper job: a `setInterval(60_000)` sweeps milestones with `voteEndAt < now()` and status `VOTING`, calls `resolveMilestone()`. Use a wallet client with `KEEPER_PRIVATE_KEY`.
+
+**Resend webhooks**: web app has `POST /api/webhooks/resend` that verifies `Resend-Webhook-Signature` header and updates `EmailNotification.status` on `delivered`/`bounced`/`complained` events.
 
 **Never** call indexer code paths from the web app. They are separate concerns; the indexer is the only writer to `Contribution`, `MilestoneVote`, and milestone status fields (except for `updateUri` which the web app writes optimistically and the indexer reconciles).
 
