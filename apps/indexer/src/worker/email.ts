@@ -9,9 +9,13 @@ export interface EmailJob {
 }
 
 export async function sendEmail(job: EmailJob): Promise<{ resendId: string }> {
+  const INDEXER_API_KEY = process.env.INDEXER_API_KEY;
   const response = await fetch(`${WEB_APP_URL}/api/internal/email/render`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-indexer-api-key": INDEXER_API_KEY ?? "",
+    },
     body: JSON.stringify(job),
   });
 

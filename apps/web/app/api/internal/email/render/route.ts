@@ -33,6 +33,11 @@ const TEMPLATES: Partial<Record<TemplateName, {
 };
 
 export async function POST(req: NextRequest) {
+  const apiKey = req.headers.get("x-indexer-api-key");
+  if (apiKey !== process.env.INDEXER_API_KEY) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json() as { template: string; payload: Record<string, unknown> };
   const { template, payload } = body;
 
