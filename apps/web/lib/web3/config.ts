@@ -1,5 +1,4 @@
 import { defineChain, http } from "viem";
-import { createConfig } from "wagmi";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit";
 import {
@@ -30,13 +29,6 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.ember.example";
 if (!projectId) {
   throw new Error("NEXT_PUBLIC_REOWN_PROJECT_ID is not set");
 }
-
-export const wagmiConfig = createConfig({
-  chains: [morphChain],
-  transports: {
-    [morphChain.id]: http(),
-  },
-});
 
 const wagmiAdapter = new WagmiAdapter({
   networks: [morphChain],
