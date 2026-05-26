@@ -196,8 +196,9 @@ model Milestone {
   weightYes       Decimal         @default(0) @db.Decimal(20, 6)
   weightNo        Decimal         @default(0) @db.Decimal(20, 6)
   passed          Boolean?
-  claimedAt       DateTime?
-  claimedTxHash   String?
+  claimedAt            DateTime?
+  claimedTxHash        String?
+  comingSoonNotifiedAt DateTime?
 
   project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   votes   MilestoneVote[]
