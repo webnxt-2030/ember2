@@ -190,3 +190,8 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `PATCH /api/users/me/settings` — Updates `name` and `image`.
 - `PATCH /api/users/me/email-preferences` — Upserts an `EmailPreference` row for a template.
 - `/dashboard/settings` — Profile editing, wallet management (set primary, unlink), and email preference toggles per template.
+
+## Issue #136
+
+### About Page
+- `/about` — Static page with platform overview, mission, technology stack, and CTAs linking to `/projects` and `/how-it-works`.
