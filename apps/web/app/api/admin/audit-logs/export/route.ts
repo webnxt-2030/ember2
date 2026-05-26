@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { errorResponse } from '@/lib/api-response'
+import { AppError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -38,10 +39,7 @@ export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
   const rl = await rateLimit(`ratelimit:audit-csv:${ip}`, 5, 60_000)
   if (!rl.success) {
-    return errorResponse(
-      Object.assign(new Error('Too Many Requests'), { statusCode: 429 }),
-      req,
-    )
+    return errorResponse(new AppError('RATE_LIMITED', 'Too Many Requests', 429), req)
   }
 
   const session = await getSession()
@@ -81,60 +79,64 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const encoder = new TextEncoder()
+      try {
+        const encoder = new TextEncoder()
 
-      controller.enqueue(encoder.encode(csvRow(HEADERS)))
+        controller.enqueue(encoder.encode(csvRow(HEADERS)))
 
-      const BATCH = 500
-      let skip = 0
-      let hasMore = true
+        const BATCH = 500
+        let skip = 0
+        let hasMore = true
 
-      while (hasMore) {
-        const rows = await prisma.activityLog.findMany({
-          where,
-          orderBy: { createdAt: 'asc' },
-          skip,
-          take: BATCH,
-          select: {
-            id: true,
-            createdAt: true,
-            type: true,
-            actorUserId: true,
-            actorWallet: true,
-            targetType: true,
-            targetId: true,
-            ipAddress: true,
-            userAgent: true,
-            metadata: true,
-            actor: { select: { email: true } },
-          },
-        })
+        while (hasMore) {
+          const rows = await prisma.activityLog.findMany({
+            where,
+            orderBy: { createdAt: 'asc' },
+            skip,
+            take: BATCH,
+            select: {
+              id: true,
+              createdAt: true,
+              type: true,
+              actorUserId: true,
+              actorWallet: true,
+              targetType: true,
+              targetId: true,
+              ipAddress: true,
+              userAgent: true,
+              metadata: true,
+              actor: { select: { email: true } },
+            },
+          })
 
-        for (const row of rows) {
-          controller.enqueue(
-            encoder.encode(
-              csvRow([
-                row.id,
-                row.createdAt.toISOString(),
-                row.type,
-                row.actorUserId ?? '',
-                row.actor?.email ?? '',
-                row.actorWallet ?? '',
-                row.targetType ?? '',
-                row.targetId ?? '',
-                row.ipAddress ?? '',
-                row.userAgent ?? '',
-                JSON.stringify(row.metadata),
-              ]),
-            ),
-          )
+          for (const row of rows) {
+            controller.enqueue(
+              encoder.encode(
+                csvRow([
+                  row.id,
+                  row.createdAt.toISOString(),
+                  row.type,
+                  row.actorUserId ?? '',
+                  row.actor?.email ?? '',
+                  row.actorWallet ?? '',
+                  row.targetType ?? '',
+                  row.targetId ?? '',
+                  row.ipAddress ?? '',
+                  row.userAgent ?? '',
+                  JSON.stringify(row.metadata),
+                ]),
+              ),
+            )
+          }
+
+          hasMore = rows.length === BATCH
+          skip += BATCH
         }
 
-        hasMore = rows.length === BATCH
-        skip += BATCH
+        controller.close()
+      } catch (err) {
+        controller.error(err)
       }
-
-      controller.close()
     },
   })
 
