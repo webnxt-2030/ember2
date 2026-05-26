@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { NotFoundError, ConflictError } from '@/lib/errors'
+import { AppError, NotFoundError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -17,10 +17,7 @@ export async function POST(
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
   const rl = await rateLimit(`ratelimit:org-verify:${ip}`, 10, 60_000)
   if (!rl.success) {
-    return errorResponse(
-      Object.assign(new Error('Too Many Requests'), { statusCode: 429 }),
-      req,
-    )
+    return errorResponse(new AppError('RATE_LIMITED', 'Too Many Requests', 429), req)
   }
 
   const session = await getSession()
@@ -39,7 +36,7 @@ export async function POST(
   if (!org) return errorResponse(new NotFoundError('Organization'), req)
 
   if (org.verifiedStatus === 'VERIFIED') {
-    return errorResponse(new ConflictError('Organization is already verified'), req)
+    return okResponse({ id, verifiedStatus: 'VERIFIED' })
   }
 
   await prisma.$transaction(async (tx) => {
