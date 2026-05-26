@@ -68,7 +68,7 @@ const liveEditSchema = z.object({
     .optional(),
 })
 
-type OrgMemberWithUser = { user: { email: string; name: string | null } }
+type OrgMemberWithUser = { user: { id: string; email: string; name: string | null } }
 
 export async function PATCH(
   req: NextRequest,
@@ -93,7 +93,7 @@ export async function PATCH(
         include: {
           members: {
             include: {
-              user: { select: { email: true, name: true } },
+              user: { select: { id: true, email: true, name: true } },
             },
           },
         },
@@ -285,6 +285,20 @@ export async function PATCH(
 
       if (emailRows.length > 0) {
         await prisma.emailNotification.createMany({ data: emailRows })
+      }
+
+      const inAppRows = orgMembers.flatMap((member) =>
+        changedMilestones.map((m: { index: number; title: string }) => ({
+          userId: member.user.id,
+          type: 'MILESTONE_UPDATED' as const,
+          title: 'Milestone Updated',
+          message: `Milestone "${m.title}" in ${project.title} has been updated.`,
+          linkUrl: projectUrl,
+        })),
+      )
+
+      if (inAppRows.length > 0) {
+        await prisma.inAppNotification.createMany({ data: inAppRows })
       }
     }
   }

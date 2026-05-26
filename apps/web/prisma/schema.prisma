@@ -20,12 +20,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts        Account[]
-  sessions        Session[]
-  wallets         Wallet[]
-  orgMemberships  OrganizationMember[]
-  contributions   Contribution[]
-  activityLogs    ActivityLog[]   @relation("ActorLogs")
+  accounts           Account[]
+  sessions           Session[]
+  wallets            Wallet[]
+  orgMemberships     OrganizationMember[]
+  contributions      Contribution[]
+  activityLogs       ActivityLog[]   @relation("ActorLogs")
+  inAppNotifications InAppNotification[]
+  emailPreferences   EmailPreference[]
 
   @@index([role])
 }
@@ -342,6 +344,39 @@ enum EmailStatus {
   PROCESSING
   SENT
   FAILED
+}
+
+// ─── In-App Notifications ─────────────────────────────────────────────────
+model InAppNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  linkUrl   String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+// ─── Email Preferences ────────────────────────────────────────────────────
+model EmailPreference {
+  id           String        @id @default(cuid())
+  userId       String
+  template     EmailTemplate
+  unsubscribed Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, template])
+  @@index([userId])
 }
 
 // ─── Indexer ──────────────────────────────────────────────────────────────

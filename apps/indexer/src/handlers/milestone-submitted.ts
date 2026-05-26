@@ -25,12 +25,17 @@ export async function handleMilestoneSubmitted(args: {
 
   const project = await prisma.project.findFirst({
     where: { escrowAddress: contract.toLowerCase() },
-    select: { id: true },
+    select: { id: true, slug: true, title: true },
   });
   if (!project) {
     logger.warn({ contract }, "MilestoneSubmitted: project not found for escrow");
     return false;
   }
+
+  const milestone = await prisma.milestone.findFirst({
+    where: { projectId: project.id, index: Number(milestoneIndex) },
+    select: { title: true },
+  });
 
   const voteEndAtDate = new Date(Number(voteEndAt) * 1000);
 
@@ -69,6 +74,20 @@ export async function handleMilestoneSubmitted(args: {
 
     if (emailRows.length > 0) {
       await tx.emailNotification.createMany({ data: emailRows });
+    }
+
+    const inAppRows = backers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        userId: c.backer.id,
+        type: "MILESTONE_VOTE_OPEN" as const,
+        title: "Vote Open",
+        message: `Voting is now open for milestone "${milestone?.title ?? `#${milestoneIndex}`}" in ${project.title}.`,
+        linkUrl: `/projects/${project.slug}`,
+      }));
+
+    if (inAppRows.length > 0) {
+      await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
     await updateCursor(tx, contract, "MilestoneSubmitted", blockNumber);

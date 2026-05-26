@@ -153,3 +153,27 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ### Admin Settings
 - `/admin/settings` — Super Admin only. Read-only view of key platform environment configuration (factory contract, USDT contract, explorer URL, webhook secrets masked).
+
+## Sprint 7
+
+### Backer Notifications
+- `InAppNotification` model — per-user notifications with `type`, `title`, `message`, `linkUrl`, `readAt`, `createdAt`.
+- Triggered alongside every email notification:
+  - `WELCOME` — on user creation (auth hook).
+  - `CONTRIBUTION_RECEIVED` — on `Contributed` event (indexer).
+  - `MILESTONE_VOTE_OPEN` — on `MilestoneSubmitted` event (indexer).
+  - `MILESTONE_VOTE_OUTCOME` — on `MilestoneResolved` event (indexer).
+  - `MILESTONE_CLAIMED` — on `MilestoneClaimed` event (indexer).
+  - `MILESTONE_UPDATED` — on live project milestone edits (web API).
+  - `ORG_VERIFIED` / `ORG_REJECTED` — on admin verify/reject (web API).
+  - `ADMIN_INVITATION` — on org creation (web API).
+- `GET /api/users/me/notifications` — Paginated in-app notifications + unread count, or email log by `to` address.
+- `PATCH /api/users/me/notifications/[id]/read` — Mark single in-app notification as read.
+- `/dashboard/notifications` — Tabbed UI for in-app notifications (with mark-as-read) and email history.
+
+### Backer Settings
+- `EmailPreference` model — per-user, per-template unsubscribe state.
+- `GET /api/users/me/settings` — Returns user profile, linked wallets, and email preferences.
+- `PATCH /api/users/me/settings` — Updates `name` and `image`.
+- `PATCH /api/users/me/email-preferences` — Upserts an `EmailPreference` row for a template.
+- `/dashboard/settings` — Profile editing, wallet management (set primary, unlink), and email preference toggles per template.

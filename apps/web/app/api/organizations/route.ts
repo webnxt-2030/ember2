@@ -92,13 +92,23 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Queue ADMIN_INVITATION emails for each owner
+    // Queue ADMIN_INVITATION emails + in-app notifications for each owner
     await tx.emailNotification.createMany({
       data: owners.map((u: UserRow) => ({
         to: u.email,
         template: 'ADMIN_INVITATION' as const,
         payload: { orgId: newOrg.id, orgTitle: name, inviteeEmail: u.email },
         status: 'QUEUED' as const,
+      })),
+    })
+
+    await tx.inAppNotification.createMany({
+      data: owners.map((u: UserRow) => ({
+        userId: u.id,
+        type: 'ADMIN_INVITATION' as const,
+        title: 'Organization Invitation',
+        message: `You have been invited to own "${name}".`,
+        linkUrl: `/admin/organizations`,
       })),
     })
 
