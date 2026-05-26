@@ -48,30 +48,24 @@ export async function handleMilestoneSubmitted(args: {
       },
     });
 
-    const projectWithMembers = await tx.project.findUnique({
-      where: { id: project.id },
-      include: {
-        organization: {
-          include: {
-            members: {
-              include: { user: { select: { email: true, name: true } } },
-            },
-          },
-        },
-      },
+    const backers = await tx.contribution.findMany({
+      where: { projectId: project.id, backerId: { not: null } },
+      include: { backer: { select: { email: true, name: true } } },
+      distinct: ["backerId"],
     });
 
-    const emailRows =
-      projectWithMembers?.organization.members.map((member) => ({
-        to: member.user.email,
+    const emailRows = backers
+      .filter((c) => c.backer)
+      .map((c) => ({
+        to: c.backer!.email,
         template: "MILESTONE_VOTE_OPEN" as const,
         payload: {
           projectId: project.id,
           milestoneIndex: Number(milestoneIndex),
-          name: member.user.name ?? member.user.email,
+          name: c.backer!.name ?? c.backer!.email,
         },
         status: "QUEUED" as const,
-      })) ?? [];
+      }));
 
     if (emailRows.length > 0) {
       await tx.emailNotification.createMany({ data: emailRows });

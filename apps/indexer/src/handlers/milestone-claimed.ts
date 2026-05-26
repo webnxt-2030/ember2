@@ -45,6 +45,29 @@ export async function handleMilestoneClaimed(args: {
       },
     });
 
+    const backers = await tx.contribution.findMany({
+      where: { projectId: project.id, backerId: { not: null } },
+      include: { backer: { select: { email: true, name: true } } },
+      distinct: ["backerId"],
+    });
+
+    const emailRows = backers
+      .filter((c) => c.backer)
+      .map((c) => ({
+        to: c.backer!.email,
+        template: "MILESTONE_CLAIMED" as const,
+        payload: {
+          projectId: project.id,
+          milestoneIndex: Number(milestoneIndex),
+          name: c.backer!.name ?? c.backer!.email,
+        },
+        status: "QUEUED" as const,
+      }));
+
+    if (emailRows.length > 0) {
+      await tx.emailNotification.createMany({ data: emailRows });
+    }
+
     await updateCursor(tx, contract, "MilestoneClaimed", blockNumber);
   });
 
