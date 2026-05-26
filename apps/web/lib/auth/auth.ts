@@ -13,15 +13,26 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           if (user.email) {
-            await prisma.emailNotification.create({
-              data: {
-                to: user.email,
-                template: 'WELCOME',
-                payload: {
-                  name: user.name ?? user.email,
+            await prisma.$transaction(async (tx) => {
+              await tx.emailNotification.create({
+                data: {
+                  to: user.email,
+                  template: 'WELCOME',
+                  payload: {
+                    name: user.name ?? user.email,
+                  },
+                  status: 'QUEUED',
                 },
-                status: 'QUEUED',
-              },
+              })
+              await tx.inAppNotification.create({
+                data: {
+                  userId: user.id,
+                  type: 'WELCOME',
+                  title: 'Welcome to Ember',
+                  message: 'Your account is ready. Start backing projects on Ember.',
+                  linkUrl: '/projects',
+                },
+              })
             })
           }
         },
