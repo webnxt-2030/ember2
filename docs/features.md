@@ -115,3 +115,21 @@ A standalone Node.js service that watches onchain events and mirrors state into 
   - `AlreadyVoted` — one vote per backer per milestone.
   - `NotABacker` — only contributors can vote.
   - `VotingWindowClosed` — votes only accepted during the active window.
+
+## Sprint 6
+
+### Activity Logging
+- `logActivity` helper in `lib/activity-log.ts` — append-only audit log capturing `actorUserId`, `actorWallet`, `type`, `targetType`, `targetId`, `metadata`, `ipAddress`, `userAgent`.
+- Written on all state-changing paths (auth, org, project, milestone, contribution, email).
+
+### Admin Users Management
+- `/admin/users` — Super Admin only. Search by email or wallet, paginated table.
+- `GET /api/admin/users` — Returns paginated users with wallets and org count.
+- `PATCH /api/admin/users/[id]` — Updates user role with guard: cannot demote self if last super admin. Writes `ADMIN_ACTION` log.
+
+### Admin Projects Management
+- `/admin/projects` — Super Admin only. Search by title or slug, paginated table.
+- `GET /api/admin/projects` — Returns all projects with org title, target, raised, status.
+- `POST /api/admin/projects/[id]/pause` — Sets status to `PAUSED`, writes `PROJECT_PAUSED` log.
+- `POST /api/admin/projects/[id]/cancel` — Sets status to `CANCELLED`, writes `PROJECT_CANCELLED` log.
+- Pause hides projects from `/projects` and disables contribute off-chain; cancel blocks contributions entirely.
