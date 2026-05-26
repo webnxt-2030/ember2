@@ -6,6 +6,7 @@ import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
+import { logActivity } from '@/lib/activity-log'
 import { z } from 'zod'
 
 export const runtime = 'nodejs'
@@ -107,6 +108,16 @@ export async function POST(
     where: { projectId_index: { projectId: id, index: milestoneIndex } },
     data: { updateUri, updateNote },
   })
+
+  await logActivity(
+    { prisma, actorUserId: session?.user.id ?? null, req },
+    {
+      type: 'MILESTONE_SUBMITTED',
+      targetType: 'Milestone',
+      targetId: milestone.id,
+      metadata: { projectId: id, milestoneIndex, updateUri },
+    },
+  )
 
   const calldata = encodeFunctionData({
     abi: ProjectEscrowAbi,
