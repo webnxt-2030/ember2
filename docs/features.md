@@ -88,6 +88,18 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - Org dashboard milestone detail page (`/org/dashboard/[orgId]/projects/[id]/milestones/[mid]`) shows vote results and a dedicated claim panel.
 - UI reflects `CLAIMED` only after the indexer observes the `MilestoneClaimed` event and updates the DB (chain is source of truth).
 
+### Backer Votes Dashboard
+- `/dashboard/votes` — Active and historical votes for projects the user has backed.
+- Active votes panel:
+  - Shows milestones in `VOTING` status for projects the user contributed to.
+  - Displays whether the user has already voted (and their choice).
+  - Renders a live tally bar (YES vs NO) and voting end date.
+- Historical votes panel:
+  - Shows all `MilestoneVote` rows cast by the user's linked wallets.
+  - Displays vote choice badge, final milestone status, and outcome.
+  - Includes vote weight and date cast.
+- Queries use the user's linked `Wallet` addresses to find both active milestones (via `Contribution.backerId`) and historical votes (via `MilestoneVote.walletAddress`).
+
 ### Voting UI + Vote Transaction
 - Voting panel rendered inside `MilestoneTimeline` when a milestone status is `VOTING`.
 - `GET /api/projects/{slug}/milestones/{index}/votes` — Returns vote totals (weightYes, weightNo), vote window timing, and optional user-specific data when a `wallet` query parameter is provided.
