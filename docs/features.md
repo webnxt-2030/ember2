@@ -47,6 +47,12 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/projects/[id]/publish/confirm` waits 12 confirmations, parses `ProjectCreated` event, and persists `onChainId`, `escrowAddress`, `nftAddress`, and `status = LIVE`.
 - Idempotent: repeating the confirm call is a no-op if the project is already `LIVE`.
 
+### Milestone management (org owner)
+- `/org/dashboard/[orgId]/projects/[id]` — Project detail for org owners with stats, milestones timeline, and per-milestone action cards.
+- `/org/dashboard/[orgId]/projects/[id]/milestones/[mid]` — Milestone detail with description, update note, and submit-for-vote form.
+- `POST /api/projects/[id]/milestones/[mid]/submit` — Validates org ownership, guards m0 (not submittable) and `PENDING` status, accepts `updateNote` markdown, writes `updateUri` and `updateNote` optimistically, and returns `submitMilestone` calldata.
+- The on-chain `MilestoneSubmitted` event is indexed by `apps/indexer`, which reconciles the milestone status to `VOTING`.
+
 ## Sprint 4
 
 ### NFT Metadata Endpoint
