@@ -190,6 +190,7 @@ model Milestone {
   bps             Int
   status          MilestoneStatus @default(PENDING)
   updateUri       String?
+  updateNote      String?
   voteStartAt     DateTime?
   voteEndAt       DateTime?
   weightYes       Decimal         @default(0) @db.Decimal(20, 6)
