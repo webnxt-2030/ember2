@@ -95,6 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Parse ProjectCreated event from receipt logs
   let escrowAddress: string | null = null
   let nftAddress: string | null = null
+  let onChainId: string | null = null
 
   for (const log of receipt.logs) {
     try {
@@ -104,7 +105,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         topics: log.topics,
         data: log.data,
       })
-      const args = decoded.args as { escrow: string; nft: string }
+      const args = decoded.args as { projectId: bigint; escrow: string; nft: string }
+      onChainId = args.projectId.toString()
       escrowAddress = args.escrow
       nftAddress = args.nft
       break
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
 
-  if (!escrowAddress || !nftAddress) {
+  if (!escrowAddress || !nftAddress || !onChainId) {
     return errorResponse(new ValidationError('ProjectCreated event not found in transaction logs'), req)
   }
 
@@ -122,6 +124,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await tx.project.update({
       where: { id, status: 'DRAFT' }, // WHERE status='DRAFT' makes this idempotent
       data: {
+        onChainId,
         escrowAddress,
         nftAddress,
         status: 'LIVE',
@@ -135,7 +138,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         type: 'PROJECT_PUBLISHED',
         targetType: 'Project',
         targetId: id,
-        metadata: { txHash, escrowAddress, nftAddress, orgId: project.organizationId },
+        metadata: { txHash, onChainId, escrowAddress, nftAddress, orgId: project.organizationId },
       },
     })
   }).catch((err: unknown) => {

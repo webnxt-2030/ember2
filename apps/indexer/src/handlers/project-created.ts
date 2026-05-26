@@ -25,10 +25,12 @@ export async function handleProjectCreated(args: {
 
   await prisma.$transaction(async (tx) => {
     await tx.project.updateMany({
-      where: { id: Number(projectId).toString() },
+      where: { onChainId: projectId.toString() },
       data: {
         escrowAddress: escrow.toLowerCase(),
         nftAddress: nft.toLowerCase(),
+        status: "LIVE",
+        publishedAt: new Date(),
       },
     });
 

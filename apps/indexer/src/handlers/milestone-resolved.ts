@@ -40,8 +40,8 @@ export async function handleMilestoneResolved(args: {
       },
       data: {
         status: passed ? "PASSED" : "FAILED",
-        weightYes,
-        weightNo,
+        weightYes: weightYes.toString(),
+        weightNo: weightNo.toString(),
         passed,
       },
     });
