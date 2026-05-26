@@ -68,9 +68,15 @@ async function resolveStaleMilestones() {
 export function startKeeper() {
   logger.info({ intervalMs: KEEPER_INTERVAL_MS }, "Keeper: starting");
 
-  resolveStaleMilestones();
+  resolveStaleMilestones().catch((err: unknown) => {
+    logger.error({ err }, "Keeper: initial sweep failed");
+  });
 
-  intervalId = setInterval(resolveStaleMilestones, KEEPER_INTERVAL_MS);
+  intervalId = setInterval(() => {
+    resolveStaleMilestones().catch((err: unknown) => {
+      logger.error({ err }, "Keeper: sweep failed");
+    });
+  }, KEEPER_INTERVAL_MS);
 }
 
 export function stopKeeper() {
