@@ -133,3 +133,8 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/admin/projects/[id]/pause` — Sets status to `PAUSED`, writes `PROJECT_PAUSED` log.
 - `POST /api/admin/projects/[id]/cancel` — Sets status to `CANCELLED`, writes `PROJECT_CANCELLED` log.
 - Pause hides projects from `/projects` and disables contribute off-chain; cancel blocks contributions entirely.
+
+### Admin Audit Logs
+- `/admin/audit-logs` — Super Admin only. Filterable, paginated view of all `ActivityLog` rows.
+- `GET /api/admin/audit-logs` — Supports filtering by `type`, `q` (actor email/wallet, target), `from`/`to` date range, and pagination.
+- Client-side CSV export of the current result set.
