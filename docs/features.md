@@ -30,6 +30,7 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ### Keeper
 - Runs every 60s, calls `resolveMilestone()` on any milestone whose `voteEndAt` has passed and status is `VOTING`.
+- **Coming-soon sweeper** — 24h before a milestone's `deliverableDate`, if status is still `PENDING` and `comingSoonNotifiedAt` is unset, the keeper queues `MILESTONE_VOTE_COMING_SOON` emails to all project backers and marks the milestone as notified. Idempotent: a milestone is never notified twice.
 
 ### Email worker
 - Polls `EmailNotification` table every 10s for `QUEUED` rows.
@@ -53,12 +54,24 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/projects/[id]/milestones/[mid]/submit` — Validates org ownership, guards m0 (not submittable) and `PENDING` status, accepts `updateNote` markdown, writes `updateUri` and `updateNote` optimistically, and returns `submitMilestone` calldata.
 - The on-chain `MilestoneSubmitted` event is indexed by `apps/indexer`, which reconciles the milestone status to `VOTING`.
 
+### Auth + Email triggers
+- `WELCOME` email is queued via Better Auth `databaseHooks` on every new user creation (Google OAuth or credentials).
+- `CONTRIBUTION_RECEIVED` email is queued by the indexer when a `Contributed` event is observed.
+- `MILESTONE_VOTE_OPEN`, `MILESTONE_VOTE_OUTCOME`, `MILESTONE_CLAIMED` emails are queued by the indexer on the corresponding on-chain events.
+- `MILESTONE_UPDATED` email is queued by the web app when an org owner edits a project's milestones.
+- `ORG_VERIFIED` / `ORG_REJECTED` emails are queued when a Super Admin updates an org's verification status.
+- `ADMIN_INVITATION` emails are queued when a Super Admin creates an organization and assigns owners.
+
 ## Sprint 4
 
 ### NFT Metadata Endpoint
 - `GET /api/nft/[contract]/[tokenId]` — Returns ERC-721 metadata JSON regenerated on the fly from the `Contribution` table.
 - `Cache-Control: public, max-age=60`.
-- Metadata includes project info, amount, m0Share, allocatedRemaining, and standard ERC-721 attributes.
+- Image URL points to `<NEXT_PUBLIC_APP_URL>/og/nft/<contract>/<tokenId>`.
+- Metadata includes `name`, `description`, `image`, and standard `attributes` array with `Project` (slug), `Amount (USDT)`, `M0 Share (USDT)`, and `Contributed At`.
+- Queries via `getContributionByNft` helper in `lib/db/contributions.ts`.
+- Case-insensitive contract address matching via Prisma `Citext`.
+- Covered by unit tests in `route.test.ts`.
 
 ### Organization Public Page
 - `/organizations/[slug]` — Public organization profile with projects list and verification badge.
