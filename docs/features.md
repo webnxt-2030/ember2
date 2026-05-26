@@ -58,7 +58,11 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 ### NFT Metadata Endpoint
 - `GET /api/nft/[contract]/[tokenId]` — Returns ERC-721 metadata JSON regenerated on the fly from the `Contribution` table.
 - `Cache-Control: public, max-age=60`.
-- Metadata includes project info, amount, m0Share, allocatedRemaining, and standard ERC-721 attributes.
+- Image URL points to `<NEXT_PUBLIC_APP_URL>/og/nft/<contract>/<tokenId>`.
+- Metadata includes `name`, `description`, `image`, and standard `attributes` array with `Project` (slug), `Amount (USDT)`, `M0 Share (USDT)`, and `Contributed At`.
+- Queries via `getContributionByNft` helper in `lib/db/contributions.ts`.
+- Case-insensitive contract address matching via Prisma `Citext`.
+- Covered by unit tests in `route.test.ts`.
 
 ### Organization Public Page
 - `/organizations/[slug]` — Public organization profile with projects list and verification badge.
