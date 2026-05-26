@@ -41,3 +41,5 @@ export const slugSchema = z
   .min(2)
   .max(60)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens')
+
+export * from './project.js'

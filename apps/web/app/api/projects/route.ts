@@ -4,10 +4,35 @@ import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { ValidationError, ConflictError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
-import { milestoneBpsSchema, slugSchema, paginationSchema } from '@ember/shared'
+import { listLiveProjects } from '@/lib/db/projects'
+import { milestoneBpsSchema, slugSchema, projectListQuerySchema } from '@ember/shared'
 import { z } from 'zod'
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+
+  const parsed = projectListQuerySchema.safeParse({
+    page: searchParams.get('page') ?? undefined,
+    pageSize: searchParams.get('pageSize') ?? undefined,
+    status: searchParams.get('status') ?? undefined,
+  })
+
+  if (!parsed.success) {
+    return errorResponse(
+      new ValidationError('Validation failed', parsed.error.issues),
+      req,
+    )
+  }
+
+  const result = await listLiveProjects({
+    page: parsed.data.page,
+    pageSize: parsed.data.pageSize,
+  })
+
+  return okResponse(result)
+}
 
 const milestoneInputSchema = z.object({
   title: z.string().min(1).max(200),
@@ -140,133 +165,4 @@ export async function POST(req: NextRequest) {
     { project: { id: project.id, slug: project.slug, status: project.status } },
     201,
   )
-}
-
-// ─── GET /api/projects ────────────────────────────────────────────────────────
-
-const listQuerySchema = z.object({
-  q: z.string().max(200).optional(),
-  status: z.enum(['DRAFT', 'LIVE', 'COMPLETED', 'PAUSED', 'CANCELLED']).optional(),
-  orgId: z.string().cuid().optional(),
-  category: z.string().max(100).optional(),
-  minRaise: z.coerce.number().positive().optional(),
-  maxRaise: z.coerce.number().positive().optional(),
-  ...paginationSchema.shape,
-})
-
-export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl
-
-  const raw = {
-    q: searchParams.get('q') ?? undefined,
-    status: searchParams.get('status') ?? undefined,
-    orgId: searchParams.get('orgId') ?? undefined,
-    category: searchParams.get('category') ?? undefined,
-    minRaise: searchParams.get('minRaise') ?? undefined,
-    maxRaise: searchParams.get('maxRaise') ?? undefined,
-    page: searchParams.get('page') ?? undefined,
-    pageSize: searchParams.get('pageSize') ?? undefined,
-  }
-
-  const parsed = listQuerySchema.safeParse(raw)
-  if (!parsed.success) {
-    return errorResponse(new ValidationError('Invalid query params', parsed.error.issues), req)
-  }
-
-  const { q, status, orgId, category, minRaise, maxRaise, page, pageSize } = parsed.data
-
-  // Build where clause
-  interface ProjectFilter {
-    status?: 'DRAFT' | 'LIVE' | 'COMPLETED' | 'PAUSED' | 'CANCELLED'
-    organizationId?: string
-    OR?: Array<{ title?: { contains: string; mode?: 'insensitive' }; summary?: { contains: string; mode?: 'insensitive' } }>
-    organization?: { title?: { contains: string; mode?: 'insensitive' } }
-    targetAmount?: { gte?: number; lte?: number }
-  }
-  const where: ProjectFilter = {}
-
-  // Default to LIVE unless a status is explicitly specified
-  if (status) {
-    where.status = status
-  } else {
-    where.status = 'LIVE'
-  }
-
-  if (orgId) {
-    where.organizationId = orgId
-  }
-
-  if (q) {
-    where.OR = [
-      { title: { contains: q, mode: 'insensitive' } },
-      { summary: { contains: q, mode: 'insensitive' } },
-    ]
-  }
-
-  if (category) {
-    where.organization = {
-      title: { contains: category, mode: 'insensitive' },
-    }
-  }
-
-  if (minRaise !== undefined || maxRaise !== undefined) {
-    where.targetAmount = {}
-    if (minRaise !== undefined) {
-      where.targetAmount.gte = minRaise
-    }
-    if (maxRaise !== undefined) {
-      where.targetAmount.lte = maxRaise
-    }
-  }
-
-  const skip = (page - 1) * pageSize
-
-  const [projects, totalCount] = await Promise.all([
-    prisma.project.findMany({
-      where,
-      skip,
-      take: pageSize,
-      orderBy: { publishedAt: 'desc' },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            logoUrl: true,
-            verifiedStatus: true,
-          },
-        },
-        milestones: { select: { id: true } },
-        contributions: { select: { id: true } },
-      },
-    }),
-    prisma.project.count({ where }),
-  ])
-
-  const totalPages = Math.ceil(totalCount / pageSize)
-
-  return okResponse({
-    projects: projects.map((p: typeof projects[number]) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      summary: p.summary,
-      pictures: p.pictures,
-      targetAmount: p.targetAmount.toString(),
-      totalRaised: p.totalRaised.toString(),
-      status: p.status,
-      fundingDeadline: p.fundingDeadline?.toISOString() ?? null,
-      rewardCurveType: p.rewardCurveType,
-      organization: p.organization,
-      milestoneCount: p.milestones.length,
-      backersCount: p.contributions.length,
-    })),
-    pagination: {
-      page,
-      pageSize,
-      totalPages,
-      totalCount,
-    },
-  })
 }
