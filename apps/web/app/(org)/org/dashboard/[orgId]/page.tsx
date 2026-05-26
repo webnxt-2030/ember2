@@ -96,27 +96,27 @@ export default async function OrgDashboardDetailPage({
               {org.projects.map(
                 (p: { id: string; title: string; slug: string; status: string }) => (
                   <Link key={p.id} href={`/org/dashboard/${orgId}/projects/${p.id}`} className="block">
-                  <Card>
-                    <CardContent className="py-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-label-md text-on-surface">{p.title}</p>
-                        <p className="text-label-sm text-on-surface-variant">{p.slug}</p>
-                      </div>
-                      <Badge
-                        status={
-                          p.status === 'LIVE'
-                            ? 'active'
-                            : p.status === 'DRAFT'
-                              ? 'pending'
-                              : p.status === 'COMPLETED'
-                                ? 'completed'
-                                : 'failed'
-                        }
-                      >
-                        {p.status}
-                      </Badge>
-                    </CardContent>
-                  </Card>
+                    <Card className="hover:shadow-sm transition-shadow">
+                      <CardContent className="py-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-label-md text-on-surface">{p.title}</p>
+                          <p className="text-label-sm text-on-surface-variant">{p.slug}</p>
+                        </div>
+                        <Badge
+                          status={
+                            p.status === 'LIVE'
+                              ? 'active'
+                              : p.status === 'DRAFT'
+                                ? 'pending'
+                                : p.status === 'COMPLETED'
+                                  ? 'completed'
+                                  : 'failed'
+                          }
+                        >
+                          {p.status}
+                        </Badge>
+                      </CardContent>
+                    </Card>
                   </Link>
                 ),
               )}
