@@ -229,3 +229,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ### Milestones List Endpoint
 - `GET /api/projects/[id]/milestones` — Public. Returns all milestones for a project ordered by `index` ascending. Full fields returned: `id`, `index`, `title`, `description`, `deliverableDate`, `bps`, `status`, `updateUri`, `voteStartAt`, `voteEndAt`, `weightYes`, `weightNo`, `passed`, `claimedAt`. Returns 404 if project not found.
+
+## Issue #142
+
+### Audit Logs CSV Export
+- `GET /api/admin/audit-logs/export` — Super Admin only. Streams `ActivityLog` rows as CSV using `ReadableStream` in 500-row batches (never buffered in memory). Supports same filters as JSON endpoint (`type`, `q`, `from`, `to`). Rate-limited at 5 req/min per IP.
+- CSV columns: `id`, `createdAt`, `type`, `actorUserId`, `actorEmail`, `actorWallet`, `targetType`, `targetId`, `ipAddress`, `userAgent`, `metadata`.
+- Response: `Content-Type: text/csv`, `Content-Disposition: attachment; filename="audit-logs-<date>.csv"`.
