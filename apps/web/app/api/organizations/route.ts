@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         title: name,
         slug,
         description: description ?? '',
-        website,
+        website: website ?? null,
         receivingWallet,
         members: {
           create: owners.map((u: UserRow) => ({ userId: u.id, role: 'OWNER' as const })),

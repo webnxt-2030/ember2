@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const checks: Record<string, 'ok' | 'error'> = {}
 
-  // DB check — try a simple query; gracefully degrade if Prisma not set up
   try {
-    // @ts-expect-error — @prisma/client may not be installed yet
     const { PrismaClient } = await import('@prisma/client')
-    const db = new PrismaClient()
+    const { PrismaPg } = await import('@prisma/adapter-pg')
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+    const db = new PrismaClient({ adapter })
     await db.$queryRaw`SELECT 1`
     await db.$disconnect()
     checks.db = 'ok'
@@ -22,7 +22,6 @@ export async function GET() {
   try {
     const redisUrl = process.env.REDIS_URL
     if (!redisUrl) throw new Error('REDIS_URL not set')
-    // @ts-expect-error — ioredis may not be installed yet
     const { default: Redis } = await import('ioredis')
     const redis = new Redis(redisUrl, { lazyConnect: true, connectTimeout: 2000 })
     await redis.connect()
