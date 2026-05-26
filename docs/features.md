@@ -58,3 +58,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `/organizations/[slug]` — Public organization profile with projects list and verification badge.
 - `GET /api/organizations/[id]` — Public API returning org profile, live projects, and members.
 - Verification badge uses tertiary (green) styling per BRAND.md.
+
+### Backer Dashboard
+- `/dashboard` — Summary cards (total contributed, positions count, active votes) plus recent activity and active votes panels.
+- `/dashboard/contributions` — List of all user contributions across projects with progress and allocation summary.
+- `/dashboard/contributions/[id]` — Detail view with NFT metadata, allocation breakdown per milestone, and on-chain links.
+- `GET /api/users/me/contributions` — Authed paginated API for current user's contributions.
+- Wallet verify endpoint back-fills past contributions: links unlinked `Contribution` rows to the user when a wallet is verified via SIWE.
