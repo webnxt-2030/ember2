@@ -30,6 +30,7 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ### Keeper
 - Runs every 60s, calls `resolveMilestone()` on any milestone whose `voteEndAt` has passed and status is `VOTING`.
+- **Coming-soon sweeper** — 24h before a milestone's `deliverableDate`, if status is still `PENDING` and `comingSoonNotifiedAt` is unset, the keeper queues `MILESTONE_VOTE_COMING_SOON` emails to all project backers and marks the milestone as notified. Idempotent: a milestone is never notified twice.
 
 ### Email worker
 - Polls `EmailNotification` table every 10s for `QUEUED` rows.

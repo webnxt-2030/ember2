@@ -4,6 +4,7 @@ import { logger } from "./lib/logger.js";
 import { ProjectEscrowAbi } from "@ember/shared/abis.js";
 
 const KEEPER_INTERVAL_MS = 60_000;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -65,6 +66,89 @@ async function resolveStaleMilestones() {
   }
 }
 
+async function sweepComingSoonMilestones() {
+  const now = new Date();
+  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const upcoming = await prisma.milestone.findMany({
+    where: {
+      status: "PENDING",
+      deliverableDate: {
+        gte: now,
+        lte: in24h,
+      },
+      comingSoonNotifiedAt: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      deliverableDate: true,
+      project: {
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+        },
+      },
+    },
+  });
+
+  if (upcoming.length === 0) return;
+
+  logger.info(
+    { count: upcoming.length },
+    "Keeper: found upcoming milestones to notify"
+  );
+
+  for (const milestone of upcoming) {
+    const projectUrl = `${APP_URL}/projects/${milestone.project.slug}`;
+
+    const backers = await prisma.contribution.findMany({
+      where: {
+        projectId: milestone.project.id,
+        backerId: { not: null },
+      },
+      include: {
+        backer: {
+          select: { email: true, name: true },
+        },
+      },
+      distinct: ["backerId"],
+    });
+
+    const emailRows = backers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        to: c.backer.email,
+        template: "MILESTONE_VOTE_COMING_SOON" as const,
+        payload: {
+          name: c.backer.name ?? c.backer.email,
+          projectName: milestone.project.title,
+          milestoneTitle: milestone.title,
+          deliverableDate: milestone.deliverableDate?.toISOString() ?? "",
+          projectUrl,
+        },
+        status: "QUEUED" as const,
+      }));
+
+    await prisma.$transaction(async (tx) => {
+      if (emailRows.length > 0) {
+        await tx.emailNotification.createMany({ data: emailRows });
+      }
+
+      await tx.milestone.update({
+        where: { id: milestone.id },
+        data: { comingSoonNotifiedAt: new Date() },
+      });
+    });
+
+    logger.info(
+      { milestoneId: milestone.id, emailsQueued: emailRows.length },
+      "Keeper: queued coming-soon notifications"
+    );
+  }
+}
+
 export function startKeeper() {
   logger.info({ intervalMs: KEEPER_INTERVAL_MS }, "Keeper: starting");
 
@@ -72,9 +156,17 @@ export function startKeeper() {
     logger.error({ err }, "Keeper: initial sweep failed");
   });
 
+  sweepComingSoonMilestones().catch((err: unknown) => {
+    logger.error({ err }, "Keeper: initial coming-soon sweep failed");
+  });
+
   intervalId = setInterval(() => {
     resolveStaleMilestones().catch((err: unknown) => {
       logger.error({ err }, "Keeper: sweep failed");
+    });
+
+    sweepComingSoonMilestones().catch((err: unknown) => {
+      logger.error({ err }, "Keeper: coming-soon sweep failed");
     });
   }, KEEPER_INTERVAL_MS);
 }
