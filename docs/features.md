@@ -54,6 +54,14 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/projects/[id]/milestones/[mid]/submit` — Validates org ownership, guards m0 (not submittable) and `PENDING` status, accepts `updateNote` markdown, writes `updateUri` and `updateNote` optimistically, and returns `submitMilestone` calldata.
 - The on-chain `MilestoneSubmitted` event is indexed by `apps/indexer`, which reconciles the milestone status to `VOTING`.
 
+### Auth + Email triggers
+- `WELCOME` email is queued via Better Auth `databaseHooks` on every new user creation (Google OAuth or credentials).
+- `CONTRIBUTION_RECEIVED` email is queued by the indexer when a `Contributed` event is observed.
+- `MILESTONE_VOTE_OPEN`, `MILESTONE_VOTE_OUTCOME`, `MILESTONE_CLAIMED` emails are queued by the indexer on the corresponding on-chain events.
+- `MILESTONE_UPDATED` email is queued by the web app when an org owner edits a project's milestones.
+- `ORG_VERIFIED` / `ORG_REJECTED` emails are queued when a Super Admin updates an org's verification status.
+- `ADMIN_INVITATION` emails are queued when a Super Admin creates an organization and assigns owners.
+
 ## Sprint 4
 
 ### NFT Metadata Endpoint
