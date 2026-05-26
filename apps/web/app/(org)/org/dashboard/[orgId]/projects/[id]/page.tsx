@@ -7,6 +7,8 @@ import { Container } from '@/components/layout/container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MilestoneTimeline } from '@/components/projects/milestone-timeline'
+import { Progress } from '@/components/ui/progress'
+import { ClaimButton } from '@/components/milestones/claim-button'
 import Link from 'next/link'
 
 export default async function OrgProjectDetailPage({
@@ -26,13 +28,13 @@ export default async function OrgProjectDetailPage({
   }
 
   const project = await prisma.project.findUnique({
-    where: { id },
+    where: { id, organizationId: orgId },
     include: {
       milestones: { orderBy: { index: 'asc' } },
-      organization: { select: { title: true } },
+      organization: { select: { receivingWallet: true, title: true } },
     },
   })
-  if (project?.organizationId !== orgId) notFound()
+  if (!project) notFound()
 
   const backerCount = await prisma.contribution.groupBy({
     by: ['walletAddress'],
@@ -42,6 +44,7 @@ export default async function OrgProjectDetailPage({
 
   const target = parseFloat(project.targetAmount.toString())
   const raised = parseFloat(project.totalRaised.toString())
+  const progress = target > 0 ? (raised / target) * 100 : 0
 
   const formatUsd = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -106,12 +109,21 @@ export default async function OrgProjectDetailPage({
           </Card>
         </div>
 
+        <div className="mt-4">
+          <Progress value={Math.min(progress, 100)} />
+          <p className="text-label-sm text-on-surface-variant mt-2">
+            {progress.toFixed(1)}% funded
+          </p>
+        </div>
+
         {/* Milestones */}
         <div className="mt-12">
           <h2 className="text-headline-md text-on-surface mb-6">Milestones</h2>
           <div className="grid lg:grid-cols-[1fr_300px] gap-8">
             <MilestoneTimeline
-              milestones={project.milestones.map((m) => ({
+              slug={project.slug}
+              escrowAddress={project.escrowAddress as `0x${string}` | null}
+              milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
                 index: m.index,
                 title: m.title,
                 description: m.description,
@@ -126,7 +138,7 @@ export default async function OrgProjectDetailPage({
 
             {/* Actions sidebar */}
             <div className="space-y-4">
-              {project.milestones.map((m) => {
+              {project.milestones.map((m: { id: string; index: number; title: string; status: string; bps: number }) => {
                 const canSubmit =
                   m.index !== 0 &&
                   m.status === 'PENDING' &&
@@ -150,6 +162,16 @@ export default async function OrgProjectDetailPage({
                             Submit for vote
                           </button>
                         </Link>
+                      )}
+                      {m.status === 'PASSED' && project.escrowAddress && (
+                        <div className="mt-4">
+                          <ClaimButton
+                            projectId={project.id}
+                            milestoneIndex={m.index}
+                            escrowAddress={project.escrowAddress as `0x${string}`}
+                            orgWallet={project.organization.receivingWallet as `0x${string}`}
+                          />
+                        </div>
                       )}
                     </CardContent>
                   </Card>

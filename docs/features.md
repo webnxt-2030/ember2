@@ -74,6 +74,20 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ## Sprint 5
 
+### Claim Milestone Flow
+- `POST /api/projects/[id]/milestones/[index]/claim` — Returns encoded calldata for `ProjectEscrow.claimMilestone(index)`.
+  - Auth: org owner (via `assertOwnsOrg`).
+  - Guards: milestone must be `PASSED`, not already `CLAIMED`, and project must have an `escrowAddress`.
+- `ClaimButton` (`components/milestones/claim-button.tsx`) — Client component that:
+  - Verifies the connected wallet matches the organization's `receivingWallet`.
+  - Uses wagmi hooks (`useSimulateContract`, `useWriteContract`, `useWaitForTransactionReceipt`) to send the claim transaction.
+  - Shows a confirmation step before sending.
+  - Displays success state with a Morph Explorer link.
+  - On error, maps contract revert reasons (`OnlyOrg`, `MilestoneNotPassed`) to human-readable messages.
+- Org dashboard project detail page (`/org/dashboard/[orgId]/projects/[id]`) lists milestones with status, allocation, and a claim button for `PASSED` milestones.
+- Org dashboard milestone detail page (`/org/dashboard/[orgId]/projects/[id]/milestones/[mid]`) shows vote results and a dedicated claim panel.
+- UI reflects `CLAIMED` only after the indexer observes the `MilestoneClaimed` event and updates the DB (chain is source of truth).
+
 ### Voting UI + Vote Transaction
 - Voting panel rendered inside `MilestoneTimeline` when a milestone status is `VOTING`.
 - `GET /api/projects/{slug}/milestones/{index}/votes` — Returns vote totals (weightYes, weightNo), vote window timing, and optional user-specific data when a `wallet` query parameter is provided.

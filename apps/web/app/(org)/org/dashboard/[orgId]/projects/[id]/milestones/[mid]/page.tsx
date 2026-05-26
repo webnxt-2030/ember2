@@ -7,6 +7,8 @@ import { Container } from '@/components/layout/container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MilestoneTimeline } from '@/components/projects/milestone-timeline'
+import { Progress } from '@/components/ui/progress'
+import { ClaimButton } from '@/components/milestones/claim-button'
 import { SafeMarkdown } from '@/components/safe-markdown'
 import Link from 'next/link'
 import { SubmitForm } from './submit-form'
@@ -34,14 +36,15 @@ export default async function OrgMilestoneDetailPage({
   }
 
   const project = await prisma.project.findUnique({
-    where: { id },
+    where: { id, organizationId: orgId },
     include: {
+      organization: { select: { receivingWallet: true } },
       milestones: { orderBy: { index: 'asc' } },
     },
   })
-  if (project?.organizationId !== orgId) notFound()
+  if (!project) notFound()
 
-  const milestone = project.milestones.find((m) => m.index === milestoneIndex)
+  const milestone = project.milestones.find((m: { index: number }) => m.index === milestoneIndex)
   if (!milestone) notFound()
 
   const canSubmit =
@@ -49,6 +52,12 @@ export default async function OrgMilestoneDetailPage({
     milestone.status === 'PENDING' &&
     (project.status === 'LIVE' || project.status === 'COMPLETED') &&
     !!project.escrowAddress
+
+  const raised = parseFloat(project.totalRaised.toString())
+  const milestoneAmount = (raised * milestone.bps) / 10000
+
+  const formatUsd = (value: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
   return (
     <div className="py-8">
@@ -93,6 +102,23 @@ export default async function OrgMilestoneDetailPage({
         <div className="grid lg:grid-cols-[1fr_420px] gap-8 mt-8">
           {/* Left: details */}
           <div className="space-y-6">
+            {/* Stats cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+                <p className="text-label-sm text-on-surface-variant mb-1">Allocation</p>
+                <p className="text-headline-md text-on-surface">{formatUsd(milestoneAmount)}</p>
+                <p className="text-label-sm text-on-surface-variant">{(milestone.bps / 100).toFixed(2)}%</p>
+              </div>
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+                <p className="text-label-sm text-on-surface-variant mb-1">Total Raised</p>
+                <p className="text-headline-md text-on-surface">{formatUsd(raised)}</p>
+              </div>
+              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
+                <p className="text-label-sm text-on-surface-variant mb-1">Status</p>
+                <p className="text-headline-md text-on-surface">{milestone.status}</p>
+              </div>
+            </div>
+
             <Card>
               <CardHeader>
                 <CardTitle>Description</CardTitle>
@@ -129,6 +155,28 @@ export default async function OrgMilestoneDetailPage({
                       day: 'numeric',
                     })}
                   </p>
+                  {raised > 0 && (
+                    <div className="mt-4">
+                      <Progress
+                        value={
+                          (parseFloat(milestone.weightYes.toString()) +
+                            parseFloat(milestone.weightNo.toString())) > 0
+                            ? (parseFloat(milestone.weightYes.toString()) /
+                              (parseFloat(milestone.weightYes.toString()) +
+                                parseFloat(milestone.weightNo.toString()))) * 100
+                            : 0
+                        }
+                      />
+                      <div className="flex justify-between text-label-sm mt-2">
+                        <span className="text-tertiary">
+                          YES {formatUsd(parseFloat(milestone.weightYes.toString()))}
+                        </span>
+                        <span className="text-error">
+                          NO {formatUsd(parseFloat(milestone.weightNo.toString()))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -139,7 +187,9 @@ export default async function OrgMilestoneDetailPage({
                 All milestones
               </h2>
               <MilestoneTimeline
-                milestones={project.milestones.map((m) => ({
+                slug={project.slug}
+                escrowAddress={project.escrowAddress as `0x${string}` | null}
+                milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
                   index: m.index,
                   title: m.title,
                   description: m.description,
@@ -155,15 +205,57 @@ export default async function OrgMilestoneDetailPage({
           </div>
 
           {/* Right: actions */}
-          <div>
-            {canSubmit ? (
+          <div className="space-y-4">
+            {canSubmit && (
               <SubmitForm
                 projectId={id}
                 orgId={orgId}
                 milestoneIndex={milestoneIndex}
                 escrowAddress={project.escrowAddress as `0x${string}`}
               />
-            ) : (
+            )}
+
+            {milestone.status === 'PASSED' && project.escrowAddress && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Claim Funds</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ClaimButton
+                    projectId={project.id}
+                    milestoneIndex={milestone.index}
+                    escrowAddress={project.escrowAddress as `0x${string}`}
+                    orgWallet={project.organization.receivingWallet as `0x${string}`}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {milestone.status === 'CLAIMED' && milestone.claimedAt && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Claimed</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-label-md text-tertiary">
+                    <span className="material-symbols-outlined text-[18px]">check</span>
+                    Claimed on {new Date(milestone.claimedAt).toLocaleDateString()}
+                  </div>
+                  {milestone.claimedTxHash && (
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${milestone.claimedTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-label-md mt-2 block"
+                    >
+                      View transaction
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {!canSubmit && milestone.status !== 'PASSED' && milestone.status !== 'CLAIMED' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Submission</CardTitle>
