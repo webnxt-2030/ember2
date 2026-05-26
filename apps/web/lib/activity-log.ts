@@ -1,6 +1,10 @@
 import type { ActivityType } from '@prisma/client'
 import type { NextRequest } from 'next/server'
 
+/**
+ * Minimal context needed to write an ActivityLog row.
+ * Pass either a PrismaClient or a transaction client.
+ */
 export interface LogContext {
   prisma: {
     activityLog: {
@@ -19,6 +23,10 @@ export interface LogActivityInput {
   metadata?: Record<string, unknown> | null
 }
 
+/**
+ * Writes an append-only ActivityLog row.
+ * Captures IP and User-Agent from the request when available.
+ */
 export async function logActivity(
   ctx: LogContext,
   input: LogActivityInput,
