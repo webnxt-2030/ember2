@@ -8,17 +8,29 @@ export interface StorageDriver {
 }
 
 class RailwayVolumeDriver implements StorageDriver {
-  constructor(private readonly root: string) {}
+  private readonly resolvedRoot: string
+
+  constructor(private readonly root: string) {
+    this.resolvedRoot = path.resolve(root)
+  }
+
+  private resolveSafe(key: string): string {
+    const resolved = path.resolve(path.join(this.root, key))
+    if (!resolved.startsWith(this.resolvedRoot + path.sep)) {
+      throw new Error('Invalid storage key')
+    }
+    return resolved
+  }
 
   async put(key: string, data: Buffer, mimeType: string): Promise<void> {
-    const dest = path.join(this.root, key)
+    const dest = this.resolveSafe(key)
     await fs.promises.mkdir(path.dirname(dest), { recursive: true })
     await fs.promises.writeFile(dest, data)
     await fs.promises.writeFile(`${dest}.mime`, mimeType)
   }
 
   async get(key: string): Promise<{ stream: Readable; mimeType: string | null } | null> {
-    const filePath = path.join(this.root, key)
+    const filePath = this.resolveSafe(key)
     try {
       await fs.promises.access(filePath)
     } catch {

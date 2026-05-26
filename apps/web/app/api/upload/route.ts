@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { errorResponse } from '@/lib/api-response'
-import { AuthError, ValidationError } from '@/lib/errors'
+import { AppError, AuthError, ValidationError } from '@/lib/errors'
 import { getStorageDriver } from '@/lib/storage'
 import { rateLimit } from '@/lib/rate-limit'
 import crypto from 'node:crypto'
@@ -24,14 +24,22 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/gif': 'gif',
 }
 
+const MAGIC_CHECKS: Record<string, (b: Buffer) => boolean> = {
+  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  'image/png': (b) =>
+    b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
+    b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
+  'image/webp': (b) =>
+    b.slice(0, 4).toString('ascii') === 'RIFF' &&
+    b.slice(8, 12).toString('ascii') === 'WEBP',
+  'image/gif': (b) => b.slice(0, 4).toString('ascii') === 'GIF8',
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
   const rl = await rateLimit(`ratelimit:upload:${ip}`, 10, 60_000)
   if (!rl.success) {
-    return errorResponse(
-      Object.assign(new Error('Too Many Requests'), { statusCode: 429 }),
-      req,
-    )
+    return errorResponse(new AppError('RATE_LIMITED', 'Too Many Requests', 429), req)
   }
 
   const session = await getSession()
@@ -73,6 +81,15 @@ export async function POST(req: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer())
+
+  const magicCheck = MAGIC_CHECKS[mimeType]
+  if (!magicCheck || !magicCheck(buffer)) {
+    return errorResponse(
+      new ValidationError(`File content does not match declared type "${mimeType}"`),
+      req,
+    )
+  }
+
   const ext = MIME_TO_EXT[mimeType] ?? 'bin'
   const key = path.posix.join(
     'uploads',
