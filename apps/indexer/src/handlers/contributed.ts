@@ -82,6 +82,18 @@ export async function handleContributed(args: {
       skipDuplicates: true,
     });
 
+    if (backerUser?.id) {
+      await tx.inAppNotification.create({
+        data: {
+          userId: backerUser.id,
+          type: "CONTRIBUTION_RECEIVED",
+          title: "Contribution Received",
+          message: `Your contribution of ${amount.toString()} USDT has been received.`,
+          linkUrl: `/dashboard/contributions`,
+        },
+      });
+    }
+
     await updateCursor(tx, contract, "Contributed", blockNumber);
   });
 

@@ -47,7 +47,7 @@ export async function handleMilestoneClaimed(args: {
 
     const backers = await tx.contribution.findMany({
       where: { projectId: project.id, backerId: { not: null } },
-      include: { backer: { select: { email: true, name: true } } },
+      include: { backer: { select: { id: true, email: true, name: true } } },
       distinct: ["backerId"],
     });
 
@@ -66,6 +66,20 @@ export async function handleMilestoneClaimed(args: {
 
     if (emailRows.length > 0) {
       await tx.emailNotification.createMany({ data: emailRows });
+    }
+
+    const inAppRows = backers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        userId: c.backer.id,
+        type: "MILESTONE_CLAIMED" as const,
+        title: "Milestone Claimed",
+        message: `Milestone #${milestoneIndex} funds have been claimed by the organization.`,
+        linkUrl: `/dashboard/contributions`,
+      }));
+
+    if (inAppRows.length > 0) {
+      await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
     await updateCursor(tx, contract, "MilestoneClaimed", blockNumber);

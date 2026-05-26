@@ -48,7 +48,7 @@ export async function handleMilestoneResolved(args: {
 
     const projectBackers = await tx.contribution.findMany({
       where: { projectId: project.id },
-      include: { backer: { select: { email: true, name: true } } },
+      include: { backer: { select: { id: true, email: true, name: true } } },
       distinct: ["backerId"],
     });
 
@@ -68,6 +68,20 @@ export async function handleMilestoneResolved(args: {
 
     if (emailRows.length > 0) {
       await tx.emailNotification.createMany({ data: emailRows });
+    }
+
+    const inAppRows = projectBackers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        userId: c.backer.id,
+        type: "MILESTONE_VOTE_OUTCOME" as const,
+        title: passed ? "Milestone Passed" : "Milestone Failed",
+        message: `Milestone #${milestoneIndex} ${passed ? "passed" : "failed"} backer vote.`,
+        linkUrl: `/dashboard/votes`,
+      }));
+
+    if (inAppRows.length > 0) {
+      await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
     await updateCursor(tx, contract, "MilestoneResolved", blockNumber);

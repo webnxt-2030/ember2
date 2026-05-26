@@ -10,7 +10,7 @@ import { z } from 'zod'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TxClient = any
 
-type OrgMember = { user: { email: string } }
+type OrgMember = { user: { id: string; email: string } }
 
 const actionSchema = z.object({
   action: z.enum(['VERIFY', 'REJECT']),
@@ -141,11 +141,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         },
       })
 
-      const ownerEmails = (org.members as OrgMember[]).map((m) => m.user.email)
-      if (ownerEmails.length > 0) {
+      const ownerMembers = org.members as OrgMember[]
+      if (ownerMembers.length > 0) {
         await tx.emailNotification.createMany({
-          data: ownerEmails.map((email: string) => ({
-            to: email,
+          data: ownerMembers.map((m) => ({
+            to: m.user.email,
             template: emailTemplate,
             payload: {
               orgName: org.title,
@@ -153,6 +153,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               reason: reason ?? undefined,
             },
             status: 'QUEUED' as const,
+          })),
+        })
+
+        await tx.inAppNotification.createMany({
+          data: ownerMembers.map((m) => ({
+            userId: m.user.id,
+            type: emailTemplate,
+            title: action === 'VERIFY' ? 'Organization Verified' : 'Organization Rejected',
+            message: action === 'VERIFY'
+              ? `Your organization "${org.title}" has been verified.`
+              : `Your organization "${org.title}" has been rejected.${reason ? ` Reason: ${reason}` : ''}`,
+            linkUrl: `/admin/organizations`,
           })),
         })
       }
