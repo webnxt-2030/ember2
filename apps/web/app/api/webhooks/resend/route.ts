@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { errorResponse } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
+import { logActivity } from "@/lib/activity-log";
 import { z } from "zod";
 
 const WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
@@ -75,6 +77,15 @@ export async function POST(req: NextRequest) {
         where: { id: notification.id },
         data: { status: "SENT", sentAt: new Date() },
       });
+      await logActivity(
+        { prisma },
+        {
+          type: "EMAIL_SENT",
+          targetType: "EmailNotification",
+          targetId: notification.id,
+          metadata: { to: notification.to, template: notification.template, resendId },
+        },
+      );
       break;
     case "email.bounced":
     case "email.complained":
@@ -82,6 +93,15 @@ export async function POST(req: NextRequest) {
         where: { id: notification.id },
         data: { status: "FAILED", error: type },
       });
+      await logActivity(
+        { prisma },
+        {
+          type: "EMAIL_FAILED",
+          targetType: "EmailNotification",
+          targetId: notification.id,
+          metadata: { to: notification.to, template: notification.template, resendId, error: type },
+        },
+      );
       break;
   }
 
