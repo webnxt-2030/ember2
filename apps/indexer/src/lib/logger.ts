@@ -1,0 +1,1 @@
+export { logger } from "@ember/shared/logger.js";

@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+build/
+coverage/
+*.lock
+pnpm-lock.yaml
+foundry.toml
+contracts/out/
+contracts/cache/
+contracts/lib/
