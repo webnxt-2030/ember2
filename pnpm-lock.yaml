@@ -32,9 +32,18 @@ importers:
 
   apps/indexer:
     dependencies:
-      '@prisma/client':
-        specifier: ^7.8.0
-        version: 7.8.0(prisma@7.8.0(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+      '@ember/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@ember/web':
+        specifier: workspace:*
+        version: link:../web
+      '@react-email/components':
+        specifier: ^1.0.12
+        version: 1.0.12(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@react-email/render':
+        specifier: ^1.0.5
+        version: 1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       bullmq:
         specifier: ^5.55.0
         version: 5.77.2
@@ -44,13 +53,28 @@ importers:
       pino:
         specifier: ^9.7.0
         version: 9.14.0
+      react:
+        specifier: ^19.2.0
+        version: 19.2.6
+      resend:
+        specifier: ^6.12.3
+        version: 6.12.3(@react-email/render@1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
       viem:
         specifier: ^2.0.0
         version: 2.50.4(typescript@5.9.3)(zod@4.4.3)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
+      '@prisma/client':
+        specifier: ^7.8.0
+        version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.19
+      abitype:
+        specifier: ^1.0.8
+        version: 1.2.3(typescript@5.9.3)(zod@4.4.3)
       eslint:
         specifier: ^9.27.0
         version: 9.39.4(jiti@2.7.0)
@@ -71,10 +95,13 @@ importers:
         version: link:../../packages/shared
       '@prisma/client':
         specifier: ^7.8.0
-        version: 7.8.0(prisma@7.8.0(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+        version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       '@react-email/components':
         specifier: ^1.0.12
         version: 1.0.12(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@react-email/render':
+        specifier: ^1.0.5
+        version: 1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.3.0)
@@ -110,7 +137,7 @@ importers:
         version: 6.3.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       resend:
         specifier: ^6.12.3
-        version: 6.12.3(@react-email/render@2.0.8(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
+        version: 6.12.3(@react-email/render@1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
       siwe:
         specifier: ^3.0.0
         version: 3.0.0(ethers@6.16.0)
@@ -1278,6 +1305,13 @@ packages:
     peerDependencies:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
 
+  '@react-email/render@1.4.0':
+    resolution: {integrity: sha512-ZtJ3noggIvW1ZAryoui95KJENKdCzLmN5F7hyZY1F/17B1vwzuxHB7YkuCg0QqHjDivc5axqYEYdIOw4JIQdUw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
+
   '@react-email/render@2.0.6':
     resolution: {integrity: sha512-xOzaYkH3jLZKqN5MqrTXYnmqBYUnZSVbkxdb5PGGmDcK6sKDVMliaDiSwfXajRC9JtSHTcGc2tmGLHWuCgVpog==}
     engines: {node: '>=20.0.0'}
@@ -2309,6 +2343,9 @@ packages:
   fast-copy@4.0.3:
     resolution: {integrity: sha512-58apWr0GUiDFM8+3afrO6eYwJBn9ZAhDOzG3L+/9llab/haCARS2UIfffmOurYLwbgDRs8n0rfr6qAAPEAuAQw==}
 
+  fast-deep-equal@2.0.1:
+    resolution: {integrity: sha512-bCK/2Z4zLidyB4ReuIsvALH6w31YfAQDmXMqMx6FyfHqvBxtjC0eRumeSu4Bs3XtXwpyIywtSTrVT99BxY1f9w==}
+
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
@@ -2976,6 +3013,9 @@ packages:
       react: ^18.0 || ^19.0 || ^19.0.0-rc
       react-dom: ^18.0 || ^19.0 || ^19.0.0-rc
 
+  react-promise-suspense@0.3.4:
+    resolution: {integrity: sha512-I42jl7L3Ze6kZaq+7zXWSunBa3b1on5yfvUW6Eo/3fFOj6dZ5Bqmcd264nJbTK/gn1HjjILAjSwnZbV4RpSaNQ==}
+
   react@19.2.6:
     resolution: {integrity: sha512-sfWGGfavi0xr8Pg0sVsyHMAOziVYKgPLNrS7ig+ivMNb3wbCBw3KxtflsGBAwD3gYQlE/AEZsTLgToRrSCjb0Q==}
     engines: {node: '>=0.10.0'}
@@ -3583,7 +3623,7 @@ snapshots:
       '@better-auth/core': 1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0)
       '@better-auth/utils': 0.4.0
     optionalDependencies:
-      '@prisma/client': 7.8.0(prisma@7.8.0(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client': 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       prisma: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
 
   '@better-auth/telemetry@1.6.11(@better-auth/core@1.6.11(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)(better-call@1.3.5(zod@4.4.3))(jose@6.2.3)(kysely@0.28.17)(nanostores@1.3.0))(@better-auth/utils@0.4.0)(@better-fetch/fetch@1.1.21)':
@@ -4027,7 +4067,7 @@ snapshots:
 
   '@prisma/client-runtime-utils@7.8.0': {}
 
-  '@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)':
+  '@prisma/client@7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       '@prisma/client-runtime-utils': 7.8.0
     optionalDependencies:
@@ -4254,6 +4294,14 @@ snapshots:
   '@react-email/preview@0.0.14(react@19.2.6)':
     dependencies:
       react: 19.2.6
+
+  '@react-email/render@1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+    dependencies:
+      html-to-text: 9.0.5
+      prettier: 3.8.3
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
+      react-promise-suspense: 0.3.4
 
   '@react-email/render@2.0.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
@@ -4836,7 +4884,7 @@ snapshots:
       nanostores: 1.3.0
       zod: 4.4.3
     optionalDependencies:
-      '@prisma/client': 7.8.0(prisma@7.8.0(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client': 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       mysql2: 3.15.3
       next: 16.2.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       prisma: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
@@ -5250,6 +5298,8 @@ snapshots:
       pure-rand: 6.1.0
 
   fast-copy@4.0.3: {}
+
+  fast-deep-equal@2.0.1: {}
 
   fast-deep-equal@3.1.3: {}
 
@@ -5882,6 +5932,10 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  react-promise-suspense@0.3.4:
+    dependencies:
+      fast-deep-equal: 2.0.1
+
   react@19.2.6: {}
 
   readdirp@4.1.2: {}
@@ -5900,12 +5954,12 @@ snapshots:
 
   require-from-string@2.0.2: {}
 
-  resend@6.12.3(@react-email/render@2.0.8(react-dom@19.2.6(react@19.2.6))(react@19.2.6)):
+  resend@6.12.3(@react-email/render@1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)):
     dependencies:
       postal-mime: 2.7.4
       svix: 1.92.2
     optionalDependencies:
-      '@react-email/render': 2.0.8(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@react-email/render': 1.4.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
   resolve-from@4.0.0: {}
 

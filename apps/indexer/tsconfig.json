@@ -1,10 +1,17 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "outDir": "dist",
-    "rootDir": "src"
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "paths": {
+      "@ember/shared": ["../../packages/shared/src"],
+      "@ember/shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
