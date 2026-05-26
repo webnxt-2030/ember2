@@ -24,6 +24,67 @@ const updateSchema = z.object({
   website: z.string().url().optional().nullable(),
 })
 
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  const org = await prisma.organization.findUnique({
+    where: { id },
+    include: {
+      projects: {
+        where: { status: 'LIVE' },
+        orderBy: { publishedAt: 'desc' },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          summary: true,
+          pictures: true,
+          targetAmount: true,
+          totalRaised: true,
+          status: true,
+          publishedAt: true,
+        },
+      },
+      members: {
+        include: { user: { select: { id: true, name: true, image: true } } },
+      },
+    },
+  })
+
+  if (!org) {
+    return errorResponse(new NotFoundError('Organization'), _req)
+  }
+
+  const response = {
+    id: org.id,
+    slug: org.slug,
+    title: org.title,
+    description: org.description,
+    logoUrl: org.logoUrl,
+    website: org.website,
+    verifiedStatus: org.verifiedStatus,
+    verifiedAt: org.verifiedAt?.toISOString() ?? null,
+    projects: org.projects.map((p: { id: string; slug: string; title: string; summary: string; pictures: string[]; targetAmount: { toString: () => string }; totalRaised: { toString: () => string }; status: string; publishedAt: Date | null }) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      summary: p.summary,
+      pictures: p.pictures,
+      targetAmount: p.targetAmount.toString(),
+      totalRaised: p.totalRaised.toString(),
+      status: p.status,
+      publishedAt: p.publishedAt?.toISOString() ?? null,
+    })),
+    members: org.members.map((m: { user: { id: string; name: string | null; image: string | null } }) => ({
+      id: m.user.id,
+      name: m.user.name,
+      image: m.user.image,
+    })),
+  }
+
+  return okResponse(response)
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   const { id } = await params

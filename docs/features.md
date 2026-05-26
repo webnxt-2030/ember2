@@ -53,3 +53,8 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `GET /api/nft/[contract]/[tokenId]` — Returns ERC-721 metadata JSON regenerated on the fly from the `Contribution` table.
 - `Cache-Control: public, max-age=60`.
 - Metadata includes project info, amount, m0Share, allocatedRemaining, and standard ERC-721 attributes.
+
+### Organization Public Page
+- `/organizations/[slug]` — Public organization profile with projects list and verification badge.
+- `GET /api/organizations/[id]` — Public API returning org profile, live projects, and members.
+- Verification badge uses tertiary (green) styling per BRAND.md.
