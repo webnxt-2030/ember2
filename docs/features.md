@@ -46,3 +46,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/projects/[id]/publish` returns encoded calldata for `ProjectFactory.createProject`.
 - `POST /api/projects/[id]/publish/confirm` waits 12 confirmations, parses `ProjectCreated` event, and persists `onChainId`, `escrowAddress`, `nftAddress`, and `status = LIVE`.
 - Idempotent: repeating the confirm call is a no-op if the project is already `LIVE`.
+
+## Sprint 4
+
+### NFT Metadata Endpoint
+- `GET /api/nft/[contract]/[tokenId]` — Returns ERC-721 metadata JSON regenerated on the fly from the `Contribution` table.
+- `Cache-Control: public, max-age=60`.
+- Metadata includes project info, amount, m0Share, allocatedRemaining, and standard ERC-721 attributes.
