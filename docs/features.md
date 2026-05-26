@@ -210,3 +210,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - Editable fields: `title`, `description`, `logoUrl`, `website`, `receivingWallet`.
 - Warning displayed when `receivingWallet` changes on a VERIFIED org (will reset verification to PENDING).
 - `PATCH /api/organizations/[id]` extended to accept `receivingWallet`; resets `verifiedStatus` to PENDING when wallet changes.
+
+## Issue #139
+
+### Org Verify / Reject Endpoints
+- `POST /api/organizations/[id]/verify` — Super Admin only. Sets `verifiedStatus = VERIFIED`, queues `ORG_VERIFIED` email + in-app notification to org owners, writes `ORG_VERIFIED` activity log. Returns 409 if already VERIFIED.
+- `POST /api/organizations/[id]/reject` — Super Admin only. Accepts optional `{ reason }` body. Sets `verifiedStatus = REJECTED`, queues `ORG_REJECTED` email + in-app notification, writes `ORG_REJECTED` activity log. Returns 409 if already REJECTED.
+- Both endpoints are rate-limited at 10 req/min per IP.
