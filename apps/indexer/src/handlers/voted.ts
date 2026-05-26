@@ -51,7 +51,7 @@ export async function handleVoted(args: {
         milestoneId: milestone.id,
         walletAddress: voter.toLowerCase(),
         choice: yes ? "YES" : "NO",
-        weight,
+        weight: weight.toString(),
         txHash: txHash.toLowerCase(),
         logIndex,
         votedAt: new Date(),

@@ -34,7 +34,7 @@ export async function handleContributed(args: {
 
   const backerUser = await prisma.user.findFirst({
     where: { wallets: { some: { address: backer.toLowerCase() } } },
-    select: { id: true },
+    select: { id: true, email: true },
   });
 
   await prisma.$transaction(async (tx) => {
@@ -44,8 +44,8 @@ export async function handleContributed(args: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
         walletAddress: backer.toLowerCase(),
-        amount,
-        m0Share,
+        amount: amount.toString(),
+        m0Share: m0Share.toString(),
         nftTokenId: tokenId.toString(),
         nftContract: contract.toLowerCase(),
         txHash: txHash.toLowerCase(),
@@ -56,8 +56,15 @@ export async function handleContributed(args: {
       update: {},
     });
 
+    await tx.project.update({
+      where: { id: project.id },
+      data: {
+        totalRaised: { increment: amount.toString() },
+      },
+    });
+
     await tx.emailNotification.createMany({
-      data: backerUser
+      data: backerUser?.email
         ? [
             {
               to: backerUser.email,

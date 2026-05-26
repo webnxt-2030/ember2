@@ -135,6 +135,7 @@ enum OrgRole {
 // ─── Projects ──────────────────────────────────────────────────────────────
 model Project {
   id               String        @id @default(cuid())
+  onChainId        String?       @unique
   organizationId   String
   slug             String        @unique
   title            String
