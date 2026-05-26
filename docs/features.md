@@ -138,3 +138,18 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `/admin/audit-logs` — Super Admin only. Filterable, paginated view of all `ActivityLog` rows.
 - `GET /api/admin/audit-logs` — Supports filtering by `type`, `q` (actor email/wallet, target), `from`/`to` date range, and pagination.
 - Client-side CSV export of the current result set.
+
+### Admin Email Log + Retry
+- `/admin/emails` — Super Admin only. Filterable, paginated view of `EmailNotification` rows.
+- `GET /api/admin/emails` — Supports filtering by `status` and `q` (recipient or template).
+- `POST /api/admin/emails/[id]/retry` — Resets a `FAILED` email to `QUEUED` for re-delivery. Writes `ADMIN_ACTION` log.
+
+### Admin Reports
+- `/admin/reports` — Super Admin only. Aggregate dashboard with cards for:
+  - Total users, organizations, projects, contributions
+  - Breakdowns by role, verification status, project status, email status
+  - Total USDT raised across all contributions
+- `GET /api/admin/reports` — Returns all aggregate counts.
+
+### Admin Settings
+- `/admin/settings` — Super Admin only. Read-only view of key platform environment configuration (factory contract, USDT contract, explorer URL, webhook secrets masked).
