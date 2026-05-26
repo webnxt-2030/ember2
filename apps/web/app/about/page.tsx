@@ -57,7 +57,7 @@ export default function AboutPage() {
             Built on accountability
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-            <Card className="p-6">
+            <Card>
               <span
                 className="material-symbols-outlined text-primary text-[2rem]"
                 aria-hidden="true"
@@ -73,7 +73,7 @@ export default function AboutPage() {
               </p>
             </Card>
 
-            <Card className="p-6">
+            <Card>
               <span
                 className="material-symbols-outlined text-primary text-[2rem]"
                 aria-hidden="true"
@@ -90,7 +90,7 @@ export default function AboutPage() {
               </p>
             </Card>
 
-            <Card className="p-6">
+            <Card>
               <span
                 className="material-symbols-outlined text-primary text-[2rem]"
                 aria-hidden="true"
