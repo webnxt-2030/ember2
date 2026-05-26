@@ -202,3 +202,11 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `/legal/terms` — Terms of Service static page.
 - `/legal/privacy` — Privacy Policy static page.
 - `apps/web/app/legal/layout.tsx` — Shared layout for legal pages with Container wrapper.
+
+## Issue #138
+
+### Org Settings Page
+- `/org/dashboard/[orgId]/settings` — Dedicated org profile settings page for Org Owners.
+- Editable fields: `title`, `description`, `logoUrl`, `website`, `receivingWallet`.
+- Warning displayed when `receivingWallet` changes on a VERIFIED org (will reset verification to PENDING).
+- `PATCH /api/organizations/[id]` extended to accept `receivingWallet`; resets `verifiedStatus` to PENDING when wallet changes.

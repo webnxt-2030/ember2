@@ -22,6 +22,7 @@ const updateSchema = z.object({
   description: z.string().max(1000).optional(),
   logoUrl: z.string().url().optional().nullable(),
   website: z.string().url().optional().nullable(),
+  receivingWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
 })
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -185,10 +186,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return errorResponse(new ValidationError('Validation failed', parsed.error.issues), req)
   }
 
-  const { title, description, logoUrl, website } = parsed.data
+  const { title, description, logoUrl, website, receivingWallet } = parsed.data
 
   const org = await prisma.organization.findUnique({ where: { id } })
   if (!org) return errorResponse(new NotFoundError('Organization'), req)
+
+  const walletChanged =
+    receivingWallet !== undefined &&
+    receivingWallet.toLowerCase() !== org.receivingWallet.toLowerCase()
 
   const updated = await prisma.organization.update({
     where: { id },
@@ -197,6 +202,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...(description !== undefined && { description }),
       ...(logoUrl !== undefined && { logoUrl: logoUrl ?? null }),
       ...(website !== undefined && { website: website ?? null }),
+      ...(receivingWallet !== undefined && { receivingWallet }),
+      ...(walletChanged && { verifiedStatus: 'PENDING', verifiedAt: null, verifiedById: null }),
     },
   })
 
@@ -206,7 +213,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       type: 'ORG_UPDATED',
       targetType: 'Organization',
       targetId: id,
-      metadata: { orgTitle: updated.title, updatedFields: Object.keys(parsed.data) },
+      metadata: {
+        orgTitle: updated.title,
+        updatedFields: Object.keys(parsed.data),
+        ...(walletChanged && { verificationReset: true }),
+      },
     },
   })
 
@@ -216,5 +227,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     description: updated.description,
     logoUrl: updated.logoUrl,
     website: updated.website,
+    receivingWallet: updated.receivingWallet,
+    verifiedStatus: updated.verifiedStatus,
   })
 }
