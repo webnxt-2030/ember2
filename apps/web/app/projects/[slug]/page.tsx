@@ -89,6 +89,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                 <div className="mt-12">
                   <h2 className="text-headline-lg text-on-surface mb-6">Milestones</h2>
                   <MilestoneTimeline
+                    slug={slug}
+                    escrowAddress={project.escrowAddress as `0x${string}` | null}
                     milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
                       index: m.index,
                       title: m.title,

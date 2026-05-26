@@ -65,3 +65,21 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `/dashboard/contributions/[id]` — Detail view with NFT metadata, allocation breakdown per milestone, and on-chain links.
 - `GET /api/users/me/contributions` — Authed paginated API for current user's contributions.
 - Wallet verify endpoint back-fills past contributions: links unlinked `Contribution` rows to the user when a wallet is verified via SIWE.
+
+## Sprint 5
+
+### Voting UI + Vote Transaction
+- Voting panel rendered inside `MilestoneTimeline` when a milestone status is `VOTING`.
+- `GET /api/projects/{slug}/milestones/{index}/votes` — Returns vote totals (weightYes, weightNo), vote window timing, and optional user-specific data when a `wallet` query parameter is provided.
+- `VotePanel` (`components/vote/vote-panel.tsx`) — Client component that:
+  - Fetches vote data from the API.
+  - Reads on-chain voting power via `ProjectEscrow.votingPowerOf(address)`.
+  - Displays a split tally bar (tertiary YES / error NO) annotated as indexer-lagged.
+  - Shows a live countdown timer for the voting window.
+  - Handles vote transaction via wagmi (`useSimulateContract`, `useWriteContract`, `useWaitForTransactionReceipt`).
+  - Enforces one vote per backer in the UI (disabled after voting, checked against DB and contract reverts).
+  - Opens Reown AppKit modal if the user is not connected.
+- The contract enforces:
+  - `AlreadyVoted` — one vote per backer per milestone.
+  - `NotABacker` — only contributors can vote.
+  - `VotingWindowClosed` — votes only accepted during the active window.
