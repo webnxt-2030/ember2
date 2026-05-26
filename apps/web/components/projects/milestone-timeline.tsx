@@ -1,4 +1,7 @@
+'use client'
+
 import { cn } from '@/lib/cn'
+import { VotePanel } from '@/components/vote/vote-panel'
 
 type MilestoneStatus = 'PENDING' | 'AUTO_RELEASED' | 'VOTING' | 'PASSED' | 'FAILED' | 'CLAIMED'
 
@@ -6,16 +9,18 @@ interface MilestoneStep {
   index: number
   title: string
   description: string
-  deliverableDate: Date | null
+  deliverableDate: Date | string | null
   bps: number
   status: MilestoneStatus
-  voteEndAt: Date | null
+  voteEndAt: Date | string | null
   passed: boolean | null
-  claimedAt: Date | null
+  claimedAt: Date | string | null
 }
 
 interface MilestoneTimelineProps {
   milestones: MilestoneStep[]
+  slug: string
+  escrowAddress?: `0x${string}` | null
 }
 
 const statusMap: Record<MilestoneStatus, {
@@ -62,7 +67,17 @@ const statusMap: Record<MilestoneStatus, {
   },
 }
 
-export function MilestoneTimeline({ milestones }: MilestoneTimelineProps) {
+function formatDate(date: Date | string | null): string | null {
+  if (!date) return null
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+export function MilestoneTimeline({ milestones, slug, escrowAddress }: MilestoneTimelineProps) {
   return (
     <div className="relative">
       {milestones.map((milestone, i) => {
@@ -122,23 +137,22 @@ export function MilestoneTimeline({ milestones }: MilestoneTimelineProps) {
 
               {milestone.deliverableDate && (
                 <p className="text-label-sm text-on-surface-variant mt-2">
-                  Target: {new Date(milestone.deliverableDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  Target: {formatDate(milestone.deliverableDate)}
                 </p>
               )}
 
               {milestone.voteEndAt && (
                 <p className="text-label-sm text-on-surface-variant mt-1">
-                  Voting ends:{' '}
-                  {new Date(milestone.voteEndAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  Voting ends: {formatDate(milestone.voteEndAt)}
                 </p>
+              )}
+
+              {milestone.status === 'VOTING' && escrowAddress && (
+                <VotePanel
+                  slug={slug}
+                  milestoneIndex={milestone.index}
+                  escrowAddress={escrowAddress}
+                />
               )}
             </div>
           </div>
