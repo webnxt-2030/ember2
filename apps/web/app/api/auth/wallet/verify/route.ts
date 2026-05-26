@@ -74,6 +74,12 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // Back-fill past contributions made from this wallet before it was linked
+    await prisma.contribution.updateMany({
+      where: { walletAddress: address, backerId: null },
+      data: { backerId: session.user.id },
+    })
+
     return okResponse({ wallet }, 201)
   } catch (err) {
     return errorResponse(err, req)
