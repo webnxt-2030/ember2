@@ -7,9 +7,12 @@ import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Container } from './container'
 import { Button } from '@/components/ui/button'
+import { ErrorBoundary } from '@/components/error-boundary'
 
+// AppKit's useAppKit hook only works client-side, so load the wallet button without SSR
+// to avoid "call createAppKit before useAppKit" during static prerendering.
 const ConnectButton = dynamic(
-  () => import('@/components/wallet/connect-button').then((mod) => ({ default: mod.ConnectButton })),
+  () => import('@/components/wallet/connect-button').then((m) => m.ConnectButton),
   { ssr: false },
 )
 
@@ -44,7 +47,7 @@ export function Header() {
 
         {/* Desktop Right */}
         <div className="hidden md:flex items-center gap-3">
-          <ConnectButton />
+          <ErrorBoundary><ConnectButton /></ErrorBoundary>
           <Button variant="primary" asChild>
             <Link href="/projects">Get Started</Link>
           </Button>
@@ -82,7 +85,7 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-3 pt-3 border-t border-outline-variant flex flex-col gap-2">
-              <ConnectButton className="justify-start" />
+              <ErrorBoundary><ConnectButton className="justify-start" /></ErrorBoundary>
               <Button variant="primary" asChild>
                 <Link href="/projects" onClick={() => { setMobileMenuOpen(false); }}>Get Started</Link>
               </Button>

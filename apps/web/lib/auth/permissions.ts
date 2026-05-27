@@ -25,7 +25,7 @@ export function assertRole(session: Session, required: Role): asserts session is
   if (!session?.user) {
     throw new AuthError()
   }
-  const userRank = ROLE_RANK[session.user.role as Role] ?? -1
+  const userRank = (ROLE_RANK as Record<string, number>)[session.user.role] ?? -1
   const requiredRank = ROLE_RANK[required]
   if (userRank < requiredRank) {
     throw new ForbiddenError(`Requires role ${required}`)

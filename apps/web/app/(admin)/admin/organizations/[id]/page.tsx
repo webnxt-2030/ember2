@@ -4,13 +4,11 @@ import { Container } from '@/components/layout/container'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { OrgActions } from './org-actions'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — prisma client may not be generated in dev
 import { prisma } from '@/lib/db'
 
 type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED'
 
-type OrgDetail = {
+interface OrgDetail {
   id: string
   title: string
   slug: string
@@ -47,8 +45,7 @@ export default async function AdminOrgDetailPage({ params }: { params: Promise<{
 
   let org: OrgDetail | null = null
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    org = await (prisma as any).organization.findUnique({
+    org = await prisma.organization.findUnique({
       where: { id },
       include: {
         members: {

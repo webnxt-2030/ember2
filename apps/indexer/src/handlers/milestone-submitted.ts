@@ -25,12 +25,17 @@ export async function handleMilestoneSubmitted(args: {
 
   const project = await prisma.project.findFirst({
     where: { escrowAddress: contract.toLowerCase() },
-    select: { id: true },
+    select: { id: true, slug: true, title: true },
   });
   if (!project) {
     logger.warn({ contract }, "MilestoneSubmitted: project not found for escrow");
     return false;
   }
+
+  const milestone = await prisma.milestone.findFirst({
+    where: { projectId: project.id, index: Number(milestoneIndex) },
+    select: { title: true },
+  });
 
   const voteEndAtDate = new Date(Number(voteEndAt) * 1000);
 
@@ -48,33 +53,41 @@ export async function handleMilestoneSubmitted(args: {
       },
     });
 
-    const projectWithMembers = await tx.project.findUnique({
-      where: { id: project.id },
-      include: {
-        organization: {
-          include: {
-            members: {
-              include: { user: { select: { email: true, name: true } } },
-            },
-          },
-        },
-      },
+    const backers = await tx.contribution.findMany({
+      where: { projectId: project.id, backerId: { not: null } },
+      include: { backer: { select: { id: true, email: true, name: true } } },
+      distinct: ["backerId"],
     });
 
-    const emailRows =
-      projectWithMembers?.organization.members.map((member) => ({
-        to: member.user.email,
+    const emailRows = backers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        to: c.backer.email,
         template: "MILESTONE_VOTE_OPEN" as const,
         payload: {
           projectId: project.id,
           milestoneIndex: Number(milestoneIndex),
-          name: member.user.name ?? member.user.email,
+          name: c.backer.name ?? c.backer.email,
         },
         status: "QUEUED" as const,
-      })) ?? [];
+      }));
 
     if (emailRows.length > 0) {
       await tx.emailNotification.createMany({ data: emailRows });
+    }
+
+    const inAppRows = backers
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
+      .map((c) => ({
+        userId: c.backer.id,
+        type: "MILESTONE_VOTE_OPEN" as const,
+        title: "Vote Open",
+        message: `Voting is now open for milestone "${milestone?.title ?? `#${String(milestoneIndex)}`}" in ${project.title}.`,
+        linkUrl: `/projects/${project.slug}`,
+      }));
+
+    if (inAppRows.length > 0) {
+      await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
     await updateCursor(tx, contract, "MilestoneSubmitted", blockNumber);

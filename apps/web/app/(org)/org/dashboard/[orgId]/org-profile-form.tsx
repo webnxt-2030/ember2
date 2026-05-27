@@ -29,7 +29,7 @@ export function OrgProfileForm({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -45,7 +45,7 @@ export function OrgProfileForm({
           website: website || null,
         }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setError(data.detail ?? data.title ?? 'Failed to save changes')
         return
@@ -62,28 +62,28 @@ export function OrgProfileForm({
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
           <Input
             label="Organization name"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); }}
             required
           />
           <Input
             label="Description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); }}
           />
           <Input
             label="Logo URL (optional)"
             value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
+            onChange={(e) => { setLogoUrl(e.target.value); }}
             type="url"
           />
           <Input
             label="Website (optional)"
             value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            onChange={(e) => { setWebsite(e.target.value); }}
             type="url"
           />
           {error && <p className="text-label-sm text-error">{error}</p>}

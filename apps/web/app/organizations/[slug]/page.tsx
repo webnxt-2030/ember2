@@ -27,7 +27,7 @@ export default async function OrganizationPage({ params }: OrgPageProps) {
         where: { status: 'LIVE' },
         orderBy: { publishedAt: 'desc' },
         include: {
-          _count: { select: { contributions: { distinct: ['walletAddress'] } } },
+          _count: { select: { contributions: true } },
         },
       },
     },
@@ -36,6 +36,18 @@ export default async function OrganizationPage({ params }: OrgPageProps) {
   if (!org) {
     notFound()
   }
+
+  interface OrgProject {
+    id: string
+    slug: string
+    title: string
+    summary: string
+    pictures: string[]
+    targetAmount: { toString: () => string }
+    totalRaised: { toString: () => string }
+    _count: { contributions: number }
+  }
+  const projects = (org as unknown as { projects: OrgProject[] }).projects
 
   const formatUsd = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
@@ -81,7 +93,7 @@ export default async function OrganizationPage({ params }: OrgPageProps) {
         <Container>
           <h2 className="text-headline-md text-on-surface mb-6">Projects</h2>
 
-          {org.projects.length === 0 ? (
+          {projects.length === 0 ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-low p-8 text-center">
               <FolderOpen className="mx-auto text-on-surface-variant/40" size={32} />
               <p className="text-label-md text-on-surface-variant mt-2">
@@ -90,7 +102,7 @@ export default async function OrganizationPage({ params }: OrgPageProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {org.projects.map((project: { id: string; slug: string; title: string; summary: string; pictures: string[]; targetAmount: { toString: () => string }; totalRaised: { toString: () => string }; _count: { contributions: number } }) => {
+              {projects.map((project) => {
                 const target = parseFloat(project.targetAmount.toString())
                 const raised = parseFloat(project.totalRaised.toString())
                 const progress = target > 0 ? (raised / target) * 100 : 0

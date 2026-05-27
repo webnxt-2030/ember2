@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { encodeFunctionData } from 'viem'
 import { ProjectFactoryAbi } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     await assertOwnsOrg(session, project.organizationId, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   // Guard: only DRAFT projects can be published

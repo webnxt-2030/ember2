@@ -3,8 +3,6 @@ import { Container } from '@/components/layout/container'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — prisma client may not be generated in dev
 import { prisma } from '@/lib/db'
 
 export const metadata = { title: 'Organizations — Admin' }
@@ -17,7 +15,7 @@ function statusToBadge(s: string): 'active' | 'pending' | 'completed' | 'failed'
   return 'pending'
 }
 
-type OrgRow = {
+interface OrgRow {
   id: string
   title: string
   slug: string
@@ -39,13 +37,12 @@ export default async function AdminOrgsPage({
       ? (status as VerificationStatus)
       : undefined
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const where = validStatus ? { verifiedStatus: validStatus } : {}
 
   let orgs: OrgRow[] = []
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    orgs = await (prisma as any).organization.findMany({
+    orgs = await prisma.organization.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 50,

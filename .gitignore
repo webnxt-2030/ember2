@@ -49,6 +49,8 @@ contracts/broadcast/
 
 # Prisma
 apps/web/prisma/migrations/*.sql.bak
+# Generated Prisma client for the indexer (produced by web's postinstall)
+apps/indexer/src/generated/
 
 # TypeScript
 *.tsbuildinfo

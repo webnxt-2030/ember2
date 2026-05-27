@@ -1,5 +1,6 @@
 declare module "@ember/shared" {
-  export const logger: import("pino").Logger;
+  import type { Logger } from "pino";
+  export const logger: Logger;
   export * from "./constants.js";
   export * from "./types/index.js";
   export * from "./abis/index.js";
@@ -8,7 +9,8 @@ declare module "@ember/shared" {
 }
 
 declare module "@ember/shared/logger.js" {
-  export const logger: import("pino").Logger;
+  import type { Logger } from "pino";
+  export const logger: Logger;
 }
 
 declare module "@ember/shared/constants.js" {
@@ -30,9 +32,4 @@ declare module "@ember/shared/abis.js" {
   export const ProjectFactoryAbi: readonly unknown[];
   export const ProjectEscrowAbi: readonly unknown[];
   export const PositionNFTAbi: readonly unknown[];
-}
-
-declare module "../../web/lib/db.js" {
-  import type { PrismaClient } from "@prisma/client";
-  export const prisma: PrismaClient;
 }

@@ -1,6 +1,30 @@
+'use client';
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { authClient } from "@/lib/auth/client";
 
 export default function StaffLoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.SyntheticEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const { error: signInError } = await authClient.signIn.email({ email, password });
+    setLoading(false);
+    if (signInError) {
+      setError(signInError.message ?? "Invalid email or password");
+      return;
+    }
+    router.push("/admin");
+  }
+
   return (
     <>
       {/* Heading */}
@@ -24,8 +48,7 @@ export default function StaffLoginPage() {
       </div>
 
       {/* Staff credentials form */}
-      {/* TODO: wire Better Auth signIn("credentials") */}
-      <form action="#" method="POST" noValidate>
+      <form onSubmit={(e) => { void handleSubmit(e); }} noValidate>
         {/* Email field */}
         <div className="mb-5">
           <label
@@ -41,6 +64,8 @@ export default function StaffLoginPage() {
             type="email"
             autoComplete="email"
             required
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); }}
             placeholder="you@ember.xyz"
             className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-shadow focus:ring-2"
             style={{
@@ -76,6 +101,8 @@ export default function StaffLoginPage() {
             type="password"
             autoComplete="current-password"
             required
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); }}
             placeholder="••••••••"
             className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-shadow focus:ring-2"
             style={{
@@ -89,17 +116,31 @@ export default function StaffLoginPage() {
           />
         </div>
 
+        {error && (
+          <p
+            className="mb-4 text-sm rounded-lg px-3 py-2"
+            role="alert"
+            style={{
+              color: "var(--color-error)",
+              backgroundColor: "var(--color-error-container)",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
         {/* Submit button */}
         <button
           type="submit"
-          className="w-full rounded-xl py-3 px-6 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          disabled={loading}
+          className="w-full rounded-xl py-3 px-6 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
           style={{
             backgroundColor: "var(--color-primary)",
             color: "var(--color-on-primary)",
           }}
           aria-label="Sign in as staff"
         >
-          Sign in
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
