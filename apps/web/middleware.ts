@@ -45,7 +45,13 @@ function getRateLimitConfig(
     return { limit: 10, windowMs: 60_000, bucket: 'upload' }
   }
   if (pathname.startsWith('/api/auth')) {
-    return { limit: 5, windowMs: 60_000, bucket: 'auth' }
+    // Session reads happen on every page load (useSession) and aren't a
+    // brute-force target — keep them on a generous bucket. The strict 5/min
+    // limit is reserved for sign-in/sign-up/callback/credential attempts.
+    if (pathname.startsWith('/api/auth/get-session')) {
+      return { limit: 60, windowMs: 60_000, bucket: 'auth-session' }
+    }
+    return { limit: 10, windowMs: 60_000, bucket: 'auth' }
   }
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && pathname.startsWith('/api/')) {
     return { limit: 10, windowMs: 60_000, bucket: 'write' }
