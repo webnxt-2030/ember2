@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 interface AdminNavLinkProps {
   href: string
   label: string
-  icon: string
+  icon: ReactNode
 }
 
 export function AdminNavLink({ href, label, icon }: AdminNavLinkProps) {
@@ -24,9 +25,7 @@ export function AdminNavLink({ href, label, icon }: AdminNavLinkProps) {
           : 'text-on-surface hover:bg-surface-container-low',
       )}
     >
-      <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-        {icon}
-      </span>
+      <span className="flex-shrink-0" aria-hidden="true">{icon}</span>
       {label}
     </Link>
   )

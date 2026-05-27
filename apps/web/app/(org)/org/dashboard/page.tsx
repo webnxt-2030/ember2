@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { Container } from '@/components/layout/container'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Users } from 'lucide-react'
 
 export default async function OrgDashboardPage() {
   const session = await getSession()
@@ -26,12 +27,7 @@ export default async function OrgDashboardPage() {
         {memberships.length === 0 ? (
           <Card className="mt-8">
             <CardContent className="py-12 text-center">
-              <span
-                className="material-symbols-outlined text-on-surface-variant text-[48px]"
-                aria-hidden="true"
-              >
-                group
-              </span>
+              <Users className="mx-auto text-on-surface-variant" size={48} aria-hidden="true" />
               <p className="text-headline-md text-on-surface mt-4">No organizations</p>
               <p className="text-body-md text-on-surface-variant mt-2">
                 You are not an org owner. Contact a Super Admin to be assigned to an organization.

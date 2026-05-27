@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Landmark, Shield, Users } from "lucide-react";
 
 export const metadata = {
   title: "How Ember works",
@@ -157,12 +158,7 @@ export default function HowItWorksPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
             {/* Card 1 */}
             <Card>
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                account_balance
-              </span>
+              <Landmark className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface mt-4">
                 ProjectEscrow
               </h3>
@@ -175,12 +171,7 @@ export default function HowItWorksPage() {
 
             {/* Card 2 */}
             <Card>
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                shield_locked
-              </span>
+              <Shield className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface mt-4">
                 Non-custodial
               </h3>
@@ -192,12 +183,7 @@ export default function HowItWorksPage() {
 
             {/* Card 3 */}
             <Card>
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                group
-              </span>
+              <Users className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface mt-4">
                 Backer-governed
               </h3>

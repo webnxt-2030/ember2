@@ -1,4 +1,6 @@
 import { cn } from '@/lib/cn'
+import { Lock, Banknote, Vote, Check, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 type MilestoneStatus = 'PENDING' | 'AUTO_RELEASED' | 'VOTING' | 'PASSED' | 'FAILED' | 'CLAIMED'
 
@@ -20,43 +22,43 @@ interface MilestoneTimelineProps {
 
 const statusMap: Record<MilestoneStatus, {
   label: string
-  icon: string
+  icon: ReactNode
   containerClass: string
   textClass: string
 }> = {
   PENDING: {
     label: 'Locked',
-    icon: 'lock',
+    icon: <Lock size={14} />,
     containerClass: 'bg-surface-container-high',
     textClass: 'text-on-surface-variant',
   },
   AUTO_RELEASED: {
     label: 'Released',
-    icon: 'payments',
+    icon: <Banknote size={14} />,
     containerClass: 'bg-tertiary-container/20',
     textClass: 'text-tertiary',
   },
   VOTING: {
     label: 'Voting',
-    icon: 'how_to_vote',
+    icon: <Vote size={14} />,
     containerClass: 'bg-primary-container/20',
     textClass: 'text-primary',
   },
   PASSED: {
     label: 'Approved',
-    icon: 'check',
+    icon: <Check size={14} />,
     containerClass: 'bg-tertiary-container/20',
     textClass: 'text-tertiary',
   },
   FAILED: {
     label: 'Rejected',
-    icon: 'close',
+    icon: <X size={14} />,
     containerClass: 'bg-error-container/20',
     textClass: 'text-error',
   },
   CLAIMED: {
     label: 'Claimed',
-    icon: 'payments',
+    icon: <Banknote size={14} />,
     containerClass: 'bg-tertiary-container/20',
     textClass: 'text-tertiary',
   },
@@ -105,7 +107,7 @@ export function MilestoneTimeline({ milestones }: MilestoneTimelineProps) {
                   {milestone.status === 'VOTING' && (
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   )}
-                  <span className="material-symbols-outlined text-[16px]">{config.icon}</span>
+                  {config.icon}
                   {config.label}
                 </span>
                 <span className="text-label-sm text-on-surface-variant ml-auto">

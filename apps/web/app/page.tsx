@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatusDot } from "@/components/ui/status-dot";
+import { Wallet, Flag, Landmark } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -78,12 +79,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
             {/* Step 1 */}
             <div className="flex flex-col gap-4">
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                account_balance_wallet
-              </span>
+              <Wallet className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface">
                 Back a project
               </h3>
@@ -95,12 +91,7 @@ export default function HomePage() {
 
             {/* Step 2 */}
             <div className="flex flex-col gap-4">
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                flag
-              </span>
+              <Flag className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface">
                 Creators deliver
               </h3>
@@ -112,12 +103,7 @@ export default function HomePage() {
 
             {/* Step 3 */}
             <div className="flex flex-col gap-4">
-              <span
-                className="material-symbols-outlined text-primary text-[2rem]"
-                aria-hidden="true"
-              >
-                account_balance
-              </span>
+              <Landmark className="text-primary" size={32} aria-hidden="true" />
               <h3 className="text-headline-md text-on-surface">
                 Funds release
               </h3>

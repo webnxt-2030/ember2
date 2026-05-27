@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { StatusDot } from '@/components/ui/status-dot'
 import { Badge } from '@/components/ui/badge'
 import { getProjectBySlug } from '@/lib/db/projects'
+import { Hourglass } from 'lucide-react'
 import type { Metadata } from 'next'
 
 interface ProjectDetailPageProps {
@@ -145,9 +146,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                   />
                 ) : (
                   <div className="rounded-lg border border-outline-variant bg-surface-container-low p-6 text-center">
-                    <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">
-                      hourglass
-                    </span>
+                    <Hourglass className="mx-auto text-on-surface-variant/40" size={32} />
                     <p className="text-label-md text-on-surface-variant mt-2">
                       Contributions coming soon
                     </p>

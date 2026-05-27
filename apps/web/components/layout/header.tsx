@@ -1,11 +1,17 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useState } from 'react'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Container } from './container'
 import { Button } from '@/components/ui/button'
-import { ConnectButton } from '@/components/wallet/connect-button'
+
+const ConnectButton = dynamic(
+  () => import('@/components/wallet/connect-button').then((mod) => ({ default: mod.ConnectButton })),
+  { ssr: false },
+)
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -50,9 +56,11 @@ export function Header() {
           onClick={() => { setMobileMenuOpen((v) => !v); }}
           aria-label="Toggle menu"
         >
-          <span className="material-symbols-outlined text-[24px]">
-            {mobileMenuOpen ? 'close' : 'menu'}
-          </span>
+          {mobileMenuOpen ? (
+            <X size={24} />
+          ) : (
+            <Menu size={24} />
+          )}
         </button>
       </Container>
 

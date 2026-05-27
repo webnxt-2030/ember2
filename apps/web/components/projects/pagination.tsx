@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface PaginationProps {
@@ -47,7 +48,7 @@ export function Pagination({ page, pageSize, totalPages, totalCount, className }
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-outline hover:bg-surface-container-low transition-colors text-label-md text-on-surface"
             aria-label="Previous page"
           >
-            <span className="material-symbols-outlined text-sm">chevron_left</span>
+            <ChevronLeft size={16} />
           </Link>
         )}
 
@@ -80,7 +81,7 @@ export function Pagination({ page, pageSize, totalPages, totalCount, className }
             className="w-9 h-9 flex items-center justify-center rounded-xl border border-outline hover:bg-surface-container-low transition-colors text-label-md text-on-surface"
             aria-label="Next page"
           >
-            <span className="material-symbols-outlined text-sm">chevron_right</span>
+            <ChevronRight size={16} />
           </Link>
         )}
       </div>

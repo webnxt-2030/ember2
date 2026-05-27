@@ -3,6 +3,7 @@ import { Container } from '@/components/layout/container'
 import { Progress } from '@/components/ui/progress'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db'
+import { Banknote } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -51,9 +52,7 @@ export default async function ContributionsPage() {
 
           {contributions.length === 0 ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-low p-8 text-center">
-              <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">
-                payments
-              </span>
+              <Banknote className="mx-auto text-on-surface-variant/40" size={32} />
               <p className="text-label-md text-on-surface-variant mt-2">
                 No contributions yet.
               </p>

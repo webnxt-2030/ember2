@@ -1,6 +1,7 @@
 import { Container } from '@/components/layout/container'
 import { ProjectCard } from '@/components/projects/project-card'
 import { listLiveProjects } from '@/lib/db/projects'
+import { Rocket } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -28,9 +29,7 @@ export default async function ProjectsPage() {
         <Container>
           {projects.length === 0 ? (
             <div className="text-center py-16">
-              <span className="material-symbols-outlined text-on-surface-variant/30 text-[64px]">
-                rocker_launch
-              </span>
+              <Rocket className="mx-auto text-on-surface-variant/30" size={64} />
               <h2 className="text-headline-md text-on-surface-variant mt-4">
                 No live projects yet
               </h2>

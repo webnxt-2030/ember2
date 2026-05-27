@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ImageOff } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Progress } from '@/components/ui/progress'
 import { StatusDot } from '@/components/ui/status-dot'
@@ -43,7 +44,7 @@ export function ProjectCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-on-surface-variant/30">
-              <span className="material-symbols-outlined text-[48px]">image</span>
+              <ImageOff size={48} />
             </div>
           )}
         </div>

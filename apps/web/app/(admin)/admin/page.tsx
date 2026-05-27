@@ -2,6 +2,16 @@ import Link from 'next/link'
 import { Container } from '@/components/layout/container'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Building2,
+  Rocket,
+  Banknote,
+  Flag,
+  User,
+  Wallet,
+  Mail,
+  CalendarDays,
+} from 'lucide-react'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — prisma client may not be generated in dev
 import { prisma } from '@/lib/db'
@@ -46,15 +56,17 @@ function formatRelative(date: Date): string {
   return `${days}d ago`
 }
 
-function activityIcon(type: string): string {
-  if (type.startsWith('ORG_')) return 'business'
-  if (type.startsWith('PROJECT_')) return 'rocket_launch'
-  if (type.startsWith('CONTRIBUTION_')) return 'payments'
-  if (type.startsWith('MILESTONE_')) return 'flag'
-  if (type.startsWith('USER_')) return 'person'
-  if (type.startsWith('WALLET_')) return 'account_balance_wallet'
-  if (type.startsWith('EMAIL_')) return 'mail'
-  return 'event_note'
+function ActivityIcon({ type }: { type: string }) {
+  const className = 'text-on-surface-variant flex-shrink-0 mt-0.5'
+  const size = 18
+  if (type.startsWith('ORG_')) return <Building2 className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('PROJECT_')) return <Rocket className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('CONTRIBUTION_')) return <Banknote className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('MILESTONE_')) return <Flag className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('USER_')) return <User className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('WALLET_')) return <Wallet className={className} size={size} aria-hidden="true" />
+  if (type.startsWith('EMAIL_')) return <Mail className={className} size={size} aria-hidden="true" />
+  return <CalendarDays className={className} size={size} aria-hidden="true" />
 }
 
 function activityLabel(type: string): string {
@@ -202,12 +214,7 @@ export default async function AdminDashboardPage() {
                   <ul className="space-y-3">
                     {recentActivity.map((entry) => (
                       <li key={entry.id} className="flex items-start gap-3">
-                        <span
-                          className="material-symbols-outlined text-[18px] text-on-surface-variant mt-0.5 flex-shrink-0"
-                          aria-hidden="true"
-                        >
-                          {activityIcon(entry.type)}
-                        </span>
+                        <ActivityIcon type={entry.type} />
                         <div className="min-w-0 flex-1">
                           <p className="text-label-sm text-on-surface truncate">
                             {activityLabel(entry.type)}

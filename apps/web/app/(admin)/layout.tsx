@@ -3,15 +3,24 @@ import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { AuthError, ForbiddenError } from '@/lib/errors'
 import { AdminNavLink } from '@/components/admin/nav-link'
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Rocket,
+  History,
+  Mail,
+  Settings,
+} from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/admin/organizations', label: 'Organizations', icon: 'business' },
-  { href: '/admin/users', label: 'Users', icon: 'group' },
-  { href: '/admin/projects', label: 'Projects', icon: 'rocket_launch' },
-  { href: '/admin/audit-logs', label: 'Audit Logs', icon: 'manage_history' },
-  { href: '/admin/emails', label: 'Emails', icon: 'mail' },
-  { href: '/admin/settings', label: 'Settings', icon: 'settings' },
+  { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  { href: '/admin/organizations', label: 'Organizations', icon: <Building2 size={20} /> },
+  { href: '/admin/users', label: 'Users', icon: <Users size={20} /> },
+  { href: '/admin/projects', label: 'Projects', icon: <Rocket size={20} /> },
+  { href: '/admin/audit-logs', label: 'Audit Logs', icon: <History size={20} /> },
+  { href: '/admin/emails', label: 'Emails', icon: <Mail size={20} /> },
+  { href: '/admin/settings', label: 'Settings', icon: <Settings size={20} /> },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

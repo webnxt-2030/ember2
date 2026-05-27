@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db'
+import { Vote, History } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -103,9 +104,7 @@ export default async function DashboardPage() {
               </div>
               {activeVotesWithStatus.length === 0 ? (
                 <div className="rounded-lg border border-outline-variant bg-surface-container-low p-6 text-center">
-                  <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">
-                    how_to_vote
-                  </span>
+                  <Vote className="mx-auto text-on-surface-variant/40" size={32} />
                   <p className="text-label-md text-on-surface-variant mt-2">No active votes.</p>
                 </div>
               ) : (
@@ -145,9 +144,7 @@ export default async function DashboardPage() {
               </div>
               {recentActivity.length === 0 ? (
                 <div className="rounded-lg border border-outline-variant bg-surface-container-low p-6 text-center">
-                  <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">
-                    history
-                  </span>
+                  <History className="mx-auto text-on-surface-variant/40" size={32} />
                   <p className="text-label-md text-on-surface-variant mt-2">No activity yet.</p>
                 </div>
               ) : (

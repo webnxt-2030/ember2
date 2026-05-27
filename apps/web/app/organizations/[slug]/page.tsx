@@ -3,6 +3,7 @@ import { Container } from '@/components/layout/container'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/db'
+import { FolderOpen } from 'lucide-react'
 import type { Metadata } from 'next'
 
 interface OrgPageProps {
@@ -82,9 +83,7 @@ export default async function OrganizationPage({ params }: OrgPageProps) {
 
           {org.projects.length === 0 ? (
             <div className="rounded-lg border border-outline-variant bg-surface-container-low p-8 text-center">
-              <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">
-                folder_open
-              </span>
+              <FolderOpen className="mx-auto text-on-surface-variant/40" size={32} />
               <p className="text-label-md text-on-surface-variant mt-2">
                 No live projects yet.
               </p>

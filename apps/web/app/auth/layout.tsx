@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Flame } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Ember — Auth",
@@ -21,12 +22,7 @@ export default function AuthLayout({
           style={{ backgroundColor: "var(--color-primary)" }}
           aria-hidden="true"
         >
-          <span
-            className="material-symbols-outlined text-white text-xl select-none"
-            style={{ fontSize: "20px" }}
-          >
-            local_fire_department
-          </span>
+          <Flame className="text-white" size={20} />
         </div>
         <span
           className="text-2xl font-semibold tracking-tight select-none"
