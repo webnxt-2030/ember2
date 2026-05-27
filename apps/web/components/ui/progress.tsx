@@ -34,13 +34,13 @@ export function Progress(props: ProgressProps) {
       <div className={cn('flex w-full h-2 rounded-full overflow-hidden', className)}>
         <div
           className="h-full bg-tertiary rounded-l-full transition-all"
-          style={{ width: `${yesPercent}%` }}
-          aria-label={`Yes: ${Math.round(yesPercent)}%`}
+          style={{ width: `${String(yesPercent)}%` }}
+          aria-label={`Yes: ${String(Math.round(yesPercent))}%`}
         />
         <div
           className="h-full bg-error rounded-r-full transition-all"
-          style={{ width: `${noPercent}%` }}
-          aria-label={`No: ${Math.round(noPercent)}%`}
+          style={{ width: `${String(noPercent)}%` }}
+          aria-label={`No: ${String(Math.round(noPercent))}%`}
         />
       </div>
     )
@@ -48,7 +48,7 @@ export function Progress(props: ProgressProps) {
 
   const { value } = props as ProgressDefaultProps
   const clampedValue = Math.min(100, Math.max(0, value))
-  const fillClass = fillVariantClasses[variant as 'default' | 'success']
+  const fillClass = fillVariantClasses[variant]
 
   return (
     <div
@@ -60,7 +60,7 @@ export function Progress(props: ProgressProps) {
     >
       <div
         className={cn('h-full rounded-full transition-all', fillClass)}
-        style={{ width: `${clampedValue}%` }}
+        style={{ width: `${String(clampedValue)}%` }}
       />
     </div>
   )

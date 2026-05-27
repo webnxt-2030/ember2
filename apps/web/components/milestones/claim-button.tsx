@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
-  useAccount,
+  useConnection,
   useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
@@ -25,13 +25,13 @@ type FlowState =
   | { type: "success"; hash: `0x${string}` };
 
 export function ClaimButton({
-  projectId,
+  projectId: _projectId,
   milestoneIndex,
   escrowAddress,
   orgWallet,
   onClaimed,
 }: ClaimButtonProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { open } = useAppKit();
   const [flow, setFlow] = useState<FlowState>({ type: "idle" });
 
@@ -48,7 +48,7 @@ export function ClaimButton({
   });
 
   const {
-    writeContract,
+    mutate: writeContract,
     isPending: isWritePending,
     error: writeError,
     data: hash,

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { errorResponse, okResponse } from '@/lib/api-response'
 import { AuthError, NotFoundError, ForbiddenError } from '@/lib/errors'
@@ -32,8 +32,9 @@ export async function PATCH(
     data: { readAt: new Date() },
   })
 
+  const readAt = updated.readAt ?? new Date()
   return okResponse({
     id: updated.id,
-    readAt: updated.readAt!.toISOString(),
+    readAt: readAt.toISOString(),
   })
 }

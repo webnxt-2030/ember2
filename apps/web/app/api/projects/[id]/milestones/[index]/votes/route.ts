@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
@@ -12,9 +12,10 @@ const paramsSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string; index: string }> },
+  { params }: { params: Promise<{ id: string; index: string }> },
 ) {
-  const { slug, index } = await params
+  // Public read keyed by slug; the shared [id] segment carries the slug value here.
+  const { id: slug, index } = await params
 
   const parsed = paramsSchema.safeParse({ slug, index })
   if (!parsed.success) {
@@ -44,11 +45,14 @@ export async function GET(
     },
   })
 
-  if (!project || project.status !== 'LIVE' || project.milestones.length === 0) {
+  if (project?.status !== 'LIVE' || project.milestones.length === 0) {
     return errorResponse(new NotFoundError('Milestone'), req)
   }
 
   const milestone = project.milestones[0]
+  if (!milestone) {
+    return errorResponse(new NotFoundError('Milestone'), req)
+  }
 
   // Optional wallet query to return user-specific vote data
   const { searchParams } = new URL(req.url)

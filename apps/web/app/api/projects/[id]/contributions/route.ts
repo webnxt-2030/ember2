@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
 import { getProjectBySlug, getProjectContributions } from '@/lib/db/projects'
@@ -6,13 +6,14 @@ import { paginationSchema } from '@ember/shared'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { slug } = await params
+  // Public read keyed by slug; the shared [id] segment carries the slug value here.
+  const { id: slug } = await params
 
   const project = await getProjectBySlug(slug)
 
-  if (!project || project.status !== 'LIVE') {
+  if (project?.status !== 'LIVE') {
     return errorResponse(new NotFoundError('Project'), req)
   }
 

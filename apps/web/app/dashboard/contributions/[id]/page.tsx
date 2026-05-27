@@ -145,7 +145,7 @@ export default async function ContributionDetailPage({ params }: ContributionDet
                   <div className="flex justify-between">
                     <span className="text-on-surface-variant">Contract</span>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/address/${contribution.nftContract}`}
+                      href={`${String(process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL)}/address/${contribution.nftContract}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-primary hover:underline"
@@ -160,7 +160,7 @@ export default async function ContributionDetailPage({ params }: ContributionDet
                   <div className="flex justify-between">
                     <span className="text-on-surface-variant">Transaction</span>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${contribution.txHash}`}
+                      href={`${String(process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL)}/tx/${contribution.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-primary hover:underline"

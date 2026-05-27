@@ -17,11 +17,11 @@ const submitSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; mid: string }> },
+  { params }: { params: Promise<{ id: string; index: string }> },
 ) {
   const session = await getSession()
-  const { id, mid } = await params
-  const milestoneIndex = Number(mid)
+  const { id, index } = await params
+  const milestoneIndex = Number(index)
 
   if (!Number.isFinite(milestoneIndex) || milestoneIndex < 0) {
     return errorResponse(new ValidationError('Invalid milestone index'), req)

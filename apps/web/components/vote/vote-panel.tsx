@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  useAccount,
+  useConnection,
   useReadContract,
   useSimulateContract,
   useWriteContract,
@@ -68,24 +68,24 @@ function useCountdown(targetDate: string | null) {
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       if (days > 0) {
-        setRemaining(`${days}d ${hours}h remaining`);
+        setRemaining(`${String(days)}d ${String(hours)}h remaining`);
       } else if (hours > 0) {
-        setRemaining(`${hours}h ${minutes}m remaining`);
+        setRemaining(`${String(hours)}h ${String(minutes)}m remaining`);
       } else {
-        setRemaining(`${minutes}m remaining`);
+        setRemaining(`${String(minutes)}m remaining`);
       }
     };
 
     update();
     const id = setInterval(update, 60000);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); };
   }, [targetDate]);
 
   return { remaining, isExpired };
 }
 
 export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { open } = useAppKit();
 
   const [voteData, setVoteData] = useState<VoteData | null>(null);
@@ -101,7 +101,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     setVoteDataError(null);
     try {
       const url = new URL(
-        `/api/projects/${slug}/milestones/${milestoneIndex}/votes`,
+        `/api/projects/${slug}/milestones/${String(milestoneIndex)}/votes`,
         window.location.origin
       );
       if (address) {
@@ -148,7 +148,6 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
         flow.type === "confirming" &&
         pendingChoice != null &&
         !!address &&
-        !!escrowAddress &&
         hasVotingPower &&
         !alreadyVoted &&
         !isExpired,
@@ -156,7 +155,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
   });
 
   const {
-    writeContract,
+    mutate: writeContract,
     isPending: isWritePending,
     error: writeError,
     data: hash,
@@ -235,6 +234,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
 
   const weightYesNum = parseFloat(voteData.weightYes);
   const weightNoNum = parseFloat(voteData.weightNo);
+  const userVote = voteData.userVote;
 
   return (
     <div className="mt-4 space-y-4">
@@ -279,10 +279,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
       )}
 
       {/* Vote action */}
-      {alreadyVoted ? (
+      {userVote ? (
         <div className="flex items-center gap-2 rounded-lg bg-tertiary-container/20 p-3 text-label-md text-tertiary">
           <span className="material-symbols-outlined text-[18px]">check</span>
-          You voted {voteData.userVote!.choice} with {formatUsd(voteData.userVote!.weight)}
+          You voted {userVote.choice} with {formatUsd(userVote.weight)}
         </div>
       ) : flow.type === "success" ? (
         <div className="space-y-3">
@@ -314,7 +314,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
                 ? "Confirm in wallet..."
                 : isConfirming
                   ? "Confirming..."
-                  : `Vote ${pendingChoice}`}
+                  : `Vote ${String(pendingChoice)}`}
             </Button>
             <Button
               onClick={handleReset}
@@ -333,7 +333,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
       ) : (
         <div className="flex gap-3">
           <Button
-            onClick={() => handleVote("YES")}
+            onClick={() => { handleVote("YES"); }}
             disabled={!isConnected || !hasVotingPower || isExpired}
             variant="outline"
             className="flex-1 border-tertiary text-tertiary hover:bg-tertiary-container/20"
@@ -342,7 +342,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
             YES
           </Button>
           <Button
-            onClick={() => handleVote("NO")}
+            onClick={() => { handleVote("NO"); }}
             disabled={!isConnected || !hasVotingPower || isExpired}
             variant="outline"
             className="flex-1 border-error text-error hover:bg-error-container/20"

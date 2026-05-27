@@ -82,7 +82,7 @@ export default async function VotesPage() {
   const formatUsd = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
-  const milestoneStatusBadge = (status: string, passed: boolean | null) => {
+  const milestoneStatusBadge = (status: string, _passed: boolean | null) => {
     switch (status) {
       case 'PASSED':
         return <Badge status="completed" label="Passed" />
@@ -124,7 +124,7 @@ export default async function VotesPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {activeVotes.map((milestone: { id: string; project: { slug: string; title: string; totalRaised: { toString: () => string } }; title: string; voteEndAt: Date | null; weightYes: { toString: () => string }; weightNo: { toString: () => string }; votes: Array<{ choice: string; weight: { toString: () => string } }> }) => {
+                {activeVotes.map((milestone: { id: string; project: { slug: string; title: string; totalRaised: { toString: () => string } }; title: string; voteEndAt: Date | null; weightYes: { toString: () => string }; weightNo: { toString: () => string }; votes: { choice: string; weight: { toString: () => string } }[] }) => {
                   const totalRaised = parseFloat(milestone.project.totalRaised.toString())
                   const userVote = milestone.votes[0]
                   const weightYes = parseFloat(milestone.weightYes.toString())

@@ -31,7 +31,7 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
       m0Share: { toString: () => '25.25' },
       contributedAt: new Date('2026-05-01T00:00:00Z'),
       project: { slug: 'my-project', title: 'My Project' },
-    } as any)
+    } as unknown as Awaited<ReturnType<typeof getContributionByNft>>)
 
     const req = makeRequest('0xabc1230000000000000000000000000000000000', '42')
     const res = await GET(req, {
@@ -44,7 +44,7 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('Cache-Control')).toBe('public, max-age=60')
 
-    const json = await res.json()
+    const json: unknown = await res.json()
     expect(json).toEqual({
       name: 'Ember Position #42',
       description: 'Contribution to My Project on Ember.',

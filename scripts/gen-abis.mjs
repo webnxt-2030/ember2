@@ -14,14 +14,18 @@ const ROOT = join(__dirname, '..');
 const FORGE_OUT = join(ROOT, 'contracts/out');
 const ABIS_OUT = join(ROOT, 'packages/shared/src/abis');
 
+// Entries are either a contract name (artifact === export base name) or an
+// { name, artifact } pair when the exported ABI comes from a differently-named artifact
+// (e.g. ERC20Abi is the IERC20 interface ABI used for USDT interactions).
 const CONTRACTS = [
   'ProjectFactory',
   'ProjectEscrow',
   'PositionNFT',
+  { name: 'ERC20', artifact: 'IERC20' },
 ];
 
-function extractAbi(contractName) {
-  const artifactPath = join(FORGE_OUT, `${contractName}.sol`, `${contractName}.json`);
+function extractAbi(artifactName) {
+  const artifactPath = join(FORGE_OUT, `${artifactName}.sol`, `${artifactName}.json`);
   if (!existsSync(artifactPath)) {
     console.warn(`Warning: ${artifactPath} not found. Run 'forge build' first.`);
     return null;
@@ -35,8 +39,10 @@ function main() {
 
   const exports = [];
 
-  for (const name of CONTRACTS) {
-    const abi = extractAbi(name);
+  for (const entry of CONTRACTS) {
+    const name = typeof entry === 'string' ? entry : entry.name;
+    const artifact = typeof entry === 'string' ? entry : entry.artifact;
+    const abi = extractAbi(artifact);
     if (!abi) continue;
 
     const filename = `${name}.abi.ts`;
@@ -52,7 +58,7 @@ function main() {
     exports
       .map(
         ({ name, filename }) =>
-          `export { ${name}Abi } from './${filename.replace('.ts', '')}';`,
+          `export { ${name}Abi } from './${filename.replace('.ts', '.js')}';`,
       )
       .join('\n') + '\n';
 

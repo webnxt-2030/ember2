@@ -189,7 +189,7 @@ export default async function OrgMilestoneDetailPage({
               <MilestoneTimeline
                 slug={project.slug}
                 escrowAddress={project.escrowAddress as `0x${string}` | null}
-                milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
+                milestones={project.milestones.map((m) => ({
                   index: m.index,
                   title: m.title,
                   description: m.description,
@@ -243,7 +243,7 @@ export default async function OrgMilestoneDetailPage({
                   </div>
                   {milestone.claimedTxHash && (
                     <a
-                      href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${milestone.claimedTxHash}`}
+                      href={`${String(process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL)}/tx/${milestone.claimedTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline text-label-md mt-2 block"

@@ -24,7 +24,7 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string | nul
 
   if (!response.ok) {
     const text = await response.text().catch(() => "unknown error");
-    throw new Error(`Email render API failed (${response.status}): ${text}`);
+    throw new Error(`Email render API failed (${String(response.status)}): ${text}`);
   }
 
   const { html, subject } = await response.json() as { html: string; subject: string };
@@ -40,5 +40,5 @@ export async function sendEmail(job: EmailJob): Promise<{ resendId: string | nul
     throw new Error(`Resend error: ${result.error.message}`);
   }
 
-  return { resendId: result.data?.id ?? null };
+  return { resendId: result.data.id };
 }

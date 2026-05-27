@@ -52,14 +52,14 @@ export async function handleMilestoneClaimed(args: {
     });
 
     const emailRows = backers
-      .filter((c) => c.backer)
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
       .map((c) => ({
-        to: c.backer!.email,
+        to: c.backer.email,
         template: "MILESTONE_CLAIMED" as const,
         payload: {
           projectId: project.id,
           milestoneIndex: Number(milestoneIndex),
-          name: c.backer!.name ?? c.backer!.email,
+          name: c.backer.name ?? c.backer.email,
         },
         status: "QUEUED" as const,
       }));
@@ -74,7 +74,7 @@ export async function handleMilestoneClaimed(args: {
         userId: c.backer.id,
         type: "MILESTONE_CLAIMED" as const,
         title: "Milestone Claimed",
-        message: `Milestone #${milestoneIndex} funds have been claimed by the organization.`,
+        message: `Milestone #${String(milestoneIndex)} funds have been claimed by the organization.`,
         linkUrl: `/dashboard/contributions`,
       }));
 

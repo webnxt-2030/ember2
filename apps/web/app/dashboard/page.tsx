@@ -1,7 +1,6 @@
-import { notFound, redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { Container } from '@/components/layout/container'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db'
 import type { Metadata } from 'next'

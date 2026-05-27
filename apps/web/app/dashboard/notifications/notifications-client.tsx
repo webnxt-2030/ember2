@@ -56,11 +56,11 @@ export function NotificationsClient({
       case 'SENT':
         return 'completed'
       case 'FAILED':
-        return 'error'
+        return 'failed'
       case 'QUEUED':
         return 'pending'
       default:
-        return 'default'
+        return 'active'
     }
   }
 
@@ -70,14 +70,14 @@ export function NotificationsClient({
         <Button
           variant={tab === 'inApp' ? 'primary' : 'outline'}
           size="sm"
-          onClick={() => setTab('inApp')}
+          onClick={() => { setTab('inApp'); }}
         >
-          In-App {unreadCount > 0 && `(${unreadCount})`}
+          In-App {unreadCount > 0 && `(${String(unreadCount)})`}
         </Button>
         <Button
           variant={tab === 'email' ? 'primary' : 'outline'}
           size="sm"
-          onClick={() => setTab('email')}
+          onClick={() => { setTab('email'); }}
         >
           Email Log
         </Button>
@@ -110,7 +110,7 @@ export function NotificationsClient({
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     {!n.readAt && (
-                      <Button variant="ghost" size="sm" onClick={() => markAsRead(n.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => { void markAsRead(n.id) }}>
                         Mark read
                       </Button>
                     )}

@@ -50,12 +50,12 @@ export default async function SettingsPage() {
     redirect('/auth/sign-in')
   }
 
-  const preferenceMap = preferences.reduce(
+  const preferenceMap = preferences.reduce<Record<string, boolean>>(
     (acc, p) => {
       acc[p.template] = p.unsubscribed
       return acc
     },
-    {} as Record<string, boolean>,
+    {},
   )
 
   return (

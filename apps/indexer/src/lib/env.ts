@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 const schema = z.object({
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string().url(),
-  MORPH_RPC_URL: z.string().url(),
-  NEXT_PUBLIC_MORPH_RPC_URL: z.string().url(),
+  DATABASE_URL: z.url(),
+  REDIS_URL: z.url(),
+  MORPH_RPC_URL: z.url(),
+  NEXT_PUBLIC_MORPH_RPC_URL: z.url(),
   KEEPER_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
   INDEXER_CONFIRMATIONS: z.coerce.number().int().min(1).default(12),
   INDEXER_API_KEY: z.string().min(1),

@@ -70,7 +70,7 @@ export async function rateLimit(
 
   try {
     const r = getRedis()
-    const member = `${now}-${Math.random()}`
+    const member = `${String(now)}-${String(Math.random())}`
     const result = await r.eval(
       RATE_LIMIT_SCRIPT,
       1,

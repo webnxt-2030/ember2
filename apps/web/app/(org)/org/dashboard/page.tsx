@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db'
 import { Container } from '@/components/layout/container'
@@ -7,10 +8,11 @@ import { Badge } from '@/components/ui/badge'
 
 export default async function OrgDashboardPage() {
   const session = await getSession()
+  if (!session?.user) redirect('/auth/sign-in')
 
   const memberships = await prisma.organizationMember
     .findMany({
-      where: { userId: session!.user.id },
+      where: { userId: session.user.id },
       include: {
         organization: {
           include: { projects: { select: { id: true, status: true } } },

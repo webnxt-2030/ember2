@@ -9,7 +9,7 @@ import { z } from 'zod'
 
 export const runtime = 'nodejs'
 
-type OrgMember = { user: { id: string; email: string } }
+interface OrgMember { user: { id: string; email: string } }
 
 const rejectSchema = z.object({
   reason: z.string().max(500).optional(),
@@ -30,7 +30,7 @@ export async function POST(
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { id } = await params
@@ -62,13 +62,13 @@ export async function POST(
       data: {
         verifiedStatus: 'REJECTED',
         verifiedAt: new Date(),
-        verifiedById: session!.user.id,
+        verifiedById: session.user.id,
       },
     })
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'ORG_REJECTED',
         targetType: 'Organization',
         targetId: id,
