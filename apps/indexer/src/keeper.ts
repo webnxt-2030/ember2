@@ -1,7 +1,7 @@
 import { prisma } from "./lib/db.js";
 import { keeperWallet, publicClient } from "./lib/client.js";
 import { logger } from "./lib/logger.js";
-import { ProjectEscrowAbi } from "@ember/shared/abis.js";
+import { ProjectEscrowAbi } from "@ember/shared/abis";
 
 const KEEPER_INTERVAL_MS = 60_000;
 

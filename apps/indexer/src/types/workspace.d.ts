@@ -26,7 +26,7 @@ declare module "@ember/shared/constants.js" {
   export const MAX_MILESTONES: number;
 }
 
-declare module "@ember/shared/abis.js" {
+declare module "@ember/shared/abis" {
   export const ProjectFactoryAbi: readonly unknown[];
   export const ProjectEscrowAbi: readonly unknown[];
   export const PositionNFTAbi: readonly unknown[];
