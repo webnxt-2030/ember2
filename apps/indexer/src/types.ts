@@ -1,36 +1,36 @@
-export type ContributedArgs = {
+export interface ContributedArgs {
   backer: `0x${string}`;
   amount: bigint;
   tokenId: bigint;
   m0Share: bigint;
-};
+}
 
-export type VotedArgs = {
+export interface VotedArgs {
   milestoneIndex: bigint;
   voter: `0x${string}`;
   yes: boolean;
   weight: bigint;
-};
+}
 
-export type MilestoneSubmittedArgs = {
+export interface MilestoneSubmittedArgs {
   milestoneIndex: bigint;
   updateURI: string;
   voteEndAt: bigint;
-};
+}
 
-export type MilestoneResolvedArgs = {
+export interface MilestoneResolvedArgs {
   milestoneIndex: bigint;
   passed: boolean;
   weightYes: bigint;
   weightNo: bigint;
-};
+}
 
-export type MilestoneClaimedArgs = {
+export interface MilestoneClaimedArgs {
   milestoneIndex: bigint;
   amount: bigint;
-};
+}
 
-export type ProjectCreatedArgs = {
+export interface ProjectCreatedArgs {
   projectId: bigint;
   organization: `0x${string}`;
   creator: `0x${string}`;
@@ -38,11 +38,11 @@ export type ProjectCreatedArgs = {
   nft: `0x${string}`;
   milestoneBps: readonly bigint[];
   votingPeriod: number;
-};
+}
 
-export type EventHandlerContext = {
+export interface EventHandlerContext {
   contract: `0x${string}`;
   blockNumber: bigint;
   txHash: `0x${string}`;
   logIndex: number;
-};
+}

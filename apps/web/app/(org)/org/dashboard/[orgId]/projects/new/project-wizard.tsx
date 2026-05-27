@@ -192,7 +192,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
           })),
         }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setError(data.detail ?? data.title ?? 'Failed to create project')
         return
@@ -213,7 +213,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
           <button
             key={s}
             type="button"
-            onClick={() => i < step && setStep(i)}
+            onClick={() => { if (i < step) setStep(i) }}
             className={cn(
               'px-4 py-2 rounded-xl text-label-sm transition-colors',
               i === step
@@ -235,19 +235,19 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
             <Input
               label="Project title"
               value={form.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
+              onChange={(e) => { handleTitleChange(e.target.value); }}
               required
             />
             <Input
               label="URL slug"
               value={form.slug}
-              onChange={(e) => updateField('slug', e.target.value)}
+              onChange={(e) => { updateField('slug', e.target.value); }}
               required
             />
             <Input
               label="Summary (1-2 sentences)"
               value={form.summary}
-              onChange={(e) => updateField('summary', e.target.value)}
+              onChange={(e) => { updateField('summary', e.target.value); }}
               required
             />
             <div>
@@ -256,13 +256,13 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               </label>
               <textarea
                 value={form.description}
-                onChange={(e) => updateField('description', e.target.value)}
+                onChange={(e) => { updateField('description', e.target.value); }}
                 rows={8}
                 className="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-y"
                 placeholder="Describe your project in detail. Markdown supported."
               />
             </div>
-            <Button variant="primary" onClick={() => setStep(1)}>
+            <Button variant="primary" onClick={() => { setStep(1); }}>
               Next: Pictures &amp; Links
             </Button>
           </CardContent>
@@ -280,7 +280,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               {Array.from({length: 10}, (_, i) => i).map((i) => (
                 <Input
                   key={i}
-                  label={`Picture ${i + 1} URL`}
+                  label={`Picture ${String(i + 1)} URL`}
                   value={form.pictures[i] ?? ''}
                   onChange={(e) => {
                     const pics = [...form.pictures]
@@ -295,10 +295,10 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               label="Twitter URL (optional)"
               value={form.socialLinks.twitter}
               onChange={(e) =>
-                updateField('socialLinks', {
+                { updateField('socialLinks', {
                   ...form.socialLinks,
                   twitter: e.target.value,
-                })
+                }); }
               }
               type="url"
             />
@@ -306,10 +306,10 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               label="GitHub URL (optional)"
               value={form.socialLinks.github}
               onChange={(e) =>
-                updateField('socialLinks', {
+                { updateField('socialLinks', {
                   ...form.socialLinks,
                   github: e.target.value,
-                })
+                }); }
               }
               type="url"
             />
@@ -317,18 +317,18 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               label="Website URL (optional)"
               value={form.socialLinks.website}
               onChange={(e) =>
-                updateField('socialLinks', {
+                { updateField('socialLinks', {
                   ...form.socialLinks,
                   website: e.target.value,
-                })
+                }); }
               }
               type="url"
             />
             <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(0)}>
+              <Button variant="outline" onClick={() => { setStep(0); }}>
                 Back
               </Button>
-              <Button variant="primary" onClick={() => setStep(2)}>
+              <Button variant="primary" onClick={() => { setStep(2); }}>
                 Next: Target &amp; Timeline
               </Button>
             </div>
@@ -343,14 +343,14 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
             <Input
               label="Target amount (USDT)"
               value={form.targetAmount}
-              onChange={(e) => updateField('targetAmount', e.target.value)}
+              onChange={(e) => { updateField('targetAmount', e.target.value); }}
               placeholder="e.g. 50000"
               required
             />
             <Input
               label="Funding deadline (optional)"
               value={form.fundingDeadline}
-              onChange={(e) => updateField('fundingDeadline', e.target.value)}
+              onChange={(e) => { updateField('fundingDeadline', e.target.value); }}
               type="datetime-local"
             />
             <div>
@@ -363,7 +363,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                 max={30}
                 value={form.votingPeriodDays}
                 onChange={(e) =>
-                  updateField('votingPeriodDays', Number(e.target.value))
+                  { updateField('votingPeriodDays', Number(e.target.value)); }
                 }
                 className="w-full"
               />
@@ -382,7 +382,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                     <button
                       key={curve}
                       type="button"
-                      onClick={() => handleCurveChange(curve)}
+                      onClick={() => { handleCurveChange(curve); }}
                       className={cn(
                         'px-4 py-3 rounded-xl text-label-sm border transition-colors text-left',
                         form.rewardCurveType === curve
@@ -400,10 +400,10 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
               </div>
             </div>
             <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button variant="outline" onClick={() => { setStep(1); }}>
                 Back
               </Button>
-              <Button variant="primary" onClick={() => setStep(3)}>
+              <Button variant="primary" onClick={() => { setStep(3); }}>
                 Next: Milestones
               </Button>
             </div>
@@ -420,7 +420,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                 label="Number of milestones (2-20)"
                 value={String(form.milestoneCount)}
                 onChange={(e) =>
-                  handleMilestoneCountChange(Number(e.target.value))
+                  { handleMilestoneCountChange(Number(e.target.value)); }
                 }
                 type="number"
               />
@@ -451,7 +451,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                       <input
                         type="number"
                         value={form.milestoneBps[i]}
-                        onChange={(e) => handleBpsChange(i, e.target.value)}
+                        onChange={(e) => { handleBpsChange(i, e.target.value); }}
                         className="w-20 bg-surface-container-lowest border border-outline rounded-xl px-3 py-1 text-label-md text-on-surface focus:border-primary outline-none"
                       />
                       <span className="text-label-sm text-on-surface-variant">
@@ -463,7 +463,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                     label="Title"
                     value={m.title}
                     onChange={(e) =>
-                      handleMilestoneField(i, 'title', e.target.value)
+                      { handleMilestoneField(i, 'title', e.target.value); }
                     }
                     required
                   />
@@ -474,7 +474,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                     <textarea
                       value={m.description}
                       onChange={(e) =>
-                        handleMilestoneField(i, 'description', e.target.value)
+                        { handleMilestoneField(i, 'description', e.target.value); }
                       }
                       rows={3}
                       className="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-y"
@@ -484,11 +484,11 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                     label="Deliverable date (optional)"
                     value={m.deliverableDate}
                     onChange={(e) =>
-                      handleMilestoneField(
+                      { handleMilestoneField(
                         i,
                         'deliverableDate',
                         e.target.value,
-                      )
+                      ); }
                     }
                     type="date"
                   />
@@ -499,12 +499,12 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
             {error && <p className="text-label-sm text-error">{error}</p>}
 
             <div className="flex gap-4">
-              <Button variant="outline" onClick={() => setStep(2)}>
+              <Button variant="outline" onClick={() => { setStep(2); }}>
                 Back
               </Button>
               <Button
                 variant="primary"
-                onClick={handleSubmit}
+                onClick={() => void handleSubmit()}
                 disabled={loading || totalBps !== 10000}
               >
                 {loading ? 'Creating draft...' : 'Create draft project'}

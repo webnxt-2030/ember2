@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
@@ -8,7 +8,7 @@ import { slugSchema } from '@ember/shared'
 import { z } from 'zod'
 
 // Typed user shape returned from prisma.user.findMany
-type UserRow = { id: string; email: string; role: string }
+interface UserRow { id: string; email: string; role: string }
 // Transaction client type inferred from prisma instance
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
@@ -16,9 +16,9 @@ const createOrgSchema = z.object({
   name: z.string().min(2).max(100),
   slug: slugSchema,
   description: z.string().max(1000).optional(),
-  website: z.string().url().optional(),
+  website: z.url().optional(),
   receivingWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid Ethereum address'),
-  ownerEmails: z.array(z.string().email()).min(1).max(10),
+  ownerEmails: z.array(z.email()).min(1).max(10),
 })
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   let body: unknown
@@ -92,13 +92,23 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Queue ADMIN_INVITATION emails for each owner
+    // Queue ADMIN_INVITATION emails + in-app notifications for each owner
     await tx.emailNotification.createMany({
       data: owners.map((u: UserRow) => ({
         to: u.email,
         template: 'ADMIN_INVITATION' as const,
         payload: { orgId: newOrg.id, orgTitle: name, inviteeEmail: u.email },
         status: 'QUEUED' as const,
+      })),
+    })
+
+    await tx.inAppNotification.createMany({
+      data: owners.map((u: UserRow) => ({
+        userId: u.id,
+        type: 'ADMIN_INVITATION' as const,
+        title: 'Organization Invitation',
+        message: `You have been invited to own "${name}".`,
+        linkUrl: `/admin/organizations`,
       })),
     })
 

@@ -6,45 +6,45 @@ const makeSession = (role: string) => ({ user: { id: 'user-1', role } })
 
 describe('assertRole', () => {
   it('throws AuthError when session is null', () => {
-    expect(() => assertRole(null, 'BACKER')).toThrow(AuthError)
+    expect(() => { assertRole(null, 'BACKER'); }).toThrow(AuthError)
   })
 
   it('throws AuthError when session.user is missing', () => {
-    expect(() => assertRole({ user: null } as any, 'BACKER')).toThrow(AuthError)
+    expect(() => { assertRole({ user: null } as unknown as Parameters<typeof assertRole>[0], 'BACKER'); }).toThrow(AuthError)
   })
 
   it('passes for BACKER requiring BACKER', () => {
-    expect(() => assertRole(makeSession('BACKER'), 'BACKER')).not.toThrow()
+    expect(() => { assertRole(makeSession('BACKER'), 'BACKER'); }).not.toThrow()
   })
 
   it('throws ForbiddenError for BACKER requiring ORG_OWNER', () => {
-    expect(() => assertRole(makeSession('BACKER'), 'ORG_OWNER')).toThrow(ForbiddenError)
+    expect(() => { assertRole(makeSession('BACKER'), 'ORG_OWNER'); }).toThrow(ForbiddenError)
   })
 
   it('throws ForbiddenError for BACKER requiring SUPER_ADMIN', () => {
-    expect(() => assertRole(makeSession('BACKER'), 'SUPER_ADMIN')).toThrow(ForbiddenError)
+    expect(() => { assertRole(makeSession('BACKER'), 'SUPER_ADMIN'); }).toThrow(ForbiddenError)
   })
 
   it('passes for ORG_OWNER requiring BACKER', () => {
-    expect(() => assertRole(makeSession('ORG_OWNER'), 'BACKER')).not.toThrow()
+    expect(() => { assertRole(makeSession('ORG_OWNER'), 'BACKER'); }).not.toThrow()
   })
 
   it('passes for ORG_OWNER requiring ORG_OWNER', () => {
-    expect(() => assertRole(makeSession('ORG_OWNER'), 'ORG_OWNER')).not.toThrow()
+    expect(() => { assertRole(makeSession('ORG_OWNER'), 'ORG_OWNER'); }).not.toThrow()
   })
 
   it('throws ForbiddenError for ORG_OWNER requiring SUPER_ADMIN', () => {
-    expect(() => assertRole(makeSession('ORG_OWNER'), 'SUPER_ADMIN')).toThrow(ForbiddenError)
+    expect(() => { assertRole(makeSession('ORG_OWNER'), 'SUPER_ADMIN'); }).toThrow(ForbiddenError)
   })
 
   it('passes for SUPER_ADMIN requiring any role', () => {
-    expect(() => assertRole(makeSession('SUPER_ADMIN'), 'BACKER')).not.toThrow()
-    expect(() => assertRole(makeSession('SUPER_ADMIN'), 'ORG_OWNER')).not.toThrow()
-    expect(() => assertRole(makeSession('SUPER_ADMIN'), 'SUPER_ADMIN')).not.toThrow()
+    expect(() => { assertRole(makeSession('SUPER_ADMIN'), 'BACKER'); }).not.toThrow()
+    expect(() => { assertRole(makeSession('SUPER_ADMIN'), 'ORG_OWNER'); }).not.toThrow()
+    expect(() => { assertRole(makeSession('SUPER_ADMIN'), 'SUPER_ADMIN'); }).not.toThrow()
   })
 
   it('throws ForbiddenError for unknown role', () => {
-    expect(() => assertRole(makeSession('UNKNOWN_ROLE'), 'BACKER')).toThrow(ForbiddenError)
+    expect(() => { assertRole(makeSession('UNKNOWN_ROLE'), 'BACKER'); }).toThrow(ForbiddenError)
   })
 })
 

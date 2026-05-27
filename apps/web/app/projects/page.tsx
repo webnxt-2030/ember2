@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   description: 'Browse and back live crowdfunding projects on Ember.',
 }
 
+// Reads live projects from the DB on each request; not statically prerendered at build.
+export const dynamic = 'force-dynamic'
+
 export default async function ProjectsPage() {
   const { projects } = await listLiveProjects({ page: 1, pageSize: 12 })
 

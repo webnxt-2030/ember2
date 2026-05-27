@@ -25,9 +25,7 @@ function getRedisConnection() {
 }
 
 export function getEmailQueue(): Queue<EmailJob> {
-  if (!emailQueue) {
-    emailQueue = new Queue<EmailJob>(EMAIL_QUEUE_NAME, getRedisConnection());
-  }
+  emailQueue ??= new Queue<EmailJob>(EMAIL_QUEUE_NAME, getRedisConnection());
   return emailQueue;
 }
 
@@ -123,14 +121,14 @@ export function startEmailWorker() {
   );
 
   emailWorker.on("failed", (job, err) => {
-    logger.error({ jobId: job?.id, failedReason: err?.message }, "Email worker: job failed");
+    logger.error({ jobId: job?.id, failedReason: err.message }, "Email worker: job failed");
   });
 
   emailWorker.on("completed", (job) => {
-    logger.debug({ jobId: job?.id }, "Email worker: job completed");
+    logger.debug({ jobId: job.id }, "Email worker: job completed");
   });
 
-  pollInterval = setInterval(pollPendingEmails, POLL_INTERVAL_MS);
+  pollInterval = setInterval(() => { void pollPendingEmails(); }, POLL_INTERVAL_MS);
 
   logger.info(
     { queue: EMAIL_QUEUE_NAME, pollIntervalMs: POLL_INTERVAL_MS },

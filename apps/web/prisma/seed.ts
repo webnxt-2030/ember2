@@ -1,7 +1,21 @@
+import 'dotenv/config'
+import { betterAuth } from 'better-auth'
+import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { PrismaClient, UserRole } from '@prisma/client'
-import * as argon2 from 'argon2'
+import { PrismaPg } from '@prisma/adapter-pg'
 
-const prisma = new PrismaClient()
+// Prisma 7 requires a driver adapter (same setup as lib/db).
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+const prisma = new PrismaClient({ adapter })
+
+// Minimal Better Auth instance for seeding. Creating the admin through Better Auth
+// stores the credential in the Account table with Better Auth's own password hashing,
+// so the app's email sign-in (POST /api/auth/sign-in/email) will accept it. Writing
+// User.passwordHash directly (the old approach) does not work — Better Auth never reads it.
+const auth = betterAuth({
+  database: prismaAdapter(prisma, { provider: 'postgresql' }),
+  emailAndPassword: { enabled: true },
+})
 
 async function main() {
   const email = process.env.SEED_SUPER_ADMIN_EMAIL
@@ -11,34 +25,31 @@ async function main() {
     throw new Error('SEED_SUPER_ADMIN_EMAIL and SEED_SUPER_ADMIN_PASSWORD must be set')
   }
 
+  // Recreate from scratch so the user always has a valid Better Auth credential.
+  // Deleting the user cascades to its Account/Session rows (onDelete: Cascade).
   const existing = await prisma.user.findUnique({ where: { email } })
   if (existing) {
-    console.log(`[seed] Super admin already exists (${email}) — skipping`)
-    return
+    await prisma.user.delete({ where: { email } })
+    console.log(`[seed] Removed existing user ${email} to recreate with a credential`)
   }
 
-  const passwordHash = await argon2.hash(password, { type: argon2.argon2id })
+  await auth.api.signUpEmail({ body: { email, password, name: 'Super Admin' } })
 
-  await prisma.user.create({
-    data: {
-      email,
-      emailVerified: true,
-      role: UserRole.SUPER_ADMIN,
-      passwordHash,
-    },
+  // signUpEmail creates the user with the default role; promote to SUPER_ADMIN.
+  await prisma.user.update({
+    where: { email },
+    data: { role: UserRole.SUPER_ADMIN, emailVerified: true },
   })
 
+  console.log(`[seed] Created super admin: ${email}`)
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[seed] Created super admin: ${email}`)
     console.log(`[seed] Password: ${password}`)
     console.log('[seed] Change the password on first login.')
-  } else {
-    console.log(`[seed] Created super admin: ${email}`)
   }
 }
 
 main()
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error('[seed] Failed:', err)
     process.exit(1)
   })

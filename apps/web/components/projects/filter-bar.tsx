@@ -12,7 +12,7 @@ const STATUS_TABS = [
 ] as const
 
 interface FilterBarProps {
-  orgOptions: Array<{ value: string; label: string }>
+  orgOptions: { value: string; label: string }[]
   className?: string
 }
 
@@ -47,7 +47,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
-            onClick={() => updateParam('status', tab.value)}
+            onClick={() => { updateParam('status', tab.value); }}
             className={cn(
               'px-4 py-2 text-label-md transition-colors border-b-2 -mb-px',
               currentStatus === tab.value
@@ -72,7 +72,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             type="text"
             placeholder="Search org..."
             value={currentCategory}
-            onChange={(e) => updateParam('category', e.target.value)}
+            onChange={(e) => { updateParam('category', e.target.value); }}
             className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-44"
           />
         </div>
@@ -85,7 +85,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
           <select
             id="org-select"
             value={currentOrg}
-            onChange={(e) => updateParam('orgId', e.target.value)}
+            onChange={(e) => { updateParam('orgId', e.target.value); }}
             className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
           >
             <option value="">All Organizations</option>
@@ -108,7 +108,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             placeholder="0"
             min="0"
             value={currentMinRaise}
-            onChange={(e) => updateParam('minRaise', e.target.value)}
+            onChange={(e) => { updateParam('minRaise', e.target.value); }}
             className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
           />
         </div>
@@ -124,7 +124,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             placeholder="Any"
             min="0"
             value={currentMaxRaise}
-            onChange={(e) => updateParam('maxRaise', e.target.value)}
+            onChange={(e) => { updateParam('maxRaise', e.target.value); }}
             className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
           />
         </div>
@@ -132,7 +132,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
         {/* Reset */}
         {(currentStatus || currentOrg || currentCategory || currentMinRaise || currentMaxRaise) && (
           <button
-            onClick={() => router.push('/projects', { scroll: false })}
+            onClick={() => { router.push('/projects', { scroll: false }); }}
             className="self-end text-label-md text-primary hover:underline"
           >
             Clear filters

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
@@ -6,17 +7,16 @@ import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TxClient = any
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
-type MemberWithUser = {
+interface MemberWithUser {
   userId: string
   role: string
   user: { id: string; email: string; name: string | null; role: string }
 }
 
 const addMemberSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { id } = await params
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'ORG_MEMBER_ADDED',
         targetType: 'Organization',
         targetId: id,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { id } = await params

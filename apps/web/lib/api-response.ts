@@ -82,6 +82,6 @@ export function errorResponse(
   )
 }
 
-export function okResponse<T>(data: T, status = 200): NextResponse {
+export function okResponse(data: unknown, status = 200): NextResponse {
   return NextResponse.json(data, { status })
 }

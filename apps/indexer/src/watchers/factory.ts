@@ -1,6 +1,7 @@
 import { publicClient } from "../lib/client.js";
 import { getAbiItem } from "viem";
-import { ProjectFactoryAbi } from "@ember/shared/abis";
+import type { AbiEvent } from "viem";
+import { ProjectFactoryAbi } from "@ember/shared/abis.js";
 import { indexerEnv } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
@@ -18,19 +19,19 @@ async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
     "Factory: backfilling ProjectCreated events"
   );
 
-  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as import("viem").AbiEvent;
+  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as AbiEvent;
   const events = await publicClient.getLogs({
     address: factoryAddress,
     event: eventItem,
     fromBlock,
     toBlock,
     strict: true,
-  }) as unknown as Array<{
+  }) as unknown as {
     blockNumber: bigint;
     transactionHash: `0x${string}`;
     logIndex: number;
     args: Parameters<typeof handleProjectCreated>[0]["args"];
-  }>;
+  }[];
 
   for (const event of events) {
     await handleProjectCreated({
@@ -66,28 +67,30 @@ export async function startFactoryWatcher() {
     abi: ProjectFactoryAbi,
     eventName,
     pollingInterval: POLLING_INTERVAL,
-    onLogs: async (logs) => {
-      for (const log of logs as unknown as Array<{
-        blockNumber: bigint;
-        transactionHash: `0x${string}`;
-        logIndex: number;
-        args: Parameters<typeof handleProjectCreated>[0]["args"];
-      }>) {
-        try {
-          await handleProjectCreated({
-            contract: factoryAddress,
-            blockNumber: log.blockNumber,
-            txHash: log.transactionHash,
-            logIndex: log.logIndex,
-            args: log.args,
-          });
-        } catch (err) {
-          logger.error(
-            { err, txHash: log.transactionHash },
-            "Factory: error handling ProjectCreated"
-          );
+    onLogs: (logs) => {
+      void (async () => {
+        for (const log of logs as unknown as {
+          blockNumber: bigint;
+          transactionHash: `0x${string}`;
+          logIndex: number;
+          args: Parameters<typeof handleProjectCreated>[0]["args"];
+        }[]) {
+          try {
+            await handleProjectCreated({
+              contract: factoryAddress,
+              blockNumber: log.blockNumber,
+              txHash: log.transactionHash,
+              logIndex: log.logIndex,
+              args: log.args,
+            });
+          } catch (err) {
+            logger.error(
+              { err, txHash: log.transactionHash },
+              "Factory: error handling ProjectCreated"
+            );
+          }
         }
-      }
+      })();
     },
   });
 

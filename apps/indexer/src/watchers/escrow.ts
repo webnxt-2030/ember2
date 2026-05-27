@@ -1,5 +1,6 @@
 import { getAbiItem } from "viem";
-import { ProjectEscrowAbi } from "@ember/shared/abis";
+import type { AbiEvent } from "viem";
+import { ProjectEscrowAbi } from "@ember/shared/abis.js";
 import { publicClient } from "../lib/client.js";
 import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/db.js";
@@ -44,8 +45,8 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
     "Escrow: backfilling events"
   );
 
-  for (const { name, handler } of escrowEvents) {
-    const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as import("viem").AbiEvent;
+  for (const { name } of escrowEvents) {
+    const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as AbiEvent;
     const events = await publicClient.getLogs({
       address: escrowAddress,
       event: eventItem,
@@ -56,7 +57,7 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
       blockNumber: bigint;
       transactionHash: `0x${string}`;
       logIndex: number;
-      args: Parameters<typeof handler>[0]["args"];
+      args: Record<string, unknown>;
     }[];
 
     for (const event of events) {
@@ -82,7 +83,7 @@ async function dispatchEvent(
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
-        args: log.args as Parameters<typeof handleContributed>[0]["args"],
+        args: log.args as unknown as Parameters<typeof handleContributed>[0]["args"],
       });
       break;
     case "Voted":
@@ -91,7 +92,7 @@ async function dispatchEvent(
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
-        args: log.args as Parameters<typeof handleVoted>[0]["args"],
+        args: log.args as unknown as Parameters<typeof handleVoted>[0]["args"],
       });
       break;
     case "MilestoneSubmitted":
@@ -100,7 +101,7 @@ async function dispatchEvent(
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
-        args: log.args as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
+        args: log.args as unknown as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
       });
       break;
     case "MilestoneResolved":
@@ -109,7 +110,7 @@ async function dispatchEvent(
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
-        args: log.args as Parameters<typeof handleMilestoneResolved>[0]["args"],
+        args: log.args as unknown as Parameters<typeof handleMilestoneResolved>[0]["args"],
       });
       break;
     case "MilestoneClaimed":
@@ -118,7 +119,7 @@ async function dispatchEvent(
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
-        args: log.args as Parameters<typeof handleMilestoneClaimed>[0]["args"],
+        args: log.args as unknown as Parameters<typeof handleMilestoneClaimed>[0]["args"],
       });
       break;
   }
@@ -137,22 +138,24 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
       abi: ProjectEscrowAbi,
       eventName: name,
       pollingInterval: POLLING_INTERVAL,
-      onLogs: async (logs) => {
-        for (const log of logs as unknown as {
-          blockNumber: bigint;
-          transactionHash: `0x${string}`;
-          logIndex: number;
-          args: Record<string, unknown>;
-        }[]) {
-          try {
-            await dispatchEvent(escrowAddress, name, log);
-          } catch (err) {
-            logger.error(
-              { err, event: name, txHash: log.transactionHash },
-              "Escrow: error handling event"
-            );
+      onLogs: (logs) => {
+        void (async () => {
+          for (const log of logs as unknown as {
+            blockNumber: bigint;
+            transactionHash: `0x${string}`;
+            logIndex: number;
+            args: Record<string, unknown>;
+          }[]) {
+            try {
+              await dispatchEvent(escrowAddress, name, log);
+            } catch (err) {
+              logger.error(
+                { err, event: name, txHash: log.transactionHash },
+                "Escrow: error handling event"
+              );
+            }
           }
-        }
+        })();
       },
     });
 
