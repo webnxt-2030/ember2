@@ -1,21 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import React from "react";
 import { render } from "@react-email/render";
-import * as emails from "@/emails/index.js";
+import * as emails from "@/emails/index";
 
-const TEMPLATE_NAMES = [
-  "WELCOME",
-  "CONTRIBUTION_RECEIVED",
-  "MILESTONE_UPDATED",
-  "MILESTONE_VOTE_OPEN",
-  "MILESTONE_VOTE_OUTCOME",
-  "MILESTONE_CLAIMED",
-  "ORG_VERIFIED",
-  "ORG_REJECTED",
-  "ADMIN_INVITATION",
-] as const;
-
-type TemplateName = typeof TEMPLATE_NAMES[number];
+type TemplateName =
+  | "WELCOME"
+  | "CONTRIBUTION_RECEIVED"
+  | "MILESTONE_UPDATED"
+  | "MILESTONE_VOTE_COMING_SOON"
+  | "MILESTONE_VOTE_OPEN"
+  | "MILESTONE_VOTE_OUTCOME"
+  | "MILESTONE_CLAIMED"
+  | "ORG_VERIFIED"
+  | "ORG_REJECTED"
+  | "ADMIN_INVITATION";
 
 const TEMPLATES: Partial<Record<TemplateName, {
   Subject: (p: unknown) => string;
@@ -24,6 +23,7 @@ const TEMPLATES: Partial<Record<TemplateName, {
   WELCOME: { Subject: (p) => emails.welcomeSubject(p as emails.WelcomeProps), Component: emails.Welcome as React.ComponentType<unknown> },
   CONTRIBUTION_RECEIVED: { Subject: (p) => emails.contributionReceivedSubject(p as emails.ContributionReceivedProps), Component: emails.ContributionReceived as React.ComponentType<unknown> },
   MILESTONE_UPDATED: { Subject: (p) => emails.milestoneUpdatedSubject(p as emails.MilestoneUpdatedProps), Component: emails.MilestoneUpdated as React.ComponentType<unknown> },
+  MILESTONE_VOTE_COMING_SOON: { Subject: (p) => emails.milestoneVoteComingSoonSubject(p as emails.MilestoneVoteComingSoonProps), Component: emails.MilestoneVoteComingSoon as React.ComponentType<unknown> },
   MILESTONE_VOTE_OPEN: { Subject: (p) => emails.milestoneVoteOpenSubject(p as emails.MilestoneVoteOpenProps), Component: emails.MilestoneVoteOpen as React.ComponentType<unknown> },
   MILESTONE_VOTE_OUTCOME: { Subject: (p) => emails.milestoneVoteOutcomeSubject(p as emails.MilestoneVoteOutcomeProps), Component: emails.MilestoneVoteOutcome as React.ComponentType<unknown> },
   MILESTONE_CLAIMED: { Subject: (p) => emails.milestoneClaimedSubject(p as emails.MilestoneClaimedProps), Component: emails.MilestoneClaimed as React.ComponentType<unknown> },

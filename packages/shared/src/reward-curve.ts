@@ -13,13 +13,13 @@ import { MILESTONE_BPS_TOTAL, MIN_MILESTONES, MAX_MILESTONES } from "./constants
 export function computeMilestoneBps(curve: RewardCurve, n: number): number[] {
   if (n < MIN_MILESTONES || n > MAX_MILESTONES) {
     throw new RangeError(
-      `n must be between ${MIN_MILESTONES} and ${MAX_MILESTONES}, got ${n}`,
+      `n must be between ${String(MIN_MILESTONES)} and ${String(MAX_MILESTONES)}, got ${String(n)}`,
     );
   }
 
   switch (curve) {
+    // LINEAR & CUSTOM use equal distribution; CUSTOM users override individual bps values via UI
     case RewardCurve.LINEAR:
-    // CUSTOM: equal distribution; user will override individual bps values via UI
     case RewardCurve.CUSTOM:
       return computeLinear(n);
 

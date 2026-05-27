@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
 import { getProjectContributions } from '@/lib/db/projects'
@@ -9,12 +9,13 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params
+  // Public read keyed by slug; the shared [id] segment carries the slug value here.
+  const { id: slug } = await params
 
-  const project = await prisma.project.findUnique({ where: { id } })
-    ?? await prisma.project.findUnique({ where: { slug: id } })
+  const project = await prisma.project.findUnique({ where: { id: slug } })
+    ?? await prisma.project.findUnique({ where: { slug } })
 
-  if (!project || project.status !== 'LIVE') {
+  if (project?.status !== 'LIVE') {
     return errorResponse(new NotFoundError('Project'), req)
   }
 

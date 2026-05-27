@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  useAccount,
+  useConnection,
   useReadContract,
   useSimulateContract,
   useWriteContract,
@@ -30,9 +30,9 @@ interface ContributeStepperProps {
 
 export function ContributeStepper({
   escrowAddress,
-  projectId,
+  projectId: _projectId,
 }: ContributeStepperProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { open } = useAppKit();
 
   const [amount, setAmount] = useState("");
@@ -71,7 +71,6 @@ export function ContributeStepper({
     query: {
       enabled:
         !!address &&
-        !!escrowAddress &&
         flow.type !== "idle" &&
         flow.type !== "success",
     },
@@ -106,7 +105,7 @@ export function ContributeStepper({
   });
 
   const {
-    writeContract: writeApprove,
+    mutate: writeApprove,
     isPending: isApprovePending,
     error: approveWriteError,
     data: approveHash,
@@ -138,7 +137,7 @@ export function ContributeStepper({
     });
 
   const {
-    writeContract: writeContribute,
+    mutate: writeContribute,
     isPending: isContributePending,
     error: contributeWriteError,
     data: contributeHash,
@@ -235,7 +234,7 @@ export function ContributeStepper({
                 label="Amount (USDT)"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => { setAmount(e.target.value); }}
                 {...(error ? { error } : {})}
               />
             )}
@@ -304,7 +303,7 @@ export function ContributeStepper({
               )}
             </div>
           </>
-        ) : flow.type === "success" ? (
+        ) : (
           <div className="flex flex-col gap-4 text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <svg
@@ -342,7 +341,7 @@ export function ContributeStepper({
               Make Another Contribution
             </Button>
           </div>
-        ) : null}
+        )}
       </CardContent>
     </Card>
   );

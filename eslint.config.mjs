@@ -23,11 +23,12 @@ export default tseslint.config(
   },
   {
     ignores: [
-      "node_modules/",
-      ".next/",
-      "dist/",
-      "build/",
-      "coverage/",
+      "**/node_modules/",
+      "**/.next/",
+      "**/dist/",
+      "**/build/",
+      "**/coverage/",
+      "**/generated/",
       "contracts/",
       "**/*.config.{js,mjs,cjs}",
     ],

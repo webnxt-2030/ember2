@@ -7,21 +7,29 @@ export const runtime = 'nodejs'
 
 const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'
 
-// Content Security Policy
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",        // Tailwind injects styles inline
-  "img-src 'self' data: blob: https:",        // wallets show remote logos
-  "font-src 'self'",
-  `connect-src 'self' ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-holesky.morphl2.io wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
-  "frame-src 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
-].join('; ')
+// Content Security Policy. Next injects inline bootstrap/hydration <script> tags, so a
+// strict script-src must allow them: in production via a per-request nonce (Next applies
+// it to its scripts automatically when the CSP is on the request headers); in dev we relax
+// to 'unsafe-inline'/'unsafe-eval' because Turbopack HMR uses inline scripts and eval.
+function buildCsp(nonce: string, isDev: boolean): string {
+  const scriptSrc = isDev
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+    : `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval'`
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Tailwind inline + Material Symbols
+    "img-src 'self' data: blob: https:", // wallets show remote logos
+    "font-src 'self' https://fonts.gstatic.com",
+    `connect-src 'self' ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-holesky.morphl2.io wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
+    "frame-src 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ')
+}
 
 function getRateLimitConfig(
   req: NextRequest,
@@ -77,9 +85,17 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // 2. Security headers
-  const response = NextResponse.next()
-  response.headers.set('Content-Security-Policy', CSP)
+  // 2. Security headers — per-request CSP nonce (Next reads it from the request headers
+  //    and applies it to its own inline scripts).
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const csp = buildCsp(nonce, process.env.NODE_ENV !== 'production')
+
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-nonce', nonce)
+  requestHeaders.set('Content-Security-Policy', csp)
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  response.headers.set('Content-Security-Policy', csp)
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '0')  // disabled — CSP handles this

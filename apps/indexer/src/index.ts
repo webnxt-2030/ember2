@@ -36,7 +36,7 @@ process.on("SIGTERM", () => {
   stopFactoryWatcher();
   stopAllEscrowWatchers();
   stopKeeper();
-  stopEmailWorker();
+  void stopEmailWorker();
   process.exit(0);
 });
 
@@ -45,6 +45,6 @@ process.on("SIGINT", () => {
   stopFactoryWatcher();
   stopAllEscrowWatchers();
   stopKeeper();
-  stopEmailWorker();
+  void stopEmailWorker();
   process.exit(0);
 });

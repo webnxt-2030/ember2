@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createPublicClient, http, decodeEventLog } from 'viem'
 import { ProjectFactoryAbi } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { NotFoundError, ValidationError } from '@/lib/errors'
+import { NotFoundError, ValidationError, AuthError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
@@ -54,7 +54,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     await assertOwnsOrg(session, project.organizationId, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
+  }
+  if (!session) {
+    return errorResponse(new AuthError(), req)
   }
 
   // Idempotency: if already LIVE and escrow already set, return success
@@ -134,7 +137,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'PROJECT_PUBLISHED',
         targetType: 'Project',
         targetId: id,
@@ -144,7 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }).catch((err: unknown) => {
     // If update matched 0 rows (project already LIVE), that's OK — idempotent
     const e = err as { code?: string; meta?: { cause?: string } }
-    if (e?.meta?.cause?.includes('0 rows')) return
+    if (e.meta?.cause?.includes('0 rows')) return
     throw err
   })
 

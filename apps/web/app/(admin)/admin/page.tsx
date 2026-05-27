@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { Container } from '@/components/layout/container'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — prisma client may not be generated in dev
 import { prisma } from '@/lib/db'
 
 function StatCard({
@@ -39,11 +37,11 @@ function formatRelative(date: Date): string {
   const diff = now - new Date(date).getTime()
   const minutes = Math.floor(diff / 60_000)
   if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return `${String(minutes)}m ago`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return `${String(hours)}h ago`
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return `${String(days)}d ago`
 }
 
 function activityIcon(type: string): string {
@@ -65,9 +63,9 @@ function activityLabel(type: string): string {
 }
 
 export default async function AdminDashboardPage() {
-  type OrgRow = { id: string; title: string; createdAt: Date }
-  type ActivityRow = { id: string; type: string; createdAt: Date }
-  type AggResult = { _sum: { amount: unknown } }
+  interface OrgRow { id: string; title: string; createdAt: Date }
+  interface ActivityRow { id: string; type: string; createdAt: Date }
+  interface AggResult { _sum: { amount: unknown } }
 
   let orgCount = 0
   let pendingCount = 0
@@ -77,37 +75,31 @@ export default async function AdminDashboardPage() {
   let recentActivity: ActivityRow[] = []
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const results = await Promise.all([
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).organization.count(),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).organization.count({ where: { verifiedStatus: 'PENDING' } }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).project.count({ where: { status: 'LIVE' } }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).contribution.aggregate({ _sum: { amount: true } }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).organization.findMany({
+      prisma.organization.count(),
+      prisma.organization.count({ where: { verifiedStatus: 'PENDING' } }),
+      prisma.project.count({ where: { status: 'LIVE' } }),
+      prisma.contribution.aggregate({ _sum: { amount: true } }),
+      prisma.organization.findMany({
         where: { verifiedStatus: 'PENDING' },
         orderBy: { createdAt: 'asc' },
         take: 10,
         select: { id: true, title: true, createdAt: true },
       }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      (prisma as any).activityLog.findMany({
+      prisma.activityLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: 10,
         select: { id: true, type: true, createdAt: true },
       }),
     ])
 
-    orgCount = results[0] as number
-    pendingCount = results[1] as number
-    liveCount = results[2] as number
-    totalRaised = results[3] as AggResult
-    pendingOrgs = results[4] as OrgRow[]
-    recentActivity = results[5] as ActivityRow[]
+    orgCount = results[0]
+    pendingCount = results[1]
+    liveCount = results[2]
+    totalRaised = results[3]
+    pendingOrgs = results[4]
+    recentActivity = results[5]
   } catch {
     // DB not available in dev — show zeros
   }
