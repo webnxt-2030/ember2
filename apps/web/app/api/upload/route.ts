@@ -30,9 +30,9 @@ const MAGIC_CHECKS: Record<string, (b: Buffer) => boolean> = {
     b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
     b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
   'image/webp': (b) =>
-    b.slice(0, 4).toString('ascii') === 'RIFF' &&
-    b.slice(8, 12).toString('ascii') === 'WEBP',
-  'image/gif': (b) => b.slice(0, 4).toString('ascii') === 'GIF8',
+    b.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    b.subarray(8, 12).toString('ascii') === 'WEBP',
+  'image/gif': (b) => b.subarray(0, 4).toString('ascii') === 'GIF8',
 }
 
 export async function POST(req: NextRequest) {
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   if (file.size > maxBytes) {
     return errorResponse(
       new ValidationError(
-        `File exceeds maximum size of ${Math.round(maxBytes / 1024 / 1024)} MB`,
+        `File exceeds maximum size of ${String(Math.round(maxBytes / 1024 / 1024))} MB`,
       ),
       req,
     )
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer())
 
   const magicCheck = MAGIC_CHECKS[mimeType]
-  if (!magicCheck || !magicCheck(buffer)) {
+  if (!magicCheck?.(buffer)) {
     return errorResponse(
       new ValidationError(`File content does not match declared type "${mimeType}"`),
       req,

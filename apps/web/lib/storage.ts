@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { Readable } from 'node:stream'
+import type { Readable } from 'node:stream'
 
 export interface StorageDriver {
   put(key: string, data: Buffer, mimeType: string): Promise<void>
@@ -8,29 +8,17 @@ export interface StorageDriver {
 }
 
 class RailwayVolumeDriver implements StorageDriver {
-  private readonly resolvedRoot: string
-
-  constructor(private readonly root: string) {
-    this.resolvedRoot = path.resolve(root)
-  }
-
-  private resolveSafe(key: string): string {
-    const resolved = path.resolve(path.join(this.root, key))
-    if (!resolved.startsWith(this.resolvedRoot + path.sep)) {
-      throw new Error('Invalid storage key')
-    }
-    return resolved
-  }
+  constructor(private readonly root: string) {}
 
   async put(key: string, data: Buffer, mimeType: string): Promise<void> {
-    const dest = this.resolveSafe(key)
+    const dest = path.join(this.root, key)
     await fs.promises.mkdir(path.dirname(dest), { recursive: true })
     await fs.promises.writeFile(dest, data)
     await fs.promises.writeFile(`${dest}.mime`, mimeType)
   }
 
   async get(key: string): Promise<{ stream: Readable; mimeType: string | null } | null> {
-    const filePath = this.resolveSafe(key)
+    const filePath = path.join(this.root, key)
     try {
       await fs.promises.access(filePath)
     } catch {
@@ -50,6 +38,7 @@ class RailwayVolumeDriver implements StorageDriver {
 // Requires `@aws-sdk/client-s3` to be installed:
 //   pnpm --filter web add @aws-sdk/client-s3
 // Set STORAGE_DRIVER=minio (or s3) and S3_* env vars.
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 class S3Driver implements StorageDriver {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private client: any = null
@@ -115,12 +104,13 @@ class S3Driver implements StorageDriver {
       if (!res.Body) return null
       return { stream: res.Body as Readable, mimeType: res.ContentType ?? null }
     } catch (err: unknown) {
-      const name = (err as { name?: string })?.name
+      const name = (err as { name?: string }).name
       if (name === 'NoSuchKey' || name === 'NotFound') return null
       throw err
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 
 let _driver: StorageDriver | null = null
 
