@@ -195,3 +195,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 
 ### About Page
 - `/about` — Static page with platform overview, mission, technology stack, and CTAs linking to `/projects` and `/how-it-works`.
+
+## Issue #137
+
+### Legal Pages
+- `/legal/terms` — Terms of Service static page.
+- `/legal/privacy` — Privacy Policy static page.
+- `apps/web/app/legal/layout.tsx` — Shared layout for legal pages with Container wrapper.
