@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { encodeFunctionData } from 'viem'
-import { ProjectEscrowAbi } from '@ember/shared'
+import { ProjectEscrowAbi, cuidSchema } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const paramsSchema = z.object({
-  id: z.string().cuid(),
+  id: cuidSchema,
   index: z.coerce.number().int().nonnegative(),
 })
 
@@ -36,7 +36,7 @@ export async function POST(
   try {
     await assertOwnsOrg(session, project.organizationId, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const milestone = project.milestones.find((m: { index: number }) => m.index === parsed.data.index)

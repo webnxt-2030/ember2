@@ -8,7 +8,7 @@ import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
-type OrgMember = { user: { id: string; email: string } }
+interface OrgMember { user: { id: string; email: string } }
 
 export async function POST(
   req: NextRequest,
@@ -25,7 +25,7 @@ export async function POST(
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { id } = await params
@@ -46,13 +46,13 @@ export async function POST(
       data: {
         verifiedStatus: 'VERIFIED',
         verifiedAt: new Date(),
-        verifiedById: session!.user.id,
+        verifiedById: session.user.id,
       },
     })
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'ORG_VERIFIED',
         targetType: 'Organization',
         targetId: id,

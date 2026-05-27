@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { slugSchema, paginationSchema } from './index.js'
+import { slugSchema, paginationSchema, cuidSchema } from './index.js'
 
 export const projectSlugParamSchema = z.object({ slug: slugSchema })
 
@@ -8,20 +8,20 @@ export const projectListQuerySchema = paginationSchema.extend({
 })
 
 export const projectPublicResponseSchema = z.object({
-  id: z.string().cuid(),
+  id: cuidSchema,
   slug: z.string(),
   title: z.string(),
   summary: z.string(),
   description: z.string(),
-  pictures: z.array(z.string().url()),
+  pictures: z.array(z.url()),
   targetAmount: z.string(),
   totalRaised: z.string(),
-  fundingDeadline: z.string().datetime().nullable(),
+  fundingDeadline: z.iso.datetime().nullable(),
   rewardCurveType: z.enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM']),
   escrowAddress: z.string().nullable(),
   nftAddress: z.string().nullable(),
   status: z.enum(['LIVE', 'COMPLETED', 'PAUSED']),
-  publishedAt: z.string().datetime().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
   organization: z.object({ name: z.string() }),
   milestoneCount: z.number().int(),
   backerCount: z.number().int(),
@@ -29,12 +29,12 @@ export const projectPublicResponseSchema = z.object({
     index: z.number().int(),
     title: z.string(),
     description: z.string(),
-    deliverableDate: z.string().datetime().nullable(),
+    deliverableDate: z.iso.datetime().nullable(),
     bps: z.number().int(),
     status: z.enum(['PENDING', 'AUTO_RELEASED', 'VOTING', 'PASSED', 'FAILED', 'CLAIMED']),
-    voteEndAt: z.string().datetime().nullable(),
+    voteEndAt: z.iso.datetime().nullable(),
     passed: z.boolean().nullable(),
-    claimedAt: z.string().datetime().nullable(),
+    claimedAt: z.iso.datetime().nullable(),
   })),
 })
 
@@ -42,6 +42,6 @@ export const contributionPublicResponseSchema = z.object({
   walletAddress: z.string(),
   amount: z.string(),
   m0Share: z.string(),
-  contributedAt: z.string().datetime(),
+  contributedAt: z.iso.datetime(),
   txHash: z.string(),
 })

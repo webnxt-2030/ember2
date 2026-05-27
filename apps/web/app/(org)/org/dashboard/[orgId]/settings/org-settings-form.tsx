@@ -37,7 +37,7 @@ export function OrgSettingsForm({
   const walletChanged = receivingWallet.toLowerCase() !== initialReceivingWallet.toLowerCase()
   const willResetVerification = walletChanged && verifiedStatus === 'VERIFIED'
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -54,7 +54,7 @@ export function OrgSettingsForm({
           receivingWallet: receivingWallet || undefined,
         }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setError(data.detail ?? data.title ?? 'Failed to save changes')
         return
@@ -71,11 +71,11 @@ export function OrgSettingsForm({
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
           <Input
             label="Organization name"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); }}
             required
             minLength={2}
             maxLength={100}
@@ -83,26 +83,26 @@ export function OrgSettingsForm({
           <Input
             label="Description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); }}
             maxLength={1000}
           />
           <Input
             label="Logo URL (optional)"
             value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
+            onChange={(e) => { setLogoUrl(e.target.value); }}
             type="url"
           />
           <Input
             label="Website (optional)"
             value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            onChange={(e) => { setWebsite(e.target.value); }}
             type="url"
           />
           <div>
             <Input
               label="Receiving wallet address"
               value={receivingWallet}
-              onChange={(e) => setReceivingWallet(e.target.value)}
+              onChange={(e) => { setReceivingWallet(e.target.value); }}
               placeholder="0x..."
               pattern="^0x[0-9a-fA-F]{40}$"
             />

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { errorResponse, okResponse } from '@/lib/api-response'
 import { AuthError, ValidationError } from '@/lib/errors'
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest) {
     return errorResponse(new AuthError(), req)
   }
 
-  const body = await req.json()
+  const body: unknown = await req.json()
   const parsed = updatePreferenceSchema.safeParse(body)
   if (!parsed.success) {
     return errorResponse(new ValidationError(parsed.error.message), req)

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { cn } from '@/lib/cn'
 import { Progress } from '@/components/ui/progress'
 import { StatusDot } from '@/components/ui/status-dot'
 

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { errorResponse, okResponse } from '@/lib/api-response'
 import { AuthError, ValidationError } from '@/lib/errors'
@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 const updateSettingsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  image: z.string().url().max(500).optional().or(z.literal('')),
+  image: z.url().max(500).optional().or(z.literal('')),
 })
 
 export async function GET(req: NextRequest) {
@@ -66,12 +66,12 @@ export async function GET(req: NextRequest) {
       isPrimary: w.isPrimary,
       verifiedAt: w.verifiedAt.toISOString(),
     })),
-    emailPreferences: preferences.reduce(
+    emailPreferences: preferences.reduce<Record<string, boolean>>(
       (acc, p) => {
         acc[p.template] = p.unsubscribed
         return acc
       },
-      {} as Record<string, boolean>,
+      {},
     ),
   })
 }
@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest) {
     return errorResponse(new AuthError(), req)
   }
 
-  const body = await req.json()
+  const body: unknown = await req.json()
   const parsed = updateSettingsSchema.safeParse(body)
   if (!parsed.success) {
     return errorResponse(new ValidationError(parsed.error.message), req)

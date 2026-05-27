@@ -1,22 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import React from "react";
 import { render } from "@react-email/render";
-import * as emails from "@/emails/index.js";
+import * as emails from "@/emails/index";
 
-const TEMPLATE_NAMES = [
-  "WELCOME",
-  "CONTRIBUTION_RECEIVED",
-  "MILESTONE_UPDATED",
-  "MILESTONE_VOTE_COMING_SOON",
-  "MILESTONE_VOTE_OPEN",
-  "MILESTONE_VOTE_OUTCOME",
-  "MILESTONE_CLAIMED",
-  "ORG_VERIFIED",
-  "ORG_REJECTED",
-  "ADMIN_INVITATION",
-] as const;
-
-type TemplateName = typeof TEMPLATE_NAMES[number];
+type TemplateName =
+  | "WELCOME"
+  | "CONTRIBUTION_RECEIVED"
+  | "MILESTONE_UPDATED"
+  | "MILESTONE_VOTE_COMING_SOON"
+  | "MILESTONE_VOTE_OPEN"
+  | "MILESTONE_VOTE_OUTCOME"
+  | "MILESTONE_CLAIMED"
+  | "ORG_VERIFIED"
+  | "ORG_REJECTED"
+  | "ADMIN_INVITATION";
 
 const TEMPLATES: Partial<Record<TemplateName, {
   Subject: (p: unknown) => string;

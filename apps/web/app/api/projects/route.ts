@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { ValidationError, ConflictError } from '@/lib/errors'
+import { ValidationError, ConflictError, AuthError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { listLiveProjects } from '@/lib/db/projects'
-import { milestoneBpsSchema, slugSchema, projectListQuerySchema } from '@ember/shared'
+import { milestoneBpsSchema, slugSchema, projectListQuerySchema, cuidSchema } from '@ember/shared'
 import { z } from 'zod'
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
@@ -37,26 +37,26 @@ export async function GET(req: NextRequest) {
 const milestoneInputSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(5000),
-  deliverableDate: z.string().datetime().optional(),
+  deliverableDate: z.iso.datetime().optional(),
 })
 
 const createProjectSchema = z.object({
-  organizationId: z.string().cuid(),
+  organizationId: cuidSchema,
   slug: slugSchema,
   title: z.string().min(2).max(200),
   summary: z.string().min(10).max(500),
   description: z.string().max(50000),
-  pictures: z.array(z.string().url()).max(10).default([]),
+  pictures: z.array(z.url()).max(10).default([]),
   socialLinks: z
     .object({
-      twitter: z.string().url().optional(),
-      github: z.string().url().optional(),
-      website: z.string().url().optional(),
+      twitter: z.url().optional(),
+      github: z.url().optional(),
+      website: z.url().optional(),
     })
     .default({}),
-  backingLinks: z.array(z.string().url()).max(5).default([]),
+  backingLinks: z.array(z.url()).max(5).default([]),
   targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/, 'Invalid USDT amount'),
-  fundingDeadline: z.string().datetime().optional(),
+  fundingDeadline: z.iso.datetime().optional(),
   votingPeriodDays: z.number().int().min(3).max(30).default(7),
   rewardCurveType: z
     .enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM'])
@@ -97,7 +97,10 @@ export async function POST(req: NextRequest) {
   try {
     await assertOwnsOrg(session, data.organizationId, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
+  }
+  if (!session) {
+    return errorResponse(new AuthError(), req)
   }
 
   const existing = await prisma.project.findUnique({
@@ -141,13 +144,13 @@ export async function POST(req: NextRequest) {
         deliverableDate: m.deliverableDate
           ? new Date(m.deliverableDate)
           : null,
-        bps: data.milestoneBps[i] as number,
+        bps: data.milestoneBps[i] ?? 0,
       })),
     })
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'PROJECT_CREATED',
         targetType: 'Project',
         targetId: proj.id,

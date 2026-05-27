@@ -107,13 +107,13 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
           <CardTitle>Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input label="Profile Image URL" value={image} onChange={(e) => setImage(e.target.value)} />
+          <Input label="Name" value={name} onChange={(e) => { setName(e.target.value); }} />
+          <Input label="Profile Image URL" value={image} onChange={(e) => { setImage(e.target.value); }} />
           <div className="flex items-center justify-between">
             <p className="text-label-sm text-on-surface-variant">Email</p>
             <p className="text-body-md text-on-surface">{user.email}</p>
           </div>
-          <Button onClick={saveProfile} disabled={saving}>
+          <Button onClick={() => void saveProfile()} disabled={saving}>
             {saving ? 'Saving...' : 'Save Profile'}
           </Button>
         </CardContent>
@@ -142,11 +142,11 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
                 </div>
                 <div className="flex gap-2">
                   {!w.isPrimary && (
-                    <Button variant="outline" size="sm" onClick={() => setPrimary(w.address)}>
+                    <Button variant="outline" size="sm" onClick={() => { void setPrimary(w.address) }}>
                       Set Primary
                     </Button>
                   )}
-                  <Button variant="destructive" size="sm" onClick={() => unlinkWallet(w.address)}>
+                  <Button variant="destructive" size="sm" onClick={() => { void unlinkWallet(w.address) }}>
                     Unlink
                   </Button>
                 </div>
@@ -177,7 +177,7 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
                     type="checkbox"
                     className="sr-only peer"
                     checked={!prefs[t.key]}
-                    onChange={(e) => togglePreference(t.key, !e.target.checked)}
+                    onChange={(e) => { void togglePreference(t.key, !e.target.checked) }}
                   />
                   <div className="relative w-11 h-6 bg-surface-variant peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                   <span className="ms-3 text-label-sm text-on-surface-variant">

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { errorResponse, okResponse } from '@/lib/api-response'
 import { AuthError } from '@/lib/errors'

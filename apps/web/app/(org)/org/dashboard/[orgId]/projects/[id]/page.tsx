@@ -123,7 +123,7 @@ export default async function OrgProjectDetailPage({
             <MilestoneTimeline
               slug={project.slug}
               escrowAddress={project.escrowAddress as `0x${string}` | null}
-              milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
+              milestones={project.milestones.map((m) => ({
                 index: m.index,
                 title: m.title,
                 description: m.description,

@@ -1,16 +1,15 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole, assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { ValidationError, NotFoundError } from '@/lib/errors'
+import { ValidationError, NotFoundError, AuthError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 // Transaction client type inferred from prisma instance
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TxClient = any
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
-type OrgMember = { user: { id: string; email: string } }
+interface OrgMember { user: { id: string; email: string } }
 
 const actionSchema = z.object({
   action: z.enum(['VERIFY', 'REJECT']),
@@ -20,8 +19,8 @@ const actionSchema = z.object({
 const updateSchema = z.object({
   title: z.string().min(2).max(100).optional(),
   description: z.string().max(1000).optional(),
-  logoUrl: z.string().url().optional().nullable(),
-  website: z.string().url().optional().nullable(),
+  logoUrl: z.url().optional().nullable(),
+  website: z.url().optional().nullable(),
   receivingWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
 })
 
@@ -102,7 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     try {
       assertRole(session, 'SUPER_ADMIN')
     } catch (err) {
-      return errorResponse(err as Error, req)
+      return errorResponse(err, req)
     }
 
     const parsed = actionSchema.safeParse(body)
@@ -128,13 +127,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         data: {
           verifiedStatus: newStatus,
           verifiedAt: new Date(),
-          verifiedById: session!.user.id,
+          verifiedById: session.user.id,
         },
       })
 
       await tx.activityLog.create({
         data: {
-          actorUserId: session!.user.id,
+          actorUserId: session.user.id,
           type: activityType,
           targetType: 'Organization',
           targetId: id,
@@ -178,7 +177,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     await assertOwnsOrg(session, id, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
+  }
+  if (!session) {
+    return errorResponse(new AuthError(), req)
   }
 
   const parsed = updateSchema.safeParse(body)
@@ -209,7 +211,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   await prisma.activityLog.create({
     data: {
-      actorUserId: session!.user.id,
+      actorUserId: session.user.id,
       type: 'ORG_UPDATED',
       targetType: 'Organization',
       targetId: id,

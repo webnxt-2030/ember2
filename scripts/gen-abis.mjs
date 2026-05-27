@@ -52,7 +52,7 @@ function main() {
     exports
       .map(
         ({ name, filename }) =>
-          `export { ${name}Abi } from './${filename.replace('.ts', '')}';`,
+          `export { ${name}Abi } from './${filename.replace('.ts', '.js')}';`,
       )
       .join('\n') + '\n';
 

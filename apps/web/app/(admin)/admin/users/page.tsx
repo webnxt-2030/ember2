@@ -71,7 +71,6 @@ export default async function AdminUsersPage({
             wallets: u.wallets,
             orgCount: u.orgMemberships.length,
           }))}
-          initialTotal={total}
           initialPage={page}
           initialLimit={limit}
           initialTotalPages={totalPages}

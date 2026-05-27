@@ -18,7 +18,7 @@ function csvEscape(value: CsvPrimitive | object): string {
   return str
 }
 
-function csvRow(cols: unknown[]): string {
+function csvRow(cols: (CsvPrimitive | object)[]): string {
   return cols.map(csvEscape).join(',') + '\r\n'
 }
 

@@ -2,10 +2,17 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { cn } from '@/lib/cn'
 import { Container } from './container'
 import { Button } from '@/components/ui/button'
-import { ConnectButton } from '@/components/wallet/connect-button'
+
+// AppKit's useAppKit hook only works client-side, so load the wallet button without SSR
+// to avoid "call createAppKit before useAppKit" during static prerendering.
+const ConnectButton = dynamic(
+  () => import('@/components/wallet/connect-button').then((m) => m.ConnectButton),
+  { ssr: false },
+)
 
 const navLinks = [
   { href: '/', label: 'Home' },

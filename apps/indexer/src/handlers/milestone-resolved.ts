@@ -53,15 +53,15 @@ export async function handleMilestoneResolved(args: {
     });
 
     const emailRows = projectBackers
-      .filter((c) => c.backer)
+      .filter((c): c is typeof c & { backer: NonNullable<typeof c.backer> } => !!c.backer)
       .map((c) => ({
-        to: c.backer!.email,
+        to: c.backer.email,
         template: "MILESTONE_VOTE_OUTCOME" as const,
         payload: {
           projectId: project.id,
           milestoneIndex: Number(milestoneIndex),
           passed,
-          name: c.backer!.name ?? c.backer!.email,
+          name: c.backer.name ?? c.backer.email,
         },
         status: "QUEUED" as const,
       }));
@@ -76,7 +76,7 @@ export async function handleMilestoneResolved(args: {
         userId: c.backer.id,
         type: "MILESTONE_VOTE_OUTCOME" as const,
         title: passed ? "Milestone Passed" : "Milestone Failed",
-        message: `Milestone #${milestoneIndex} ${passed ? "passed" : "failed"} backer vote.`,
+        message: `Milestone #${String(milestoneIndex)} ${passed ? "passed" : "failed"} backer vote.`,
         linkUrl: `/dashboard/votes`,
       }));
 

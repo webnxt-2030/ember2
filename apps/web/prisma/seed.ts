@@ -38,7 +38,7 @@ async function main() {
 }
 
 main()
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error('[seed] Failed:', err)
     process.exit(1)
   })

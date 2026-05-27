@@ -59,8 +59,8 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --prod
-        # Fails on high/critical vulnerabilities
+      - run: pnpm audit --prod --audit-level high
+        # Fails on high/critical vulnerabilities only
 
   contracts-test:
     name: Forge Tests

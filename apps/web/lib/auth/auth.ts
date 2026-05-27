@@ -19,7 +19,7 @@ export const auth = betterAuth({
                   to: user.email,
                   template: 'WELCOME',
                   payload: {
-                    name: user.name ?? user.email,
+                    name: user.name,
                   },
                   status: 'QUEUED',
                 },
@@ -49,8 +49,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      clientId: process.env.AUTH_GOOGLE_ID ?? '',
+      clientSecret: process.env.AUTH_GOOGLE_SECRET ?? '',
     },
   },
   emailAndPassword: {

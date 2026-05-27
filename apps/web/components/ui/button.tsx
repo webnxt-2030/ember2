@@ -79,7 +79,7 @@ export function Button(props: ButtonProps) {
     })
   }
 
-  const elementProps = props as ButtonElementProps
+  const elementProps = props
   return (
     <button
       type={elementProps.type ?? 'button'}

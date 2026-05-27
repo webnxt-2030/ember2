@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { generateNonce } from 'siwe'
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const session = await getSession()
     assertRole(session, 'BACKER')
 
-    const body = await req.json()
+    const body = (await req.json()) as { address?: unknown } | null
     const parsed = addressSchema.safeParse(body?.address)
     if (!parsed.success) {
       throw new ValidationError('Invalid wallet address', parsed.error.issues)

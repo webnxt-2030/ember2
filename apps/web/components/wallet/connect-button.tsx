@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppKit } from "@reown/appkit/react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useConnection, useDisconnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 
 interface ConnectButtonProps {
@@ -10,7 +10,7 @@ interface ConnectButtonProps {
 
 export function ConnectButton({ className }: ConnectButtonProps) {
   const { open } = useAppKit();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const { mutate: disconnect } = useDisconnect();
 
   if (isConnected && address) {
