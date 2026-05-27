@@ -47,12 +47,13 @@ model Account {
   userId        String
   providerId    String
   accountId     String
-  accessToken   String?
-  refreshToken  String?
-  idToken       String?
-  expiresAt     DateTime?
-  password      String?
-  scope         String?
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  password              String?
+  scope                 String?
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
