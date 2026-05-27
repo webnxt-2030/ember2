@@ -29,13 +29,11 @@ export const votingPeriodSchema = z
 // CUID
 export const cuidSchema = z.string().cuid()
 
-// Pagination
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 })
 
-// Slug: lowercase letters, numbers, hyphens
 export const slugSchema = z
   .string()
   .min(2)

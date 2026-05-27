@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { slugSchema, paginationSchema } from './index.js'
+import { slugSchema, paginationSchema } from './common.js'
 
 export const projectSlugParamSchema = z.object({ slug: slugSchema })
 
