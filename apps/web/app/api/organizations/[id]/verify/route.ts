@@ -57,7 +57,7 @@ export async function POST(
         targetId: id,
         metadata: { orgTitle: org.title },
         ipAddress: ip,
-        userAgent: req.headers.get('user-agent') ?? undefined,
+        ...(req.headers.get('user-agent') ? { userAgent: req.headers.get('user-agent')! } : {}),
       },
     })
 
