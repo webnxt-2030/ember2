@@ -4,12 +4,71 @@ import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
+import { getProjectBySlug } from '@/lib/db/projects'
 import { milestoneBpsSchema, slugSchema } from '@ember/shared'
 import { z } from 'zod'
 
 export const runtime = 'nodejs'
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params
+
+  if (!id) {
+    return errorResponse(new NotFoundError('Project'), _req)
+  }
+
+  const project = await getProjectBySlug(id)
+    ?? await prisma.project.findUnique({
+      where: { id },
+      include: {
+        organization: { select: { title: true } },
+        milestones: { orderBy: { index: 'asc' } },
+        _count: { select: { contributions: { distinct: ['walletAddress'] } } },
+      },
+    })
+
+  if (!project || project.status !== 'LIVE') {
+    return errorResponse(new NotFoundError('Project'), _req)
+  }
+
+  const response = {
+    id: project.id,
+    slug: project.slug,
+    title: project.title,
+    summary: project.summary,
+    description: project.description,
+    pictures: project.pictures,
+    targetAmount: project.targetAmount.toString(),
+    totalRaised: project.totalRaised.toString(),
+    fundingDeadline: project.fundingDeadline?.toISOString() ?? null,
+    rewardCurveType: project.rewardCurveType,
+    escrowAddress: project.escrowAddress,
+    nftAddress: project.nftAddress,
+    status: project.status,
+    publishedAt: project.publishedAt?.toISOString() ?? null,
+    organization: { name: project.organization.title },
+    milestoneCount: project.milestones.length,
+    backerCount: project._count.contributions,
+    milestones: project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
+      index: m.index,
+      title: m.title,
+      description: m.description,
+      deliverableDate: m.deliverableDate?.toISOString() ?? null,
+      bps: m.bps,
+      status: m.status,
+      voteEndAt: m.voteEndAt?.toISOString() ?? null,
+      passed: m.passed,
+      claimedAt: m.claimedAt?.toISOString() ?? null,
+    })),
+  }
+
+  return okResponse(response)
+}
 
 // Fields editable on DRAFT (full edit)
 const draftEditSchema = z.object({

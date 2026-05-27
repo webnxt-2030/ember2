@@ -1,10 +1,10 @@
-import { prisma } from './index.js'
+import { prisma } from './index'
 
 export async function getProjectBySlug(slug: string) {
   return prisma.project.findUnique({
     where: { slug },
     include: {
-      organization: { select: { name: true } },
+      organization: { select: { title: true } },
       milestones: { orderBy: { index: 'asc' } },
       _count: { select: { contributions: { distinct: ['walletAddress'] } } },
     },
@@ -33,7 +33,7 @@ export async function listLiveProjects({ page, pageSize }: PaginationParams) {
         targetAmount: true,
         totalRaised: true,
         status: true,
-        organization: { select: { name: true } },
+        organization: { select: { title: true } },
       },
     }),
     prisma.project.count({ where: { status: 'LIVE' } }),

@@ -1,16 +1,18 @@
 import { NextRequest } from 'next/server'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
-import { getProjectBySlug, getProjectContributions } from '@/lib/db/projects'
+import { getProjectContributions } from '@/lib/db/projects'
+import { prisma } from '@/lib/db'
 import { paginationSchema } from '@ember/shared'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { slug } = await params
+  const { id } = await params
 
-  const project = await getProjectBySlug(slug)
+  const project = await prisma.project.findUnique({ where: { id } })
+    ?? await prisma.project.findUnique({ where: { slug: id } })
 
   if (!project || project.status !== 'LIVE') {
     return errorResponse(new NotFoundError('Project'), req)
