@@ -1,6 +1,6 @@
 import { getAbiItem } from "viem";
 import type { AbiEvent } from "viem";
-import { ProjectEscrowAbi } from "@ember/shared/abis.js";
+import { ProjectEscrowAbi } from "@ember/shared/abis";
 import { publicClient } from "../lib/client.js";
 import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/db.js";
