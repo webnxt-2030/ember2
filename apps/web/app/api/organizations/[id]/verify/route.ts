@@ -15,6 +15,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown'
+  const ua = req.headers.get('user-agent')
   const rl = await rateLimit(`ratelimit:org-verify:${ip}`, 10, 60_000)
   if (!rl.success) {
     return errorResponse(new AppError('RATE_LIMITED', 'Too Many Requests', 429), req)
@@ -57,7 +58,7 @@ export async function POST(
         targetId: id,
         metadata: { orgTitle: org.title },
         ipAddress: ip,
-        ...(req.headers.get('user-agent') ? { userAgent: req.headers.get('user-agent')! } : {}),
+        ...(ua ? { userAgent: ua } : {}),
       },
     })
 
