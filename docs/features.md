@@ -217,3 +217,10 @@ A standalone Node.js service that watches onchain events and mirrors state into 
 - `POST /api/organizations/[id]/verify` — Super Admin only. Sets `verifiedStatus = VERIFIED`, queues `ORG_VERIFIED` email + in-app notification to org owners, writes `ORG_VERIFIED` activity log. Returns 409 if already VERIFIED.
 - `POST /api/organizations/[id]/reject` — Super Admin only. Accepts optional `{ reason }` body. Sets `verifiedStatus = REJECTED`, queues `ORG_REJECTED` email + in-app notification, writes `ORG_REJECTED` activity log. Returns 409 if already REJECTED.
 - Both endpoints are rate-limited at 10 req/min per IP.
+
+## Issue #140
+
+### File Upload and Serving
+- `POST /api/upload` — Authed. Accepts `multipart/form-data` with a `file` field. Validates MIME type (jpeg/png/webp/gif) and max size (`MAX_UPLOAD_BYTES`, default 5 MB). Returns `{ url }` pointing at `/api/files/<key>`. Rate-limited at 10 req/min per IP.
+- `GET /api/files/[...path]` — Public. Streams the stored file with `Content-Type` and `Cache-Control: public, max-age=31536000, immutable`. Blocks path traversal. Returns 404 for missing files.
+- `lib/storage.ts` — Storage driver abstraction. `STORAGE_DRIVER` env selects: `railway-volume` (default, uses `STORAGE_ROOT`) or `minio`/`s3` (requires `@aws-sdk/client-s3` and `S3_*` env vars).
