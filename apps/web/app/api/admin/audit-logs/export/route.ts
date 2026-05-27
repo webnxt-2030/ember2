@@ -8,7 +8,8 @@ import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
-function csvEscape(value: unknown): string {
+type CsvPrimitive = string | number | boolean | bigint | null | undefined
+function csvEscape(value: CsvPrimitive | object): string {
   if (value === null || value === undefined) return ''
   const str = typeof value === 'object' ? JSON.stringify(value) : String(value)
   if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { searchParams } = new URL(req.url)
