@@ -20,11 +20,39 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
   return { title: `${project.title} — Ember` }
 }
 
+interface ProjectMilestone {
+  index: number
+  title: string
+  description: string
+  deliverableDate: Date | null
+  bps: number
+  status: 'PENDING' | 'AUTO_RELEASED' | 'VOTING' | 'PASSED' | 'FAILED' | 'CLAIMED'
+  voteEndAt: Date | null
+  passed: boolean | null
+  claimedAt: Date | null
+}
+
+interface ProjectDetail {
+  id: string
+  slug: string
+  title: string
+  summary: string
+  description: string | null
+  status: string
+  pictures: string[]
+  targetAmount: { toString: () => string }
+  totalRaised: { toString: () => string }
+  escrowAddress: string | null
+  organization: { name: string }
+  milestones: ProjectMilestone[]
+  _count: { contributions: number }
+}
+
 export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { slug } = await params
-  const project = await getProjectBySlug(slug)
+  const project = (await getProjectBySlug(slug)) as unknown as ProjectDetail | null
 
-  if (!project || project.status !== 'LIVE') {
+  if (project?.status !== 'LIVE') {
     notFound()
   }
 
@@ -89,7 +117,9 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
                 <div className="mt-12">
                   <h2 className="text-headline-lg text-on-surface mb-6">Milestones</h2>
                   <MilestoneTimeline
-                    milestones={project.milestones.map((m: { index: number; title: string; description: string; deliverableDate: Date | null; bps: number; status: string; voteEndAt: Date | null; passed: boolean | null; claimedAt: Date | null }) => ({
+                    slug={slug}
+                    escrowAddress={project.escrowAddress as `0x${string}` | null}
+                    milestones={project.milestones.map((m) => ({
                       index: m.index,
                       title: m.title,
                       description: m.description,

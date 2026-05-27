@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { SiweMessage } from 'siwe'
@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { ValidationError, ConflictError, AuthError } from '@/lib/errors'
 import { errorResponse, okResponse } from '@/lib/api-response'
+import { logActivity } from '@/lib/activity-log'
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
@@ -15,8 +16,8 @@ export async function POST(req: NextRequest) {
     const session = await getSession()
     assertRole(session, 'BACKER')
 
-    const body = await req.json()
-    const { message, signature } = body as { message: string; signature: string }
+    const body = (await req.json()) as { message?: string; signature?: string }
+    const { message, signature } = body
 
     if (!message || !signature) {
       throw new ValidationError('message and signature are required')
@@ -79,6 +80,11 @@ export async function POST(req: NextRequest) {
       where: { walletAddress: address, backerId: null },
       data: { backerId: session.user.id },
     })
+
+    await logActivity(
+      { prisma, actorUserId: session.user.id, actorWallet: address, req },
+      { type: 'WALLET_LINKED', metadata: { address } },
+    )
 
     return okResponse({ wallet }, 201)
   } catch (err) {

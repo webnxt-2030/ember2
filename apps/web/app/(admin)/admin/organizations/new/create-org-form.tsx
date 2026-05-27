@@ -22,7 +22,7 @@ export function CreateOrgForm() {
     setSlug(v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -40,7 +40,7 @@ export function CreateOrgForm() {
           ownerEmails: emails,
         }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setError(data.detail ?? data.title ?? 'Failed to create organization')
         return
@@ -56,41 +56,41 @@ export function CreateOrgForm() {
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
           <Input
             label="Organization name"
             value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
+            onChange={(e) => { handleNameChange(e.target.value); }}
             required
           />
           <Input
             label="Slug (URL identifier)"
             value={slug}
-            onChange={(e) => setSlug(e.target.value)}
+            onChange={(e) => { setSlug(e.target.value); }}
             required
           />
           <Input
             label="Description (optional)"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); }}
           />
           <Input
             label="Website (optional)"
             value={website}
-            onChange={(e) => setWebsite(e.target.value)}
+            onChange={(e) => { setWebsite(e.target.value); }}
             type="url"
           />
           <Input
             label="Receiving wallet address"
             value={receivingWallet}
-            onChange={(e) => setReceivingWallet(e.target.value)}
+            onChange={(e) => { setReceivingWallet(e.target.value); }}
             placeholder="0x..."
             required
           />
           <Input
             label="Owner emails (comma-separated)"
             value={ownerEmails}
-            onChange={(e) => setOwnerEmails(e.target.value)}
+            onChange={(e) => { setOwnerEmails(e.target.value); }}
             {...(error ? { error } : {})}
             required
           />

@@ -1,13 +1,67 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
-import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors'
+import { ValidationError, NotFoundError, ConflictError, AuthError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
-import { milestoneBpsSchema, slugSchema } from '@ember/shared'
+import { getProjectBySlug } from '@/lib/db/projects'
+import { milestoneBpsSchema, slugSchema, projectSlugParamSchema } from '@ember/shared'
 import { z } from 'zod'
 
 export const runtime = 'nodejs'
+
+// Public read keyed by slug. The [id] segment is shared with the owner-only PATCH
+// (which keys by project id); each method interprets the URL value per its needs.
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id: slug } = await params
+  if (!slug) {
+    return errorResponse(new NotFoundError('Project'), _req)
+  }
+
+  const parsed = projectSlugParamSchema.safeParse({ slug })
+  if (!parsed.success) {
+    return errorResponse(new NotFoundError('Project'), _req)
+  }
+
+  const project = await getProjectBySlug(parsed.data.slug)
+  if (project?.status !== 'LIVE') {
+    return errorResponse(new NotFoundError('Project'), _req)
+  }
+
+  return okResponse({
+    id: project.id,
+    slug: project.slug,
+    title: project.title,
+    summary: project.summary,
+    description: project.description,
+    pictures: project.pictures,
+    targetAmount: project.targetAmount.toString(),
+    totalRaised: project.totalRaised.toString(),
+    fundingDeadline: project.fundingDeadline?.toISOString() ?? null,
+    rewardCurveType: project.rewardCurveType,
+    escrowAddress: project.escrowAddress,
+    nftAddress: project.nftAddress,
+    status: project.status,
+    publishedAt: project.publishedAt?.toISOString() ?? null,
+    organization: { name: project.organization.name },
+    milestoneCount: project.milestones.length,
+    backerCount: project._count.contributions,
+    milestones: project.milestones.map((m) => ({
+      index: m.index,
+      title: m.title,
+      description: m.description,
+      deliverableDate: m.deliverableDate?.toISOString() ?? null,
+      bps: m.bps,
+      status: m.status,
+      voteEndAt: m.voteEndAt?.toISOString() ?? null,
+      passed: m.passed,
+      claimedAt: m.claimedAt?.toISOString() ?? null,
+    })),
+  })
+}
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
@@ -17,17 +71,17 @@ const draftEditSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   summary: z.string().min(10).max(500).optional(),
   description: z.string().max(50000).optional(),
-  pictures: z.array(z.string().url()).max(10).optional(),
+  pictures: z.array(z.url()).max(10).optional(),
   socialLinks: z
     .object({
-      twitter: z.string().url().optional().nullable(),
-      github: z.string().url().optional().nullable(),
-      website: z.string().url().optional().nullable(),
+      twitter: z.url().optional().nullable(),
+      github: z.url().optional().nullable(),
+      website: z.url().optional().nullable(),
     })
     .optional(),
-  backingLinks: z.array(z.string().url()).max(5).optional(),
+  backingLinks: z.array(z.url()).max(5).optional(),
   targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/).optional(),
-  fundingDeadline: z.string().datetime().optional().nullable(),
+  fundingDeadline: z.iso.datetime().optional().nullable(),
   votingPeriodDays: z.number().int().min(3).max(30).optional(),
   rewardCurveType: z.enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM']).optional(),
   milestoneBps: milestoneBpsSchema.optional(),
@@ -38,7 +92,7 @@ const draftEditSchema = z.object({
         index: z.number().int().nonnegative(),
         title: z.string().min(1).max(200).optional(),
         description: z.string().max(5000).optional(),
-        deliverableDate: z.string().datetime().optional().nullable(),
+        deliverableDate: z.iso.datetime().optional().nullable(),
       }),
     )
     .optional(),
@@ -47,28 +101,28 @@ const draftEditSchema = z.object({
 // Fields editable on LIVE (limited)
 const liveEditSchema = z.object({
   description: z.string().max(50000).optional(),
-  pictures: z.array(z.string().url()).max(10).optional(),
+  pictures: z.array(z.url()).max(10).optional(),
   socialLinks: z
     .object({
-      twitter: z.string().url().optional().nullable(),
-      github: z.string().url().optional().nullable(),
-      website: z.string().url().optional().nullable(),
+      twitter: z.url().optional().nullable(),
+      github: z.url().optional().nullable(),
+      website: z.url().optional().nullable(),
     })
     .optional(),
-  backingLinks: z.array(z.string().url()).max(5).optional(),
+  backingLinks: z.array(z.url()).max(5).optional(),
   // Milestone edits on LIVE: only description + deliverableDate
   milestones: z
     .array(
       z.object({
         index: z.number().int().nonnegative(),
         description: z.string().max(5000).optional(),
-        deliverableDate: z.string().datetime().optional().nullable(),
+        deliverableDate: z.iso.datetime().optional().nullable(),
       }),
     )
     .optional(),
 })
 
-type OrgMemberWithUser = { user: { email: string; name: string | null } }
+interface OrgMemberWithUser { user: { id: string; email: string; name: string | null } }
 
 export async function PATCH(
   req: NextRequest,
@@ -93,7 +147,7 @@ export async function PATCH(
         include: {
           members: {
             include: {
-              user: { select: { email: true, name: true } },
+              user: { select: { id: true, email: true, name: true } },
             },
           },
         },
@@ -109,7 +163,10 @@ export async function PATCH(
   try {
     await assertOwnsOrg(session, project.organizationId, prisma)
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
+  }
+  if (!session) {
+    return errorResponse(new AuthError(), req)
   }
 
   // Guard: cannot edit COMPLETED/CANCELLED/PAUSED projects
@@ -190,7 +247,7 @@ export async function PATCH(
 
       await tx.activityLog.create({
         data: {
-          actorUserId: session!.user.id,
+          actorUserId: session.user.id,
           type: 'PROJECT_UPDATED',
           targetType: 'Project',
           targetId: id,
@@ -213,7 +270,7 @@ export async function PATCH(
     const data = parsed.data
 
     // Determine which milestones have changed (description or deliverableDate)
-    const changedMilestones: Array<{ index: number; title: string }> = []
+    const changedMilestones: { index: number; title: string }[] = []
 
     await prisma.$transaction(async (tx: TxClient) => {
       const projectUpdate: Record<string, unknown> = {}
@@ -246,7 +303,7 @@ export async function PATCH(
             const existing = project.milestones.find((m: { index: number; title: string }) => m.index === mEdit.index)
             changedMilestones.push({
               index: mEdit.index,
-              title: existing?.title ?? `Milestone ${mEdit.index + 1}`,
+              title: existing?.title ?? `Milestone ${String(mEdit.index + 1)}`,
             })
           }
         }
@@ -254,7 +311,7 @@ export async function PATCH(
 
       await tx.activityLog.create({
         data: {
-          actorUserId: session!.user.id,
+          actorUserId: session.user.id,
           type: 'PROJECT_UPDATED',
           targetType: 'Project',
           targetId: id,
@@ -286,6 +343,20 @@ export async function PATCH(
       if (emailRows.length > 0) {
         await prisma.emailNotification.createMany({ data: emailRows })
       }
+
+      const inAppRows = orgMembers.flatMap((member) =>
+        changedMilestones.map((m: { index: number; title: string }) => ({
+          userId: member.user.id,
+          type: 'MILESTONE_UPDATED' as const,
+          title: 'Milestone Updated',
+          message: `Milestone "${m.title}" in ${project.title} has been updated.`,
+          linkUrl: projectUrl,
+        })),
+      )
+
+      if (inAppRows.length > 0) {
+        await prisma.inAppNotification.createMany({ data: inAppRows })
+      }
     }
   }
 
@@ -293,6 +364,9 @@ export async function PATCH(
     where: { id },
     select: { id: true, status: true, updatedAt: true },
   })
+  if (!updated) {
+    return errorResponse(new NotFoundError('Project'), req)
+  }
 
-  return okResponse({ id: updated!.id, status: updated!.status, updatedAt: updated!.updatedAt })
+  return okResponse({ id: updated.id, status: updated.status, updatedAt: updated.updatedAt })
 }

@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+import { getContributionByNft } from '@/lib/db/contributions'
 import { errorResponse } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
 import { addressSchema } from '@ember/shared'
@@ -21,13 +22,10 @@ export async function GET(
     return errorResponse(new NotFoundError('NFT'), _req)
   }
 
-  const contribution = await prisma.contribution.findFirst({
-    where: {
-      nftContract: parsed.data.contract.toLowerCase(),
-      nftTokenId: parsed.data.tokenId,
-    },
-    include: { project: { select: { id: true, slug: true, title: true, pictures: true } } },
-  })
+  const contribution = await getContributionByNft(
+    parsed.data.contract.toLowerCase(),
+    parsed.data.tokenId,
+  )
 
   if (!contribution) {
     return errorResponse(new NotFoundError('NFT'), _req)
@@ -35,26 +33,18 @@ export async function GET(
 
   const amount = parseFloat(contribution.amount.toString())
   const m0Share = parseFloat(contribution.m0Share.toString())
-  const allocatedRemaining = amount - m0Share
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ember.app'
 
   const metadata = {
     name: `Ember Position #${contribution.nftTokenId}`,
-    description: `Position in ${contribution.project.title}. Contributed ${amount.toFixed(2)} USDT.`,
-    image: contribution.project.pictures[0] ?? '',
+    description: `Contribution to ${contribution.project.title} on Ember.`,
+    image: `${appUrl}/og/nft/${contract}/${tokenId}`,
     attributes: [
-      { trait_type: 'Project', value: contribution.project.title },
-      { trait_type: 'Project ID', value: contribution.project.id },
-      { trait_type: 'Amount', value: amount.toFixed(6), display_type: 'number' },
-      { trait_type: 'M0 Share', value: m0Share.toFixed(6), display_type: 'number' },
-      { trait_type: 'Allocated Remaining', value: allocatedRemaining.toFixed(6), display_type: 'number' },
+      { trait_type: 'Project', value: contribution.project.slug },
+      { trait_type: 'Amount (USDT)', value: amount.toFixed(6) },
+      { trait_type: 'M0 Share (USDT)', value: m0Share.toFixed(6) },
       { trait_type: 'Contributed At', value: contribution.contributedAt.toISOString() },
     ],
-    projectId: contribution.project.id,
-    projectSlug: contribution.project.slug,
-    amount: contribution.amount.toString(),
-    contributedAt: contribution.contributedAt.toISOString(),
-    m0Share: contribution.m0Share.toString(),
-    allocatedRemaining: allocatedRemaining.toFixed(6),
   }
 
   return NextResponse.json(metadata, {

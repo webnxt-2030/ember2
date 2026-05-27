@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TxClient = any
+type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
-type OrgMember = { userId: string }
+interface OrgMember { userId: string }
 
 export async function DELETE(
   req: NextRequest,
@@ -18,7 +18,7 @@ export async function DELETE(
   try {
     assertRole(session, 'SUPER_ADMIN')
   } catch (err) {
-    return errorResponse(err as Error, req)
+    return errorResponse(err, req)
   }
 
   const { id, userId } = await params
@@ -43,7 +43,7 @@ export async function DELETE(
 
     await tx.activityLog.create({
       data: {
-        actorUserId: session!.user.id,
+        actorUserId: session.user.id,
         type: 'ORG_MEMBER_REMOVED',
         targetType: 'Organization',
         targetId: id,

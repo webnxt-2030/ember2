@@ -26,8 +26,10 @@ export const votingPeriodSchema = z
   .min(3 * 24 * 60 * 60, 'Voting period must be at least 3 days')
   .max(30 * 24 * 60 * 60, 'Voting period must be at most 30 days')
 
-// CUID
-export const cuidSchema = z.string().cuid()
+// CUID — Prisma generates CUID v1 IDs (schema uses @default(cuid())), so we validate
+// that format directly. z.cuid2() is the non-deprecated API but rejects v1 IDs, which
+// would break every existing record; this regex mirrors zod's original .cuid() check.
+export const cuidSchema = z.string().regex(/^[cC][^\s-]{8,}$/, 'Invalid CUID')
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -39,5 +41,3 @@ export const slugSchema = z
   .min(2)
   .max(60)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens')
-
-export * from './project.js'

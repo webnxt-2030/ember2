@@ -1,17 +1,44 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+import { prisma } from '@/lib/db'
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
   }),
   plugins: [nextCookies()],
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          if (user.email) {
+            await prisma.$transaction(async (tx) => {
+              await tx.emailNotification.create({
+                data: {
+                  to: user.email,
+                  template: 'WELCOME',
+                  payload: {
+                    name: user.name,
+                  },
+                  status: 'QUEUED',
+                },
+              })
+              await tx.inAppNotification.create({
+                data: {
+                  userId: user.id,
+                  type: 'WELCOME',
+                  title: 'Welcome to Ember',
+                  message: 'Your account is ready. Start backing projects on Ember.',
+                  linkUrl: '/projects',
+                },
+              })
+            })
+          }
+        },
+      },
+    },
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days in seconds
     updateAge: 60 * 60 * 24, // rotate after 1 day of activity
@@ -22,8 +49,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      clientId: process.env.AUTH_GOOGLE_ID ?? '',
+      clientSecret: process.env.AUTH_GOOGLE_SECRET ?? '',
     },
   },
   emailAndPassword: {

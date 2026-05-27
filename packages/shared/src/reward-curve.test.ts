@@ -19,7 +19,7 @@ describe("computeMilestoneBps – LINEAR", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.LINEAR, n);
-      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
+      expect(sum(bps), `n=${String(n)}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -72,7 +72,7 @@ describe("computeMilestoneBps – EXPONENTIAL", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, n);
-      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
+      expect(sum(bps), `n=${String(n)}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -95,7 +95,9 @@ describe("computeMilestoneBps – EXPONENTIAL", () => {
   it("last element is strictly greater than first (geometrically increasing)", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, n);
-      expect(bps[n - 1]!, `n=${n}`).toBeGreaterThan(bps[0]!);
+      const first = bps[0] ?? 0;
+      const last = bps[n - 1] ?? 0;
+      expect(last, `n=${String(n)}`).toBeGreaterThan(first);
     }
   });
 
@@ -103,7 +105,9 @@ describe("computeMilestoneBps – EXPONENTIAL", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.EXPONENTIAL, n);
       for (let i = 1; i < bps.length; i++) {
-        expect(bps[i]!, `n=${n} i=${i}`).toBeGreaterThanOrEqual(bps[i - 1]!);
+        const curr = bps[i] ?? 0;
+        const prev = bps[i - 1] ?? 0;
+        expect(curr, `n=${String(n)} i=${String(i)}`).toBeGreaterThanOrEqual(prev);
       }
     }
   });
@@ -129,7 +133,7 @@ describe("computeMilestoneBps – BINARY", () => {
   it("sums to 10000 for all n in [2..20]", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.BINARY, n);
-      expect(sum(bps), `n=${n}`).toBe(MILESTONE_BPS_TOTAL);
+      expect(sum(bps), `n=${String(n)}`).toBe(MILESTONE_BPS_TOTAL);
     }
   });
 
@@ -152,7 +156,7 @@ describe("computeMilestoneBps – BINARY", () => {
   it("first element is always 0", () => {
     for (let n = 2; n <= 20; n++) {
       const bps = computeMilestoneBps(RewardCurve.BINARY, n);
-      expect(bps[0], `n=${n}`).toBe(0);
+      expect(bps[0], `n=${String(n)}`).toBe(0);
     }
   });
 
@@ -189,7 +193,7 @@ describe("computeMilestoneBps – CUSTOM", () => {
     for (let n = 2; n <= 20; n++) {
       const custom = computeMilestoneBps(RewardCurve.CUSTOM, n);
       const linear = computeMilestoneBps(RewardCurve.LINEAR, n);
-      expect(custom, `n=${n}`).toEqual(linear);
+      expect(custom, `n=${String(n)}`).toEqual(linear);
     }
   });
 
@@ -240,7 +244,7 @@ describe("validateMilestoneBps", () => {
   });
 
   it("returns true for edge case n=20, sum=10000", () => {
-    const arr = Array(20).fill(500);
+    const arr = Array<number>(20).fill(500);
     expect(validateMilestoneBps(arr)).toBe(true);
   });
 
@@ -261,7 +265,7 @@ describe("validateMilestoneBps", () => {
   });
 
   it("returns false when array length > 20", () => {
-    const arr = Array(21).fill(0);
+    const arr = Array<number>(21).fill(0);
     arr[20] = 10000;
     expect(validateMilestoneBps(arr)).toBe(false);
   });
@@ -278,7 +282,7 @@ describe("validateMilestoneBps", () => {
     for (const curve of Object.values(RewardCurve)) {
       for (let n = 2; n <= 20; n++) {
         const bps = computeMilestoneBps(curve, n);
-        expect(validateMilestoneBps(bps), `curve=${curve} n=${n}`).toBe(true);
+        expect(validateMilestoneBps(bps), `curve=${curve} n=${String(n)}`).toBe(true);
       }
     }
   });

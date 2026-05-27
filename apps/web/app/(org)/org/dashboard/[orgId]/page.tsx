@@ -7,6 +7,7 @@ import { Container } from '@/components/layout/container'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { OrgProfileForm } from './org-profile-form'
+import Link from 'next/link'
 
 export default async function OrgDashboardDetailPage({
   params,
@@ -94,27 +95,29 @@ export default async function OrgDashboardDetailPage({
             <div className="mt-4 space-y-3">
               {org.projects.map(
                 (p: { id: string; title: string; slug: string; status: string }) => (
-                  <Card key={p.id}>
-                    <CardContent className="py-4 flex items-center justify-between">
-                      <div>
-                        <p className="text-label-md text-on-surface">{p.title}</p>
-                        <p className="text-label-sm text-on-surface-variant">{p.slug}</p>
-                      </div>
-                      <Badge
-                        status={
-                          p.status === 'LIVE'
-                            ? 'active'
-                            : p.status === 'DRAFT'
-                              ? 'pending'
-                              : p.status === 'COMPLETED'
-                                ? 'completed'
-                                : 'failed'
-                        }
-                      >
-                        {p.status}
-                      </Badge>
-                    </CardContent>
-                  </Card>
+                  <Link key={p.id} href={`/org/dashboard/${orgId}/projects/${p.id}`} className="block">
+                    <Card className="hover:shadow-sm transition-shadow">
+                      <CardContent className="py-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-label-md text-on-surface">{p.title}</p>
+                          <p className="text-label-sm text-on-surface-variant">{p.slug}</p>
+                        </div>
+                        <Badge
+                          status={
+                            p.status === 'LIVE'
+                              ? 'active'
+                              : p.status === 'DRAFT'
+                                ? 'pending'
+                                : p.status === 'COMPLETED'
+                                  ? 'completed'
+                                  : 'failed'
+                          }
+                        >
+                          {p.status}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ),
               )}
             </div>

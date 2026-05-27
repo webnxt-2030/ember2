@@ -1,6 +1,7 @@
 import { defineChain, http } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit";
+import type { Config } from "wagmi";
 import {
   MORPH_CHAIN_ID,
   MORPH_RPC_URL,
@@ -22,13 +23,11 @@ export const morphChain = defineChain({
   },
 });
 
-const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID;
+// Falls back to a placeholder so the app can build/prerender without the env var set;
+// wallet connectivity requires a real project id at runtime.
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID ?? "placeholder";
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Ember";
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.ember.example";
-
-if (!projectId) {
-  throw new Error("NEXT_PUBLIC_REOWN_PROJECT_ID is not set");
-}
 
 const wagmiAdapter = new WagmiAdapter({
   networks: [morphChain],
@@ -54,4 +53,4 @@ export const appKit = createAppKit({
   allWallets: "SHOW",
 });
 
-export const appKitWagmiConfig = wagmiAdapter.wagmiConfig;
+export const appKitWagmiConfig: Config = wagmiAdapter.wagmiConfig;

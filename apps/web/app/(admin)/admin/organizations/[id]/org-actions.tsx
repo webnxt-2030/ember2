@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-type Member = {
+interface Member {
   userId: string
   email: string
   name: string | null
@@ -41,7 +41,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'VERIFY' }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setActionError(data.detail ?? data.title ?? 'Failed to verify organization')
         return
@@ -63,7 +63,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'REJECT', reason: rejectReason || undefined }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setActionError(data.detail ?? data.title ?? 'Failed to reject organization')
         return
@@ -78,7 +78,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
     }
   }
 
-  async function handleAddMember(e: React.FormEvent) {
+  async function handleAddMember(e: React.SyntheticEvent) {
     e.preventDefault()
     setAddError(null)
     setAddLoading(true)
@@ -88,7 +88,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: addEmail }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as { detail?: string; title?: string }
       if (!res.ok) {
         setAddError(data.detail ?? data.title ?? 'Failed to add member')
         return
@@ -109,7 +109,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
         method: 'DELETE',
       })
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
+        const data = (await res.json().catch(() => ({}))) as { detail?: string; title?: string }
         alert(data.detail ?? data.title ?? 'Failed to remove member')
         return
       }
@@ -145,7 +145,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
             {currentStatus !== 'VERIFIED' && (
               <Button
                 variant="primary"
-                onClick={handleVerify}
+                onClick={() => void handleVerify()}
                 disabled={actionLoading !== null}
               >
                 {actionLoading === 'VERIFY' ? 'Verifying...' : 'Verify organization'}
@@ -154,7 +154,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
             {currentStatus !== 'REJECTED' && (
               <Button
                 variant="destructive"
-                onClick={() => setShowRejectForm((v) => !v)}
+                onClick={() => { setShowRejectForm((v) => !v); }}
                 disabled={actionLoading !== null}
               >
                 Reject organization
@@ -167,18 +167,18 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
               <Input
                 label="Rejection reason (optional)"
                 value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
+                onChange={(e) => { setRejectReason(e.target.value); }}
                 placeholder="Explain why this org is being rejected..."
               />
               <div className="flex gap-2">
                 <Button
                   variant="destructive"
-                  onClick={handleReject}
+                  onClick={() => void handleReject()}
                   disabled={actionLoading !== null}
                 >
                   {actionLoading === 'REJECT' ? 'Rejecting...' : 'Confirm rejection'}
                 </Button>
-                <Button variant="ghost" onClick={() => setShowRejectForm(false)}>
+                <Button variant="ghost" onClick={() => { setShowRejectForm(false); }}>
                   Cancel
                 </Button>
               </div>
@@ -211,7 +211,7 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
                     variant="ghost"
                     size="sm"
                     disabled={removeLoading === m.userId || members.length <= 1}
-                    onClick={() => handleRemoveMember(m.userId)}
+                    onClick={() => { void handleRemoveMember(m.userId) }}
                   >
                     {removeLoading === m.userId ? 'Removing...' : 'Remove'}
                   </Button>
@@ -221,13 +221,13 @@ export function OrgActions({ orgId, orgTitle, currentStatus, members }: OrgActio
           )}
 
           {/* Add member form */}
-          <form onSubmit={handleAddMember} className="flex gap-2 items-end pt-2 border-t border-outline-variant flex-wrap">
+          <form onSubmit={(e) => void handleAddMember(e)} className="flex gap-2 items-end pt-2 border-t border-outline-variant flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <Input
                 label="Add owner by email"
                 type="email"
                 value={addEmail}
-                onChange={(e) => setAddEmail(e.target.value)}
+                onChange={(e) => { setAddEmail(e.target.value); }}
                 placeholder="owner@example.com"
                 required
                 {...(addError ? { error: addError } : {})}

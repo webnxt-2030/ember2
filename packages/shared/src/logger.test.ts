@@ -21,9 +21,9 @@ describe("logger redaction", () => {
 
     testLogger.info({ password: "foo", username: "alice" }, "test");
 
-    const parsed = JSON.parse(lines[0]!);
-    expect(parsed["password"]).toBe("[REDACTED]");
-    expect(parsed["username"]).toBe("alice");
+    const parsed = JSON.parse(lines[0] ?? "{}") as Record<string, unknown>;
+    expect(parsed.password).toBe("[REDACTED]");
+    expect(parsed.username).toBe("alice");
   });
 
   it("redacts accessToken field", () => {
@@ -45,7 +45,7 @@ describe("logger redaction", () => {
 
     testLogger.info({ accessToken: "eyJ..." }, "test");
 
-    const parsed = JSON.parse(lines[0]!);
-    expect(parsed["accessToken"]).toBe("[REDACTED]");
+    const parsed = JSON.parse(lines[0] ?? "{}") as Record<string, unknown>;
+    expect(parsed.accessToken).toBe("[REDACTED]");
   });
 });

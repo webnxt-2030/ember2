@@ -12,7 +12,7 @@ interface PaginationProps {
 export function Pagination({ page, pageSize, totalPages, totalCount, className }: PaginationProps) {
   if (totalPages <= 1) return null
 
-  const pages: Array<number | 'ellipsis'> = []
+  const pages: (number | 'ellipsis')[] = []
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) pages.push(i)
   } else {
@@ -53,7 +53,7 @@ export function Pagination({ page, pageSize, totalPages, totalCount, className }
 
         {pages.map((p, i) =>
           p === 'ellipsis' ? (
-            <span key={`ellipsis-${i}`} className="px-2 text-on-surface-variant">
+            <span key={`ellipsis-${String(i)}`} className="px-2 text-on-surface-variant">
               …
             </span>
           ) : (
@@ -66,7 +66,7 @@ export function Pagination({ page, pageSize, totalPages, totalCount, className }
                   ? 'bg-primary text-on-primary'
                   : 'border border-outline hover:bg-surface-container-low text-on-surface',
               )}
-              aria-label={`Page ${p}`}
+              aria-label={`Page ${String(p)}`}
               aria-current={p === page ? 'page' : undefined}
             >
               {p}
