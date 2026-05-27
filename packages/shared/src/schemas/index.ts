@@ -31,13 +31,11 @@ export const votingPeriodSchema = z
 // would break every existing record; this regex mirrors zod's original .cuid() check.
 export const cuidSchema = z.string().regex(/^[cC][^\s-]{8,}$/, 'Invalid CUID')
 
-// Pagination
 export const paginationSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 })
 
-// Slug: lowercase letters, numbers, hyphens
 export const slugSchema = z
   .string()
   .min(2)
