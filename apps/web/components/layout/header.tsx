@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn'
 import { Container } from './container'
 import { Button } from '@/components/ui/button'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { AuthNav } from './auth-nav'
 
 // AppKit's useAppKit hook only works client-side, so load the wallet button without SSR
 // to avoid "call createAppKit before useAppKit" during static prerendering.
@@ -47,6 +48,7 @@ export function Header() {
         {/* Desktop Right */}
         <div className="hidden md:flex items-center gap-3">
           <ErrorBoundary><ConnectButton /></ErrorBoundary>
+          <AuthNav />
           <Button variant="primary" asChild>
             <Link href="/projects">Get Started</Link>
           </Button>
@@ -83,6 +85,7 @@ export function Header() {
             ))}
             <div className="mt-3 pt-3 border-t border-outline-variant flex flex-col gap-2">
               <ErrorBoundary><ConnectButton className="justify-start" /></ErrorBoundary>
+              <AuthNav mobile onNavigate={() => { setMobileMenuOpen(false); }} />
               <Button variant="primary" asChild>
                 <Link href="/projects" onClick={() => { setMobileMenuOpen(false); }}>Get Started</Link>
               </Button>

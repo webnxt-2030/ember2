@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import { authClient } from "@/lib/auth/client";
 
 export default function SignInPage() {
   return (
@@ -33,11 +34,9 @@ export default function SignInPage() {
         style={{
           backgroundColor: "var(--color-primary)",
           color: "var(--color-on-primary)",
-          // TODO: wire Better Auth signIn("google")
         }}
         onClick={() => {
-          // TODO: wire Better Auth signIn("google")
-          console.log("TODO: signIn('google')");
+          void authClient.signIn.social({ provider: "google", callbackURL: "/projects" });
         }}
       >
         {/* Google "G" SVG icon */}

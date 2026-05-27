@@ -7,6 +7,11 @@
     "moduleResolution": "bundler",
     "jsx": "preserve",
     "incremental": true,
+    // This is a Next.js application, never consumed as a library, so it emits no
+    // .d.ts files. Disabling declaration emit (inherited true from the root config)
+    // avoids TS2742 "inferred type is not portable" on better-auth's inferred client.
+    "declaration": false,
+    "declarationMap": false,
     "plugins": [{ "name": "next" }],
     "baseUrl": ".",
     "paths": {
