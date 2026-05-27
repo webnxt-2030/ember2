@@ -1,14 +1,10 @@
 import type { NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { ForbiddenError, NotFoundError, ConflictError } from '@/lib/errors'
 import { errorResponse, okResponse } from '@/lib/api-response'
+import { prisma } from '@/lib/db'
 import { logActivity } from '@/lib/activity-log'
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
 
 export async function DELETE(
   req: NextRequest,
