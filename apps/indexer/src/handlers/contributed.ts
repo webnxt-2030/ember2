@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
@@ -13,6 +14,8 @@ export async function handleContributed(args: {
 }) {
   const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
   const { backer, amount, tokenId, m0Share } = eventArgs;
+  const decimalAmount = formatUnits(amount, 6);
+  const decimalM0Share = formatUnits(m0Share, 6);
 
   const currentBlock = await publicClient.getBlockNumber();
   if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
@@ -38,14 +41,21 @@ export async function handleContributed(args: {
   });
 
   await prisma.$transaction(async (tx) => {
-    await tx.contribution.upsert({
+    const existing = await tx.contribution.findUnique({
       where: { txHash: txHash.toLowerCase() },
-      create: {
+    });
+    if (existing) {
+      logger.debug({ txHash }, "Contributed: already indexed");
+      return;
+    }
+
+    await tx.contribution.create({
+      data: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
         walletAddress: backer.toLowerCase(),
-        amount: amount.toString(),
-        m0Share: m0Share.toString(),
+        amount: decimalAmount,
+        m0Share: decimalM0Share,
         nftTokenId: tokenId.toString(),
         nftContract: contract.toLowerCase(),
         txHash: txHash.toLowerCase(),
@@ -53,13 +63,12 @@ export async function handleContributed(args: {
         blockNumber,
         contributedAt: new Date(),
       },
-      update: {},
     });
 
     await tx.project.update({
       where: { id: project.id },
       data: {
-        totalRaised: { increment: amount.toString() },
+        totalRaised: { increment: decimalAmount },
       },
     });
 
@@ -72,7 +81,7 @@ export async function handleContributed(args: {
               payload: {
                 projectId: project.id,
                 backerAddress: backer.toLowerCase(),
-                amount: amount.toString(),
+                amount: decimalAmount,
                 tokenId: tokenId.toString(),
               },
               status: "QUEUED",
@@ -88,7 +97,7 @@ export async function handleContributed(args: {
           userId: backerUser.id,
           type: "CONTRIBUTION_RECEIVED",
           title: "Contribution Received",
-          message: `Your contribution of ${amount.toString()} USDT has been received.`,
+          message: `Your contribution of ${decimalAmount} USDT has been received.`,
           linkUrl: `/dashboard/contributions`,
         },
       });

@@ -11,7 +11,7 @@ import { handleMilestoneResolved } from "../handlers/milestone-resolved.js";
 import { handleMilestoneClaimed } from "../handlers/milestone-claimed.js";
 import { getCursor } from "../lib/cursor.js";
 
-const POLLING_INTERVAL = 4_000;
+const POLLING_INTERVAL = 1_000;
 
 const escrowWatchers = new Map<string, () => void>();
 
@@ -34,11 +34,16 @@ async function getEscrowStartBlock(escrowAddress: `0x${string}`) {
   return earliest;
 }
 
-async function backfillEscrow(escrowAddress: `0x${string}`) {
-  const fromBlock = await getEscrowStartBlock(escrowAddress);
-  const toBlock = await publicClient.getBlockNumber();
+const MAX_BLOCK_RANGE = 5000n;
 
-  if (!fromBlock || fromBlock > toBlock) return;
+const FALLBACK_BLOCK_RANGE = 100_000n;
+
+export async function backfillEscrow(escrowAddress: `0x${string}`, fromBlockOverride?: bigint) {
+  const cursorBlock = await getEscrowStartBlock(escrowAddress);
+  const toBlock = await publicClient.getBlockNumber();
+  const fromBlock = fromBlockOverride ?? cursorBlock ?? (toBlock > FALLBACK_BLOCK_RANGE ? toBlock - FALLBACK_BLOCK_RANGE : 0n);
+
+  if (fromBlock > toBlock) return;
 
   logger.info(
     { escrow: escrowAddress, fromBlock, toBlock },
@@ -47,21 +52,28 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
 
   for (const { name } of escrowEvents) {
     const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as AbiEvent;
-    const events = await publicClient.getLogs({
-      address: escrowAddress,
-      event: eventItem,
-      fromBlock,
-      toBlock,
-      strict: true,
-    }) as unknown as {
-      blockNumber: bigint;
-      transactionHash: `0x${string}`;
-      logIndex: number;
-      args: Record<string, unknown>;
-    }[];
 
-    for (const event of events) {
-      await dispatchEvent(escrowAddress, name, event);
+    for (let batchFrom = fromBlock; batchFrom <= toBlock; batchFrom += MAX_BLOCK_RANGE) {
+      const batchTo = batchFrom + MAX_BLOCK_RANGE - 1n > toBlock
+        ? toBlock
+        : batchFrom + MAX_BLOCK_RANGE - 1n;
+
+      const events = await publicClient.getLogs({
+        address: escrowAddress,
+        event: eventItem,
+        fromBlock: batchFrom,
+        toBlock: batchTo,
+        strict: true,
+      }) as unknown as {
+        blockNumber: bigint;
+        transactionHash: `0x${string}`;
+        logIndex: number;
+        args: Record<string, unknown>;
+      }[];
+
+      for (const event of events) {
+        await dispatchEvent(escrowAddress, name, event);
+      }
     }
   }
 
@@ -75,95 +87,154 @@ async function dispatchEvent(
   escrowAddress: `0x${string}`,
   eventName: typeof escrowEvents[number]["name"],
   log: { blockNumber: bigint; transactionHash: `0x${string}`; logIndex: number; args: Record<string, unknown> }
-) {
+): Promise<boolean> {
   switch (eventName) {
     case "Contributed":
-      await handleContributed({
+      return handleContributed({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleContributed>[0]["args"],
       });
-      break;
     case "Voted":
-      await handleVoted({
+      return handleVoted({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleVoted>[0]["args"],
       });
-      break;
     case "MilestoneSubmitted":
-      await handleMilestoneSubmitted({
+      return handleMilestoneSubmitted({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
       });
-      break;
     case "MilestoneResolved":
-      await handleMilestoneResolved({
+      return handleMilestoneResolved({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneResolved>[0]["args"],
       });
-      break;
     case "MilestoneClaimed":
-      await handleMilestoneClaimed({
+      return handleMilestoneClaimed({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneClaimed>[0]["args"],
       });
-      break;
+    default:
+      return true;
   }
 }
 
-function startEscrowWatcher(escrowAddress: `0x${string}`) {
+async function startEscrowWatcher(escrowAddress: `0x${string}`) {
   if (escrowWatchers.has(escrowAddress)) return;
 
   logger.info({ escrow: escrowAddress }, "Escrow watcher: starting");
 
-  const stopFns: (() => void)[] = [];
+  const abortControllers = new Map<string, AbortController>();
 
   for (const { name } of escrowEvents) {
-    const stopFn = publicClient.watchContractEvent({
-      address: escrowAddress,
-      abi: ProjectEscrowAbi,
-      eventName: name,
-      pollingInterval: POLLING_INTERVAL,
-      onLogs: (logs) => {
-        void (async () => {
-          for (const log of logs as unknown as {
-            blockNumber: bigint;
-            transactionHash: `0x${string}`;
-            logIndex: number;
-            args: Record<string, unknown>;
-          }[]) {
-            try {
-              await dispatchEvent(escrowAddress, name, log);
-            } catch (err) {
-              logger.error(
-                { err, event: name, txHash: log.transactionHash },
-                "Escrow: error handling event"
-              );
+    const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as AbiEvent;
+    const cursor = await getCursor(escrowAddress, name);
+    let lastBlock = cursor ?? (await publicClient.getBlockNumber());
+    const abort = new AbortController();
+    abortControllers.set(name, abort);
+
+    const poll = async () => {
+      while (!abort.signal.aborted) {
+        try {
+          const currentBlock = await publicClient.getBlockNumber();
+          if (currentBlock > lastBlock) {
+            const logs = await publicClient.getLogs({
+              address: escrowAddress,
+              event: eventItem,
+              fromBlock: lastBlock + 1n,
+              toBlock: currentBlock,
+              strict: true,
+            });
+
+            for (const log of logs as unknown as {
+              blockNumber: bigint;
+              transactionHash: `0x${string}`;
+              logIndex: number;
+              args: Record<string, unknown>;
+            }[]) {
+              try {
+                await prisma.indexerCursor.upsert({
+                  where: {
+                    contract_eventName: {
+                      contract: escrowAddress.toLowerCase(),
+                      eventName: name,
+                    },
+                  },
+                  create: {
+                    contract: escrowAddress.toLowerCase(),
+                    eventName: name,
+                    lastBlock: log.blockNumber - 1n,
+                  },
+                  update: {
+                    lastBlock: log.blockNumber - 1n,
+                  },
+                });
+
+                const ok = await dispatchEvent(escrowAddress, name, log);
+                if (ok) {
+                  await prisma.indexerCursor.upsert({
+                    where: {
+                      contract_eventName: {
+                        contract: escrowAddress.toLowerCase(),
+                        eventName: name,
+                      },
+                    },
+                    create: {
+                      contract: escrowAddress.toLowerCase(),
+                      eventName: name,
+                      lastBlock: log.blockNumber,
+                    },
+                    update: {
+                      lastBlock: log.blockNumber,
+                    },
+                  });
+                  lastBlock = log.blockNumber;
+                }
+              } catch (err) {
+                logger.error(
+                  { err, event: name, txHash: log.transactionHash },
+                  "Escrow: error handling event"
+                );
+              }
+            }
+
+            if (logs.length === 0) {
+              lastBlock = currentBlock;
             }
           }
-        })();
-      },
-    });
+        } catch (err) {
+          logger.error(
+            { err, escrow: escrowAddress, event: name },
+            "Escrow: polling error"
+          );
+        }
 
-    stopFns.push(stopFn);
+        await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+      }
+    };
+
+    void poll();
   }
 
   const combinedStop = () => {
-    stopFns.forEach((fn) => { fn(); });
+    for (const abort of abortControllers.values()) {
+      abort.abort();
+    }
     escrowWatchers.delete(escrowAddress);
   };
 
@@ -184,13 +255,13 @@ async function startEscrowWatchersForKnownProjects() {
     if (project.escrowAddress) {
       const address = project.escrowAddress as `0x${string}`;
       await backfillEscrow(address);
-      startEscrowWatcher(address);
+      void startEscrowWatcher(address);
     }
   }
 }
 
 export function addEscrowWatcher(escrowAddress: `0x${string}`) {
-  startEscrowWatcher(escrowAddress);
+  void startEscrowWatcher(escrowAddress);
 }
 
 export function stopAllEscrowWatchers() {
