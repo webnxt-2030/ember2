@@ -36,7 +36,7 @@ export function PublishButton({ projectId }: PublishButtonProps) {
   const [flow, setFlow] = useState<FlowState>({ type: 'idle' })
 
   const {
-    sendTransaction,
+    mutate,
     isPending: isSendPending,
     error: sendError,
     data: hash,
@@ -61,8 +61,8 @@ export function PublishButton({ projectId }: PublishButtonProps) {
           setFlow({ type: 'success' })
           window.location.reload()
         })
-        .catch((err: Error) => {
-          setError(err.message)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : 'Confirmation failed')
           setFlow({ type: 'idle' })
         })
     }
@@ -100,7 +100,7 @@ export function PublishButton({ projectId }: PublishButtonProps) {
       void open()
       return
     }
-    sendTransaction({
+    mutate({
       to: flow.to,
       data: flow.calldata,
     })

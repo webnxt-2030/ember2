@@ -122,14 +122,14 @@ export function EditProjectForm({
       <Card>
         <CardContent className="pt-6 space-y-6">
           <h2 className="text-headline-md text-on-surface">Metadata</h2>
-          <Input label="Project title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          <Input label="URL slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
-          <Input label="Summary" value={summary} onChange={(e) => setSummary(e.target.value)} required />
+          <Input label="Project title" value={title} onChange={(e) => { setTitle(e.target.value); }} required />
+          <Input label="URL slug" value={slug} onChange={(e) => { setSlug(e.target.value); }} required />
+          <Input label="Summary" value={summary} onChange={(e) => { setSummary(e.target.value); }} required />
           <div>
             <label className="block text-label-md text-on-surface mb-2">Description (Markdown)</label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); }}
               rows={8}
               className="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-y"
             />
@@ -143,7 +143,7 @@ export function EditProjectForm({
           {pictures.map((pic, i) => (
             <Input
               key={i}
-              label={`Picture ${i + 1} URL`}
+              label={`Picture ${String(i + 1)} URL`}
               value={pic}
               onChange={(e) => {
                 const p = [...pictures]
@@ -153,13 +153,13 @@ export function EditProjectForm({
               type="url"
             />
           ))}
-          <Input label="Twitter URL" value={twitter} onChange={(e) => setTwitter(e.target.value)} type="url" />
-          <Input label="GitHub URL" value={github} onChange={(e) => setGithub(e.target.value)} type="url" />
-          <Input label="Website URL" value={website} onChange={(e) => setWebsite(e.target.value)} type="url" />
+          <Input label="Twitter URL" value={twitter} onChange={(e) => { setTwitter(e.target.value); }} type="url" />
+          <Input label="GitHub URL" value={github} onChange={(e) => { setGithub(e.target.value); }} type="url" />
+          <Input label="Website URL" value={website} onChange={(e) => { setWebsite(e.target.value); }} type="url" />
           {backingLinks.map((link, i) => (
             <Input
               key={i}
-              label={`Backing link ${i + 1}`}
+              label={`Backing link ${String(i + 1)}`}
               value={link}
               onChange={(e) => {
                 const b = [...backingLinks]
@@ -178,13 +178,13 @@ export function EditProjectForm({
           <Input
             label="Target amount (USDT)"
             value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
+            onChange={(e) => { setTargetAmount(e.target.value); }}
             required
           />
           <Input
             label="Funding deadline"
             value={fundingDeadline}
-            onChange={(e) => setFundingDeadline(e.target.value)}
+            onChange={(e) => { setFundingDeadline(e.target.value); }}
             type="datetime-local"
           />
           <div>
@@ -196,7 +196,7 @@ export function EditProjectForm({
               min={3}
               max={30}
               value={votingPeriodDays}
-              onChange={(e) => setVotingPeriodDays(Number(e.target.value))}
+              onChange={(e) => { setVotingPeriodDays(Number(e.target.value)); }}
               className="w-full"
             />
             <div className="flex justify-between text-label-sm text-on-surface-variant mt-1">
@@ -217,14 +217,14 @@ export function EditProjectForm({
                 <Input
                   label="Title"
                   value={m.title}
-                  onChange={(e) => updateMilestone(i, 'title', e.target.value)}
+                  onChange={(e) => { updateMilestone(i, 'title', e.target.value); }}
                   required
                 />
                 <div>
                   <label className="block text-label-md text-on-surface mb-2">Description</label>
                   <textarea
                     value={m.description}
-                    onChange={(e) => updateMilestone(i, 'description', e.target.value)}
+                    onChange={(e) => { updateMilestone(i, 'description', e.target.value); }}
                     rows={3}
                     className="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-y"
                   />
@@ -232,7 +232,7 @@ export function EditProjectForm({
                 <Input
                   label="Deliverable date"
                   value={m.deliverableDate}
-                  onChange={(e) => updateMilestone(i, 'deliverableDate', e.target.value)}
+                  onChange={(e) => { updateMilestone(i, 'deliverableDate', e.target.value); }}
                   type="date"
                 />
               </div>
@@ -245,7 +245,7 @@ export function EditProjectForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`/org/dashboard/${orgId}/projects/${projectId}`)}
+          onClick={() => { router.push(`/org/dashboard/${orgId}/projects/${projectId}`); }}
         >
           Cancel
         </Button>
