@@ -53,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     args: [
       project.organization.receivingWallet as `0x${string}`,
       project.milestoneBps as readonly number[],
-      project.votingPeriodDays * 86400,
+      project.votingPeriodDays * 60,
       projectURI,
     ],
   })

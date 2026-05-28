@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
@@ -51,12 +52,22 @@ export async function handleVoted(args: {
         milestoneId: milestone.id,
         walletAddress: voter.toLowerCase(),
         choice: yes ? "YES" : "NO",
-        weight: weight.toString(),
+        weight: formatUnits(weight, 6),
         txHash: txHash.toLowerCase(),
         logIndex,
         votedAt: new Date(),
       },
       update: {},
+    });
+
+    await tx.milestone.updateMany({
+      where: {
+        projectId: project.id,
+        index: Number(milestoneIndex),
+      },
+      data: yes
+        ? { weightYes: { increment: formatUnits(weight, 6) } }
+        : { weightNo: { increment: formatUnits(weight, 6) } },
     });
 
     await updateCursor(tx, contract, "Voted", blockNumber);

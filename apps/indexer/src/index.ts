@@ -19,7 +19,7 @@ async function main() {
 
   await startFactoryWatcher();
 
-  startKeeper();
+  void startKeeper();
 
   startEmailWorker();
 

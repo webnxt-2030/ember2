@@ -72,6 +72,11 @@ export async function handleContributed(args: {
       },
     });
 
+    await tx.milestone.updateMany({
+      where: { projectId: project.id, index: 0, status: 'PENDING' },
+      data: { status: 'AUTO_RELEASED' },
+    });
+
     await tx.emailNotification.createMany({
       data: backerUser?.email
         ? [

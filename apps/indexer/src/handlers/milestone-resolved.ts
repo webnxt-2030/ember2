@@ -1,3 +1,4 @@
+import { formatUnits } from "viem";
 import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
@@ -40,8 +41,8 @@ export async function handleMilestoneResolved(args: {
       },
       data: {
         status: passed ? "PASSED" : "FAILED",
-        weightYes: weightYes.toString(),
-        weightNo: weightNo.toString(),
+        weightYes: formatUnits(weightYes, 6),
+        weightNo: formatUnits(weightNo, 6),
         passed,
       },
     });
