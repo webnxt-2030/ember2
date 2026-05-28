@@ -43,9 +43,9 @@ export default async function EditProjectPage({
           initialSlug={project.slug}
           initialSummary={project.summary}
           initialDescription={project.description}
-          initialPictures={project.pictures as string[]}
+          initialPictures={project.pictures}
           initialSocialLinks={project.socialLinks as Record<string, string>}
-          initialBackingLinks={project.backingLinks as string[]}
+          initialBackingLinks={project.backingLinks}
           initialTargetAmount={project.targetAmount.toString()}
           initialFundingDeadline={project.fundingDeadline?.toISOString().slice(0, 16) ?? ''}
           initialVotingPeriodDays={project.votingPeriodDays}
