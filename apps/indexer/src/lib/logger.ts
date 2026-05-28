@@ -1,1 +1,1 @@
-export { logger } from "@ember/shared/logger.js";
+export { logger } from "@ember/shared/logger";

@@ -1,6 +1,6 @@
 import { defineChain, http } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { createAppKit } from "@reown/appkit";
+import { createAppKit } from "@reown/appkit/react";
 import type { Config } from "wagmi";
 import {
   MORPH_CHAIN_ID,

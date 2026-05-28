@@ -8,12 +8,12 @@ declare module "@ember/shared" {
   export * from "./reward-curve.js";
 }
 
-declare module "@ember/shared/logger.js" {
+declare module "@ember/shared/logger" {
   import type { Logger } from "pino";
   export const logger: Logger;
 }
 
-declare module "@ember/shared/constants.js" {
+declare module "@ember/shared/constants" {
   export const MORPH_CHAIN_ID: 2818;
   export const MORPH_TESTNET_CHAIN_ID: 2810;
   export const USDT_ADDRESS: `0x${string}`;
@@ -28,7 +28,7 @@ declare module "@ember/shared/constants.js" {
   export const MAX_MILESTONES: number;
 }
 
-declare module "@ember/shared/abis.js" {
+declare module "@ember/shared/abis" {
   export const ProjectFactoryAbi: readonly unknown[];
   export const ProjectEscrowAbi: readonly unknown[];
   export const PositionNFTAbi: readonly unknown[];

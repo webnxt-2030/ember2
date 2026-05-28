@@ -1,7 +1,7 @@
 import { publicClient } from "../lib/client.js";
 import { getAbiItem } from "viem";
 import type { AbiEvent } from "viem";
-import { ProjectFactoryAbi } from "@ember/shared/abis.js";
+import { ProjectFactoryAbi } from "@ember/shared/abis";
 import { indexerEnv } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
