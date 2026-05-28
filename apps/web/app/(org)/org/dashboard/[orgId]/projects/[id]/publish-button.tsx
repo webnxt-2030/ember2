@@ -19,7 +19,7 @@ type FlowState =
   | { type: 'idle' }
   | { type: 'preparing' }
   | { type: 'ready'; to: `0x${string}`; calldata: `0x${string}`; chainId: number }
-  | { type: 'confirming'; hash: `0x${string}` }
+  | { type: 'finalizing' }
   | { type: 'success' }
 
 interface PublishApiResponse {
@@ -45,28 +45,47 @@ export function PublishButton({ projectId }: PublishButtonProps) {
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash })
 
+  // Triggered once the on-chain tx is mined (1 confirmation)
   useEffect(() => {
-    if (isConfirmed && hash && flow.type !== 'success') {
-      setFlow({ type: 'confirming', hash })
+    if (isConfirmed && hash && flow.type !== 'finalizing' && flow.type !== 'success') {
+      setFlow({ type: 'finalizing' })
+
+      // Fire confirmation in the background so ActivityLog is still recorded
       fetch(`/api/projects/${projectId}/publish/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txHash: hash }),
+      }).catch(() => {
+        // Background confirmation failed; indexer will eventually reconcile
       })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = (await res.json()) as { detail?: string; title?: string }
-            throw new Error(data.detail ?? data.title ?? 'Confirmation failed')
-          }
-          setFlow({ type: 'success' })
-          window.location.reload()
-        })
-        .catch((err: unknown) => {
-          setError(err instanceof Error ? err.message : 'Confirmation failed')
-          setFlow({ type: 'idle' })
-        })
     }
   }, [isConfirmed, hash, flow.type, projectId])
+
+  // Poll project status until it flips to LIVE, then reload
+  useEffect(() => {
+    if (flow.type !== 'finalizing') return
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/status`)
+        if (!res.ok) return
+        const data = (await res.json()) as { status?: string }
+        if (data.status === 'LIVE') {
+          window.location.reload()
+        }
+      } catch {
+        // Ignore polling errors; next tick will retry
+      }
+    }
+
+    void poll()
+    const interval = setInterval(() => {
+      void poll()
+    }, 2000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [flow.type, projectId])
 
   async function handlePrepare() {
     setError(null)
@@ -144,6 +163,35 @@ export function PublishButton({ projectId }: PublishButtonProps) {
     )
   }
 
+  if (flow.type === 'finalizing') {
+    return (
+      <Card className="w-full max-w-xl">
+        <CardContent className="pt-6 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <svg
+              className="animate-spin text-primary"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+          <h3 className="text-headline-sm text-on-surface">Finalizing publish</h3>
+          <p className="text-body-md text-on-surface-variant mt-1">
+            Transaction confirmed. Waiting for on-chain data to sync...
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="w-full max-w-xl">
       <CardHeader>
@@ -168,7 +216,7 @@ export function PublishButton({ projectId }: PublishButtonProps) {
           >
             {flow.type === 'preparing' ? 'Preparing...' : 'Prepare publish'}
           </Button>
-        ) : flow.type === 'ready' ? (
+        ) : (
           <Button
             onClick={handlePublish}
             disabled={isSendPending || isConfirming}
@@ -179,8 +227,6 @@ export function PublishButton({ projectId }: PublishButtonProps) {
                 ? 'Confirming on-chain...'
                 : 'Publish on-chain'}
           </Button>
-        ) : (
-          <Button disabled>Confirming...</Button>
         )}
       </CardContent>
     </Card>

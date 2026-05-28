@@ -84,8 +84,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     receipt = await client.waitForTransactionReceipt({
       hash: txHash as `0x${string}`,
-      confirmations: 12,
-      timeout: 110_000, // just under maxDuration
+      confirmations: 1, // was 12
+      timeout: 110_000,
     })
   } catch (err) {
     return errorResponse(new ValidationError(`Transaction not confirmed: ${String(err)}`), req)
