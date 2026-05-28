@@ -2,24 +2,23 @@ import { defineChain, http } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit/react";
 import type { Config } from "wagmi";
-import {
-  MORPH_CHAIN_ID,
-  MORPH_RPC_URL,
-  MORPH_EXPLORER_URL,
-} from "@ember/shared";
 
 const BITGET_WALLETCONNECT_ID =
   "38f5d18bd8522c244bdd70cb4a68e0e718865155811c043f052fb9f1c51de662";
 
+const chainId = Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2810);
+const rpcUrl = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? "https://rpc-holesky.morphl2.io";
+const explorerUrl = process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? "https://explorer-holesky.morphl2.io";
+
 export const morphChain = defineChain({
-  id: MORPH_CHAIN_ID,
+  id: chainId,
   name: "Morph",
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   rpcUrls: {
-    default: { http: [MORPH_RPC_URL] },
+    default: { http: [rpcUrl] },
   },
   blockExplorers: {
-    default: { name: "Morph Explorer", url: MORPH_EXPLORER_URL },
+    default: { name: "Morph Explorer", url: explorerUrl },
   },
 });
 
