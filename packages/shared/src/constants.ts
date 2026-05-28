@@ -1,5 +1,5 @@
 export const MORPH_CHAIN_ID = 2910;
-export const MORPH_TESTNET_CHAIN_ID = 2810;
+export const MORPH_TESTNET_CHAIN_ID = 2910;
 
 export const USDT_ADDRESS = "0x5178020dF6Cce016fF5c169Ce7167F10421C29F5" as const;
 export const USDT_DECIMALS = 6;
