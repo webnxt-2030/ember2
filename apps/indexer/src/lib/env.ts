@@ -3,6 +3,7 @@ import { z } from "zod";
 const schema = z.object({
   DATABASE_URL: z.url(),
   REDIS_URL: z.url(),
+  MORPH_CHAIN_ID: z.coerce.number().int().positive().default(2910),
   MORPH_RPC_URL: z.url(),
   NEXT_PUBLIC_MORPH_RPC_URL: z.url(),
   KEEPER_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
