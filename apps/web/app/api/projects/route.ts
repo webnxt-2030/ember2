@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 const milestoneInputSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(5000),
-  deliverableDate: z.iso.datetime().optional(),
+  deliverableDate: z.string().optional(),
 })
 
 const createProjectSchema = z.object({
@@ -56,7 +56,7 @@ const createProjectSchema = z.object({
     .default({}),
   backingLinks: z.array(z.url()).max(5).default([]),
   targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/, 'Invalid USDT amount'),
-  fundingDeadline: z.iso.datetime().optional(),
+  fundingDeadline: z.string().optional(),
   votingPeriodDays: z.number().int().min(3).max(30).default(7),
   rewardCurveType: z
     .enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM'])
