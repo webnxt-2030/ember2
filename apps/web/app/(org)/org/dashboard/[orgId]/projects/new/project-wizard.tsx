@@ -26,7 +26,7 @@ function isValidUrl(url: string): boolean {
 }
 
 function formatValidationIssues(
-  issues: Array<{ path: (string | number)[]; message: string }>,
+  issues: { path: (string | number)[]; message: string }[],
 ): string {
   return issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
 }
@@ -244,7 +244,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
       const data = (await res.json()) as {
         detail?: string
         title?: string
-        issues?: Array<{ path: (string | number)[]; message: string }>
+        issues?: { path: (string | number)[]; message: string }[]
       }
       if (!res.ok) {
         const message =
