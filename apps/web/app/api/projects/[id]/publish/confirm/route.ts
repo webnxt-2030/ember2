@@ -18,12 +18,12 @@ const confirmSchema = z.object({
 })
 
 // Morph L2 chain (not in viem built-ins)
-const morphMainnet = {
-  id: 2818,
-  name: 'Morph L2',
+const morphChain = {
+  id: 2910,
+  name: 'Morph Hoodi',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: [process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'] as readonly [string, ...string[]] },
+    default: { http: [process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'] as readonly [string, ...string[]] },
   },
 } as const
 
@@ -76,8 +76,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Wait for 12 confirmations
   const client = createPublicClient({
-    chain: morphMainnet,
-    transport: http(process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'),
+    chain: morphChain,
+    transport: http(process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'),
   })
 
   let receipt: Awaited<ReturnType<typeof client.waitForTransactionReceipt>>

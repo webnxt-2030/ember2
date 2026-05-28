@@ -1,6 +1,6 @@
 export type Address = `0x${string}`;
 
-export type ChainId = 2818 | 2810;
+export type ChainId = 2910 | 2818 | 2810;
 
 export enum UserRole {
   BACKER = "BACKER",

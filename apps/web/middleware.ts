@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rate-limit'
 // Must be Node.js runtime: ioredis depends on Node.js net/tls (not available in Edge runtime)
 export const runtime = 'nodejs'
 
-const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'
+const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'
 
 // Content Security Policy. Next injects inline bootstrap/hydration <script> tags, so a
 // strict script-src must allow them: in production via a per-request nonce (Next applies
@@ -21,7 +21,7 @@ function buildCsp(nonce: string, isDev: boolean): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Tailwind inline + Material Symbols
     "img-src 'self' data: blob: https:", // wallets show remote logos
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-holesky.morphl2.io wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
+    `connect-src 'self' ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-hoodi.morph.network wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
     "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -111,7 +111,7 @@ export async function middleware(req: NextRequest) {
     'Strict-Transport-Security',
     'max-age=63072000; includeSubDomains; preload',
   )
-  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
 
   return response

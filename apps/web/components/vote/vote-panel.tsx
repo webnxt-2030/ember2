@@ -10,7 +10,7 @@ import {
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { zeroAddress } from "viem";
-import { ProjectEscrowAbi, MORPH_EXPLORER_URL } from "@ember/shared";
+import { ProjectEscrowAbi } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -291,7 +291,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
             Vote recorded: {flow.choice}
           </div>
           <a
-            href={`${MORPH_EXPLORER_URL}/tx/${flow.hash}`}
+            href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline text-label-md"

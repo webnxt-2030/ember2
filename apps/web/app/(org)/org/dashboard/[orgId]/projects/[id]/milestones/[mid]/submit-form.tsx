@@ -6,7 +6,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { ProjectEscrowAbi, MORPH_EXPLORER_URL } from '@ember/shared'
+import { ProjectEscrowAbi } from '@ember/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -149,7 +149,7 @@ export function SubmitForm({
               </p>
             </div>
             <a
-              href={`${MORPH_EXPLORER_URL}/tx/${flow.hash}`}
+              href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline text-label-md"
