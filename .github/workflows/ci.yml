@@ -71,6 +71,8 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run forge test with gas report
         run: |
           cd contracts
@@ -85,6 +87,8 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Slither
         run: pip install slither-analyzer
       - name: Run Slither
@@ -101,6 +105,8 @@ jobs:
           submodules: recursive
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
