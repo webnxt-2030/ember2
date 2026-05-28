@@ -8,6 +8,7 @@ import { handleProjectCreated } from "../handlers/project-created.js";
 import { getCursor } from "../lib/cursor.js";
 
 const POLLING_INTERVAL = 4_000;
+const MAX_BLOCK_RANGE = 5000n;
 
 const factoryAddress = indexerEnv.FACTORY_ADDRESS as `0x${string}`;
 
@@ -20,31 +21,41 @@ async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
   );
 
   const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as AbiEvent;
-  const events = await publicClient.getLogs({
-    address: factoryAddress,
-    event: eventItem,
-    fromBlock,
-    toBlock,
-    strict: true,
-  }) as unknown as {
-    blockNumber: bigint;
-    transactionHash: `0x${string}`;
-    logIndex: number;
-    args: Parameters<typeof handleProjectCreated>[0]["args"];
-  }[];
+  let totalEvents = 0;
 
-  for (const event of events) {
-    await handleProjectCreated({
-      contract: factoryAddress,
-      blockNumber: event.blockNumber,
-      txHash: event.transactionHash,
-      logIndex: event.logIndex,
-      args: event.args,
-    });
+  for (let batchFrom = fromBlock; batchFrom <= toBlock; batchFrom += MAX_BLOCK_RANGE) {
+    const batchTo = batchFrom + MAX_BLOCK_RANGE - 1n > toBlock
+      ? toBlock
+      : batchFrom + MAX_BLOCK_RANGE - 1n;
+
+    const events = await publicClient.getLogs({
+      address: factoryAddress,
+      event: eventItem,
+      fromBlock: batchFrom,
+      toBlock: batchTo,
+      strict: true,
+    }) as unknown as {
+      blockNumber: bigint;
+      transactionHash: `0x${string}`;
+      logIndex: number;
+      args: Parameters<typeof handleProjectCreated>[0]["args"];
+    }[];
+
+    for (const event of events) {
+      await handleProjectCreated({
+        contract: factoryAddress,
+        blockNumber: event.blockNumber,
+        txHash: event.transactionHash,
+        logIndex: event.logIndex,
+        args: event.args,
+      });
+    }
+
+    totalEvents += events.length;
   }
 
   logger.info(
-    { factory: factoryAddress, count: events.length },
+    { factory: factoryAddress, count: totalEvents },
     "Factory: backfill complete"
   );
 }

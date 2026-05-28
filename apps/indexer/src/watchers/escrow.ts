@@ -34,11 +34,16 @@ async function getEscrowStartBlock(escrowAddress: `0x${string}`) {
   return earliest;
 }
 
-async function backfillEscrow(escrowAddress: `0x${string}`) {
-  const fromBlock = await getEscrowStartBlock(escrowAddress);
-  const toBlock = await publicClient.getBlockNumber();
+const MAX_BLOCK_RANGE = 5000n;
 
-  if (!fromBlock || fromBlock > toBlock) return;
+const FALLBACK_BLOCK_RANGE = 100_000n;
+
+export async function backfillEscrow(escrowAddress: `0x${string}`, fromBlockOverride?: bigint) {
+  const cursorBlock = await getEscrowStartBlock(escrowAddress);
+  const toBlock = await publicClient.getBlockNumber();
+  const fromBlock = fromBlockOverride ?? cursorBlock ?? (toBlock > FALLBACK_BLOCK_RANGE ? toBlock - FALLBACK_BLOCK_RANGE : 0n);
+
+  if (fromBlock > toBlock) return;
 
   logger.info(
     { escrow: escrowAddress, fromBlock, toBlock },
@@ -47,21 +52,28 @@ async function backfillEscrow(escrowAddress: `0x${string}`) {
 
   for (const { name } of escrowEvents) {
     const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as AbiEvent;
-    const events = await publicClient.getLogs({
-      address: escrowAddress,
-      event: eventItem,
-      fromBlock,
-      toBlock,
-      strict: true,
-    }) as unknown as {
-      blockNumber: bigint;
-      transactionHash: `0x${string}`;
-      logIndex: number;
-      args: Record<string, unknown>;
-    }[];
 
-    for (const event of events) {
-      await dispatchEvent(escrowAddress, name, event);
+    for (let batchFrom = fromBlock; batchFrom <= toBlock; batchFrom += MAX_BLOCK_RANGE) {
+      const batchTo = batchFrom + MAX_BLOCK_RANGE - 1n > toBlock
+        ? toBlock
+        : batchFrom + MAX_BLOCK_RANGE - 1n;
+
+      const events = await publicClient.getLogs({
+        address: escrowAddress,
+        event: eventItem,
+        fromBlock: batchFrom,
+        toBlock: batchTo,
+        strict: true,
+      }) as unknown as {
+        blockNumber: bigint;
+        transactionHash: `0x${string}`;
+        logIndex: number;
+        args: Record<string, unknown>;
+      }[];
+
+      for (const event of events) {
+        await dispatchEvent(escrowAddress, name, event);
+      }
     }
   }
 

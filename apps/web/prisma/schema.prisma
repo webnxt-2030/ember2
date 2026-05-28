@@ -52,6 +52,7 @@ model Account {
   idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
+  expiresAt             DateTime?
   password              String?
   scope                 String?
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)

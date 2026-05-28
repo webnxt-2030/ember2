@@ -1,3 +1,5 @@
+import { formatUnits } from "viem";
+import { USDT_DECIMALS } from "@ember/shared";
 import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
@@ -13,6 +15,8 @@ export async function handleContributed(args: {
 }) {
   const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
   const { backer, amount, tokenId, m0Share } = eventArgs;
+  const decimalAmount = formatUnits(amount, USDT_DECIMALS);
+  const decimalM0Share = formatUnits(m0Share, USDT_DECIMALS);
 
   const currentBlock = await publicClient.getBlockNumber();
   if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
@@ -44,8 +48,8 @@ export async function handleContributed(args: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
         walletAddress: backer.toLowerCase(),
-        amount: amount.toString(),
-        m0Share: m0Share.toString(),
+        amount: decimalAmount,
+        m0Share: decimalM0Share,
         nftTokenId: tokenId.toString(),
         nftContract: contract.toLowerCase(),
         txHash: txHash.toLowerCase(),
@@ -59,7 +63,7 @@ export async function handleContributed(args: {
     await tx.project.update({
       where: { id: project.id },
       data: {
-        totalRaised: { increment: amount.toString() },
+        totalRaised: { increment: decimalAmount },
       },
     });
 
@@ -72,7 +76,7 @@ export async function handleContributed(args: {
               payload: {
                 projectId: project.id,
                 backerAddress: backer.toLowerCase(),
-                amount: amount.toString(),
+                amount: decimalAmount,
                 tokenId: tokenId.toString(),
               },
               status: "QUEUED",
@@ -88,7 +92,7 @@ export async function handleContributed(args: {
           userId: backerUser.id,
           type: "CONTRIBUTION_RECEIVED",
           title: "Contribution Received",
-          message: `Your contribution of ${amount.toString()} USDT has been received.`,
+          message: `Your contribution of ${decimalAmount} USDT has been received.`,
           linkUrl: `/dashboard/contributions`,
         },
       });
