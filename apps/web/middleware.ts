@@ -111,7 +111,7 @@ export async function middleware(req: NextRequest) {
     'Strict-Transport-Security',
     'max-age=63072000; includeSubDomains; preload',
   )
-  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
   response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
 
   return response
