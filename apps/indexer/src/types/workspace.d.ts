@@ -15,7 +15,7 @@ declare module "@ember/shared/logger" {
 
 declare module "@ember/shared/constants" {
   export const MORPH_CHAIN_ID: 2910;
-  export const MORPH_TESTNET_CHAIN_ID: 2810;
+  export const MORPH_TESTNET_CHAIN_ID: 2910;
   export const USDT_ADDRESS: `0x${string}`;
   export const USDT_DECIMALS: 6;
   export const MORPH_RPC_URL: string;
