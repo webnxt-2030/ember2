@@ -331,7 +331,7 @@ export function ContributeStepper({
               </p>
             </div>
             <a
-              href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${flow.hash}`}
+              href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline text-label-md"
