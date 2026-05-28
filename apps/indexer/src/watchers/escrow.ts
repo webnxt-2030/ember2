@@ -11,7 +11,7 @@ import { handleMilestoneResolved } from "../handlers/milestone-resolved.js";
 import { handleMilestoneClaimed } from "../handlers/milestone-claimed.js";
 import { getCursor } from "../lib/cursor.js";
 
-const POLLING_INTERVAL = 4_000;
+const POLLING_INTERVAL = 1_000;
 
 const escrowWatchers = new Map<string, () => void>();
 

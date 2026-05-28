@@ -8,7 +8,7 @@ import { prisma } from "../lib/db.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
 import { getCursor } from "../lib/cursor.js";
 
-const POLLING_INTERVAL = 4_000;
+const POLLING_INTERVAL = 1_000;
 const MAX_BLOCK_RANGE = 5000n;
 
 const factoryAddress = indexerEnv.FACTORY_ADDRESS as `0x${string}`;
