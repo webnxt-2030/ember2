@@ -1,5 +1,4 @@
 import { formatUnits } from "viem";
-import { USDT_DECIMALS } from "@ember/shared";
 import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
@@ -15,8 +14,8 @@ export async function handleContributed(args: {
 }) {
   const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
   const { backer, amount, tokenId, m0Share } = eventArgs;
-  const decimalAmount = formatUnits(amount, USDT_DECIMALS);
-  const decimalM0Share = formatUnits(m0Share, USDT_DECIMALS);
+  const decimalAmount = formatUnits(amount, 6);
+  const decimalM0Share = formatUnits(m0Share, 6);
 
   const currentBlock = await publicClient.getBlockNumber();
   if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {

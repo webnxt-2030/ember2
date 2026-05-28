@@ -255,13 +255,13 @@ async function startEscrowWatchersForKnownProjects() {
     if (project.escrowAddress) {
       const address = project.escrowAddress as `0x${string}`;
       await backfillEscrow(address);
-      startEscrowWatcher(address);
+      void startEscrowWatcher(address);
     }
   }
 }
 
 export function addEscrowWatcher(escrowAddress: `0x${string}`) {
-  startEscrowWatcher(escrowAddress);
+  void startEscrowWatcher(escrowAddress);
 }
 
 export function stopAllEscrowWatchers() {
