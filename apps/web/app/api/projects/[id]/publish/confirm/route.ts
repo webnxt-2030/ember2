@@ -17,10 +17,13 @@ const confirmSchema = z.object({
   txHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/, 'Invalid tx hash'),
 })
 
+const chainId = Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID) || 2818
+
 // Morph L2 chain (not in viem built-ins)
 const morphChain = {
-  id: 2910,
-  name: 'Morph Hoodi',
+<<<<<<< HEAD
+  id: chainId,
+  name: 'Morph L2',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
     default: { http: [process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'] as readonly [string, ...string[]] },
@@ -77,6 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Wait for 12 confirmations
   const client = createPublicClient({
     chain: morphChain,
+<<<<<<< HEAD
     transport: http(process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'),
   })
 

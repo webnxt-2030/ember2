@@ -68,6 +68,7 @@ export function AuthNav({ mobile = false, onNavigate }: AuthNavProps) {
 
   const { user } = session
   const isStaff = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
+  const isOrgOwner = user.role === 'ORG_OWNER' || user.role === 'SUPER_ADMIN'
 
   // Mobile: flat list of links instead of a dropdown.
   if (mobile) {
@@ -83,6 +84,15 @@ export function AuthNav({ mobile = false, onNavigate }: AuthNavProps) {
         >
           Dashboard
         </Link>
+        {isOrgOwner && (
+          <Link
+            href="/org/dashboard"
+            className="px-4 py-3 text-body-md text-on-surface rounded-xl hover:bg-surface-container-low transition-colors"
+            onClick={() => { onNavigate?.() }}
+          >
+            My Organizations
+          </Link>
+        )}
         {isStaff && (
           <Link
             href="/admin"
@@ -142,6 +152,16 @@ export function AuthNav({ mobile = false, onNavigate }: AuthNavProps) {
           >
             Dashboard
           </Link>
+          {isOrgOwner && (
+            <Link
+              href="/org/dashboard"
+              role="menuitem"
+              className="block px-4 py-2.5 text-body-md text-on-surface hover:bg-surface-container-low transition-colors"
+              onClick={() => { setMenuOpen(false) }}
+            >
+              My Organizations
+            </Link>
+          )}
           {isStaff && (
             <Link
               href="/admin"

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { MilestoneTimeline } from '@/components/projects/milestone-timeline'
 import { Progress } from '@/components/ui/progress'
 import { ClaimButton } from '@/components/milestones/claim-button'
+import { PublishButton } from './publish-button'
 import Link from 'next/link'
 
 export default async function OrgProjectDetailPage({
@@ -83,6 +84,17 @@ export default async function OrgProjectDetailPage({
             </div>
             <p className="text-label-sm text-on-surface-variant mt-1">{project.slug}</p>
           </div>
+          <div className="flex items-center gap-3">
+            {project.status === 'DRAFT' && (
+              <Link
+                href={`/org/dashboard/${orgId}/projects/${id}/edit`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-outline px-4 py-2 text-label-md text-on-surface hover:bg-surface-container-low transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Edit
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Stats */}
@@ -115,6 +127,12 @@ export default async function OrgProjectDetailPage({
             {progress.toFixed(1)}% funded
           </p>
         </div>
+
+        {project.status === 'DRAFT' && (
+          <div className="mt-8">
+            <PublishButton projectId={id} orgId={orgId} />
+          </div>
+        )}
 
         {/* Milestones */}
         <div className="mt-12">
