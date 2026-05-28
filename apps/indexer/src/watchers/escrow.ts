@@ -134,51 +134,40 @@ async function dispatchEvent(
   }
 }
 
-function startEscrowWatcher(escrowAddress: `0x${string}`) {
+async function startEscrowWatcher(escrowAddress: `0x${string}`) {
   if (escrowWatchers.has(escrowAddress)) return;
 
   logger.info({ escrow: escrowAddress }, "Escrow watcher: starting");
 
-  const stopFns: (() => void)[] = [];
+  const abortControllers = new Map<string, AbortController>();
 
   for (const { name } of escrowEvents) {
-    const stopFn = publicClient.watchContractEvent({
-      address: escrowAddress,
-      abi: ProjectEscrowAbi,
-      eventName: name,
-      pollingInterval: POLLING_INTERVAL,
-      poll: true,
-      onLogs: (logs) => {
-        void (async () => {
-          for (const log of logs as unknown as {
-            blockNumber: bigint;
-            transactionHash: `0x${string}`;
-            logIndex: number;
-            args: Record<string, unknown>;
-          }[]) {
-            try {
-              // Pre-advance cursor to blockNumber - 1 so that if dispatch fails
-              // (e.g. insufficient confirmations) the next backfill will retry.
-              await prisma.indexerCursor.upsert({
-                where: {
-                  contract_eventName: {
-                    contract: escrowAddress.toLowerCase(),
-                    eventName: name,
-                  },
-                },
-                create: {
-                  contract: escrowAddress.toLowerCase(),
-                  eventName: name,
-                  lastBlock: log.blockNumber - 1n,
-                },
-                update: {
-                  lastBlock: log.blockNumber - 1n,
-                },
-              });
+    const eventItem = getAbiItem({ abi: ProjectEscrowAbi, name }) as AbiEvent;
+    const cursor = await getCursor(escrowAddress, name);
+    let lastBlock = cursor ?? (await publicClient.getBlockNumber());
+    const abort = new AbortController();
+    abortControllers.set(name, abort);
 
-              const ok = await dispatchEvent(escrowAddress, name, log);
-              if (ok) {
-                // Successfully processed — advance cursor to blockNumber.
+    const poll = async () => {
+      while (!abort.signal.aborted) {
+        try {
+          const currentBlock = await publicClient.getBlockNumber();
+          if (currentBlock > lastBlock) {
+            const logs = await publicClient.getLogs({
+              address: escrowAddress,
+              event: eventItem,
+              fromBlock: lastBlock + 1n,
+              toBlock: currentBlock,
+              strict: true,
+            });
+
+            for (const log of logs as unknown as {
+              blockNumber: bigint;
+              transactionHash: `0x${string}`;
+              logIndex: number;
+              args: Record<string, unknown>;
+            }[]) {
+              try {
                 await prisma.indexerCursor.upsert({
                   where: {
                     contract_eventName: {
@@ -189,29 +178,63 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
                   create: {
                     contract: escrowAddress.toLowerCase(),
                     eventName: name,
-                    lastBlock: log.blockNumber,
+                    lastBlock: log.blockNumber - 1n,
                   },
                   update: {
-                    lastBlock: log.blockNumber,
+                    lastBlock: log.blockNumber - 1n,
                   },
                 });
+
+                const ok = await dispatchEvent(escrowAddress, name, log);
+                if (ok) {
+                  await prisma.indexerCursor.upsert({
+                    where: {
+                      contract_eventName: {
+                        contract: escrowAddress.toLowerCase(),
+                        eventName: name,
+                      },
+                    },
+                    create: {
+                      contract: escrowAddress.toLowerCase(),
+                      eventName: name,
+                      lastBlock: log.blockNumber,
+                    },
+                    update: {
+                      lastBlock: log.blockNumber,
+                    },
+                  });
+                  lastBlock = log.blockNumber;
+                }
+              } catch (err) {
+                logger.error(
+                  { err, event: name, txHash: log.transactionHash },
+                  "Escrow: error handling event"
+                );
               }
-            } catch (err) {
-              logger.error(
-                { err, event: name, txHash: log.transactionHash },
-                "Escrow: error handling event"
-              );
+            }
+
+            if (logs.length === 0) {
+              lastBlock = currentBlock;
             }
           }
-        })();
-      },
-    });
+        } catch (err) {
+          logger.error(
+            { err, escrow: escrowAddress, event: name },
+            "Escrow: polling error"
+          );
+        }
 
-    stopFns.push(stopFn);
+        await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+      }
+    };
+
+    void poll();
   }
 
   const combinedStop = () => {
-    stopFns.forEach((fn) => { fn(); });
+    for (const abort of abortControllers.values()) {
+      abort.abort();
+    }
     escrowWatchers.delete(escrowAddress);
   };
 

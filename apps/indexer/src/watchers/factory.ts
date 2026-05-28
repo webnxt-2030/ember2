@@ -73,47 +73,31 @@ export async function startFactoryWatcher() {
   }
 
   const eventName = "ProjectCreated" as const;
+  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as AbiEvent;
+  const cursor = await getCursor(factoryAddress, eventName);
+  let lastBlock = cursor ?? toBlock;
+  const abort = new AbortController();
 
-  factoryStopFn = publicClient.watchContractEvent({
-    address: factoryAddress,
-    abi: ProjectFactoryAbi,
-    eventName,
-    pollingInterval: POLLING_INTERVAL,
-    poll: true,
-    onLogs: (logs) => {
-      void (async () => {
-        for (const log of logs as unknown as {
-          blockNumber: bigint;
-          transactionHash: `0x${string}`;
-          logIndex: number;
-          args: Parameters<typeof handleProjectCreated>[0]["args"];
-        }[]) {
-          try {
-            await prisma.indexerCursor.upsert({
-              where: {
-                contract_eventName: {
-                  contract: factoryAddress.toLowerCase(),
-                  eventName,
-                },
-              },
-              create: {
-                contract: factoryAddress.toLowerCase(),
-                eventName,
-                lastBlock: log.blockNumber - 1n,
-              },
-              update: {
-                lastBlock: log.blockNumber - 1n,
-              },
-            });
+  const poll = async () => {
+    while (!abort.signal.aborted) {
+      try {
+        const currentBlock = await publicClient.getBlockNumber();
+        if (currentBlock > lastBlock) {
+          const logs = await publicClient.getLogs({
+            address: factoryAddress,
+            event: eventItem,
+            fromBlock: lastBlock + 1n,
+            toBlock: currentBlock,
+            strict: true,
+          });
 
-            const ok = await handleProjectCreated({
-              contract: factoryAddress,
-              blockNumber: log.blockNumber,
-              txHash: log.transactionHash,
-              logIndex: log.logIndex,
-              args: log.args,
-            });
-            if (ok) {
+          for (const log of logs as unknown as {
+            blockNumber: bigint;
+            transactionHash: `0x${string}`;
+            logIndex: number;
+            args: Parameters<typeof handleProjectCreated>[0]["args"];
+          }[]) {
+            try {
               await prisma.indexerCursor.upsert({
                 where: {
                   contract_eventName: {
@@ -124,23 +108,65 @@ export async function startFactoryWatcher() {
                 create: {
                   contract: factoryAddress.toLowerCase(),
                   eventName,
-                  lastBlock: log.blockNumber,
+                  lastBlock: log.blockNumber - 1n,
                 },
                 update: {
-                  lastBlock: log.blockNumber,
+                  lastBlock: log.blockNumber - 1n,
                 },
               });
+
+              const ok = await handleProjectCreated({
+                contract: factoryAddress,
+                blockNumber: log.blockNumber,
+                txHash: log.transactionHash,
+                logIndex: log.logIndex,
+                args: log.args,
+              });
+              if (ok) {
+                await prisma.indexerCursor.upsert({
+                  where: {
+                    contract_eventName: {
+                      contract: factoryAddress.toLowerCase(),
+                      eventName,
+                    },
+                  },
+                  create: {
+                    contract: factoryAddress.toLowerCase(),
+                    eventName,
+                    lastBlock: log.blockNumber,
+                  },
+                  update: {
+                    lastBlock: log.blockNumber,
+                  },
+                });
+                lastBlock = log.blockNumber;
+              }
+            } catch (err) {
+              logger.error(
+                { err, txHash: log.transactionHash },
+                "Factory: error handling ProjectCreated"
+              );
             }
-          } catch (err) {
-            logger.error(
-              { err, txHash: log.transactionHash },
-              "Factory: error handling ProjectCreated"
-            );
+          }
+
+          if (logs.length === 0) {
+            lastBlock = currentBlock;
           }
         }
-      })();
-    },
-  });
+      } catch (err) {
+        logger.error({ err, factory: factoryAddress }, "Factory: polling error");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+    }
+  };
+
+  void poll();
+
+  factoryStopFn = () => {
+    abort.abort();
+    factoryStopFn = null;
+  };
 
   logger.info({ factory: factoryAddress }, "Factory watcher: started");
 }
@@ -148,7 +174,6 @@ export async function startFactoryWatcher() {
 export function stopFactoryWatcher() {
   if (factoryStopFn) {
     factoryStopFn();
-    factoryStopFn = null;
     logger.info("Factory watcher: stopped");
   }
 }
