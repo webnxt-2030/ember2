@@ -13,11 +13,12 @@ import { parseUnits, zeroAddress } from "viem";
 import {
   ERC20Abi,
   ProjectEscrowAbi,
-  USDT_ADDRESS,
   USDT_DECIMALS,
-  MORPH_EXPLORER_URL,
   usdtAmountSchema,
 } from "@ember/shared";
+
+const USDT_ADDRESS = (process.env.NEXT_PUBLIC_USDT_ADDRESS ??
+  "0x0000000000000000000000000000000000000000") as `0x${string}`;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -330,7 +331,7 @@ export function ContributeStepper({
               </p>
             </div>
             <a
-              href={`${MORPH_EXPLORER_URL}/tx/${flow.hash}`}
+              href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${flow.hash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline text-label-md"

@@ -8,7 +8,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
-import { ProjectEscrowAbi, MORPH_EXPLORER_URL } from "@ember/shared";
+import { ProjectEscrowAbi } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 
 interface ClaimButtonProps {
@@ -105,7 +105,7 @@ export function ClaimButton({
           Claim submitted
         </div>
         <a
-          href={`${MORPH_EXPLORER_URL}/tx/${flow.hash}`}
+          href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL}/tx/${flow.hash}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:underline text-label-md"
