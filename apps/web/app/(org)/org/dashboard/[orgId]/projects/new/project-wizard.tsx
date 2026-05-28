@@ -15,6 +15,22 @@ function toCurveEnum(c: CurveType): RewardCurve {
   return RewardCurve[c]
 }
 
+function isValidUrl(url: string): boolean {
+  if (!url) return true
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function formatValidationIssues(
+  issues: { path: (string | number)[]; message: string }[],
+): string {
+  return issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
+}
+
 interface MilestoneForm {
   title: string
   description: string
@@ -153,6 +169,39 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
       setError('Please fill in all required fields: title, slug, summary, and target amount.')
       return
     }
+    if (form.title.trim().length < 2) {
+      setError('Title must be at least 2 characters.')
+      return
+    }
+    if (form.summary.trim().length < 10) {
+      setError('Summary must be at least 10 characters.')
+      return
+    }
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.slug)) {
+      setError('Slug must be lowercase letters, numbers, and single hyphens only.')
+      return
+    }
+    if (!/^\d+(\.\d{1,6})?$/.test(form.targetAmount)) {
+      setError('Target amount must be a valid number with up to 6 decimal places.')
+      return
+    }
+    const invalidPicture = form.pictures.find((p) => p && !isValidUrl(p))
+    if (invalidPicture !== undefined) {
+      setError(`Invalid picture URL: ${invalidPicture}`)
+      return
+    }
+    if (form.socialLinks.twitter && !isValidUrl(form.socialLinks.twitter)) {
+      setError('Invalid Twitter URL.')
+      return
+    }
+    if (form.socialLinks.github && !isValidUrl(form.socialLinks.github)) {
+      setError('Invalid GitHub URL.')
+      return
+    }
+    if (form.socialLinks.website && !isValidUrl(form.socialLinks.website)) {
+      setError('Invalid website URL.')
+      return
+    }
     if (form.milestones.some(m => !m.title.trim())) {
       setError('All milestones must have a title.')
       return
@@ -192,9 +241,17 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
           })),
         }),
       })
-      const data = (await res.json()) as { detail?: string; title?: string }
+      const data = (await res.json()) as {
+        detail?: string
+        title?: string
+        issues?: { path: (string | number)[]; message: string }[]
+      }
       if (!res.ok) {
-        setError(data.detail ?? data.title ?? 'Failed to create project')
+        const message =
+          data.issues && data.issues.length > 0
+            ? formatValidationIssues(data.issues)
+            : (data.detail ?? data.title ?? 'Failed to create project')
+        setError(message)
         return
       }
       router.push(`/org/dashboard/${orgId}`)

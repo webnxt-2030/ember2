@@ -87,8 +87,17 @@ export default async function OrgDashboardDetailPage({
         </div>
 
         {/* Projects list */}
-        <div className="mt-8">
+        <div className="mt-8 flex items-center justify-between">
           <h2 className="text-headline-md text-on-surface">Projects</h2>
+          <Link
+            href={`/org/dashboard/${orgId}/projects/new`}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:bg-primary/90 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New project
+          </Link>
+        </div>
+        <div className="mt-4">
           {org.projects.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-4">No projects yet.</p>
           ) : (
