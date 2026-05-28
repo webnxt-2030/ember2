@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rate-limit'
 // Must be Node.js runtime: ioredis depends on Node.js net/tls (not available in Edge runtime)
 export const runtime = 'nodejs'
 
-const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc.morphl2.io'
+const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'
 
 // Content Security Policy. Next injects inline bootstrap/hydration <script> tags, so a
 // strict script-src must allow them: in production via a per-request nonce (Next applies

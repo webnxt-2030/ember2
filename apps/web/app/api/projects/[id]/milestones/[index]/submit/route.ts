@@ -130,6 +130,6 @@ export async function POST(
     calldata,
     milestoneIndex,
     updateUri,
-    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2818),
+    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2910),
   })
 }

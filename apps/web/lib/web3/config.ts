@@ -33,7 +33,7 @@ const wagmiAdapter = new WagmiAdapter({
   projectId,
   chains: [morphChain],
   transports: {
-    [morphChain.id]: http(MORPH_RPC_URL),
+    [morphChain.id]: http(rpcUrl),
   },
 });
 

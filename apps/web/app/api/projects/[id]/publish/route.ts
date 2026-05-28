@@ -62,6 +62,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     to: factoryAddress,
     calldata,
     projectURI,
-    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2818),
+    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2910),
   })
 }
