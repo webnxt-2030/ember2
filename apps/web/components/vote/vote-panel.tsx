@@ -9,7 +9,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
-import { zeroAddress } from "viem";
+import { zeroAddress, formatUnits } from "viem";
 import { ProjectEscrowAbi } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -134,8 +134,9 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     },
   });
 
-  const displayVotingPower = onChainVotingPower?.toString() ?? voteData?.userVotingPower ?? "0";
-  const hasVotingPower = BigInt(displayVotingPower) > 0n;
+  const rawOnChainPower = onChainVotingPower != null ? formatUnits(onChainVotingPower, 6) : null;
+  const displayVotingPower = rawOnChainPower ?? voteData?.userVotingPower ?? "0";
+  const hasVotingPower = parseFloat(displayVotingPower) > 0;
   const alreadyVoted = voteData?.userVote != null;
 
   const { data: sim, error: simError } = useSimulateContract({

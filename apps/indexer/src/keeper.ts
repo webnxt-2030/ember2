@@ -5,6 +5,7 @@ import { ProjectEscrowAbi } from "@ember/shared/abis";
 
 const KEEPER_INTERVAL_MS = 60_000;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const RESOLVE_BUFFER_MS = 60_000;
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -12,7 +13,7 @@ async function resolveStaleMilestones() {
   const staleMilestones = await prisma.milestone.findMany({
     where: {
       status: "VOTING",
-      voteEndAt: { lt: new Date() },
+      voteEndAt: { lt: new Date(Date.now() - RESOLVE_BUFFER_MS) },
     },
     select: {
       id: true,
@@ -42,6 +43,7 @@ async function resolveStaleMilestones() {
         abi: ProjectEscrowAbi,
         functionName: "resolveMilestone",
         args: [BigInt(milestone.index)],
+        gas: 200_000n,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -58,10 +60,23 @@ async function resolveStaleMilestones() {
         );
       }
     } catch (err) {
-      logger.error(
-        { err, milestoneId: milestone.id, escrowAddress },
-        "Keeper: error resolving milestone"
-      );
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("VotingNotEnded")) {
+        logger.warn(
+          { milestoneId: milestone.id, escrowAddress },
+          "Keeper: milestone not ready for resolution yet (VotingNotEnded)"
+        );
+      } else if (msg.includes("gas required exceeds allowance") || msg.includes("insufficient funds")) {
+        logger.error(
+          { milestoneId: milestone.id, escrowAddress },
+          "Keeper: keeper wallet may be out of gas. Fund the keeper address."
+        );
+      } else {
+        logger.error(
+          { err, milestoneId: milestone.id, escrowAddress },
+          "Keeper: error resolving milestone"
+        );
+      }
     }
   }
 }
@@ -149,8 +164,23 @@ async function sweepComingSoonMilestones() {
   }
 }
 
-export function startKeeper() {
+export async function startKeeper() {
   logger.info({ intervalMs: KEEPER_INTERVAL_MS }, "Keeper: starting");
+
+  const balance = await publicClient.getBalance({
+    address: keeperWallet.account.address,
+  });
+  if (balance === 0n) {
+    logger.error(
+      { address: keeperWallet.account.address },
+      "Keeper: wallet has zero native balance. Keeper transactions will fail."
+    );
+  } else {
+    logger.info(
+      { address: keeperWallet.account.address, balance: balance.toString() },
+      "Keeper: wallet balance"
+    );
+  }
 
   resolveStaleMilestones().catch((err: unknown) => {
     logger.error({ err }, "Keeper: initial sweep failed");

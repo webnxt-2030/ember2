@@ -82,7 +82,7 @@ const draftEditSchema = z.object({
   backingLinks: z.array(z.url()).max(5).optional(),
   targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/).optional(),
   fundingDeadline: z.iso.datetime().optional().nullable(),
-  votingPeriodDays: z.number().int().min(3).max(30).optional(),
+  votingPeriodDays: z.number().int().min(1).max(43200).optional(),
   rewardCurveType: z.enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM']).optional(),
   milestoneBps: milestoneBpsSchema.optional(),
   // Milestone metadata edits (array index = milestone index)

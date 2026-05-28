@@ -189,19 +189,20 @@ export function EditProjectForm({
           />
           <div>
             <label className="block text-label-md text-on-surface mb-2">
-              Voting period (days): {votingPeriodDays}
+              Voting period (minutes): {votingPeriodDays}
             </label>
             <input
-              type="range"
-              min={3}
-              max={30}
+              type="number"
+              min={1}
+              max={43200}
+              step={1}
               value={votingPeriodDays}
               onChange={(e) => { setVotingPeriodDays(Number(e.target.value)); }}
-              className="w-full"
+              className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex justify-between text-label-sm text-on-surface-variant mt-1">
-              <span>3 days</span>
-              <span>30 days</span>
+              <span>1 min</span>
+              <span>30 days (43200 min)</span>
             </div>
           </div>
         </CardContent>

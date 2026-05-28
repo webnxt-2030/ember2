@@ -135,6 +135,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     })
 
+    await tx.milestone.updateMany({
+      where: { projectId: id, index: 0, status: 'PENDING' },
+      data: { status: 'AUTO_RELEASED' },
+    })
+
     await tx.activityLog.create({
       data: {
         actorUserId: session.user.id,

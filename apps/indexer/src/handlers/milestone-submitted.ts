@@ -50,6 +50,8 @@ export async function handleMilestoneSubmitted(args: {
         updateUri: updateURI,
         voteStartAt: new Date(),
         voteEndAt: voteEndAtDate,
+        weightYes: 0,
+        weightNo: 0,
       },
     });
 

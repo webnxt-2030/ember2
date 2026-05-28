@@ -57,7 +57,7 @@ const createProjectSchema = z.object({
   backingLinks: z.array(z.url()).max(5).default([]),
   targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/, 'Invalid USDT amount'),
   fundingDeadline: z.string().optional(),
-  votingPeriodDays: z.number().int().min(3).max(30).default(7),
+  votingPeriodDays: z.number().int().min(1).max(43200).default(10080),
   rewardCurveType: z
     .enum(['LINEAR', 'EXPONENTIAL', 'BINARY', 'CUSTOM'])
     .default('LINEAR'),
