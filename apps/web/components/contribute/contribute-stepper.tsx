@@ -84,7 +84,7 @@ export function ContributeStepper({
         console.error("  USDT address:", USDT_ADDRESS);
         console.error("  Escrow address:", escrowAddress);
         console.error("  Wallet address:", address);
-        setError(`Failed to read USDT allowance: ${allowanceError.message ?? allowanceError}`);
+        setError(`Failed to read USDT allowance: ${allowanceError.message}`);
         setFlow({ type: "idle" });
         return;
       }
