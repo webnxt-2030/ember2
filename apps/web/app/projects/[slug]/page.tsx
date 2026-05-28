@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { getProjectBySlug } from '@/lib/db/projects'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 interface ProjectDetailPageProps {
   params: Promise<{ slug: string }>
 }

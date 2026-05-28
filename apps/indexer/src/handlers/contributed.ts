@@ -42,9 +42,16 @@ export async function handleContributed(args: {
   });
 
   await prisma.$transaction(async (tx) => {
-    await tx.contribution.upsert({
+    const existing = await tx.contribution.findUnique({
       where: { txHash: txHash.toLowerCase() },
-      create: {
+    });
+    if (existing) {
+      logger.debug({ txHash }, "Contributed: already indexed");
+      return;
+    }
+
+    await tx.contribution.create({
+      data: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
         walletAddress: backer.toLowerCase(),
@@ -57,7 +64,6 @@ export async function handleContributed(args: {
         blockNumber,
         contributedAt: new Date(),
       },
-      update: {},
     });
 
     await tx.project.update({

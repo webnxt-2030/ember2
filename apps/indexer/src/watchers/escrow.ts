@@ -87,53 +87,50 @@ async function dispatchEvent(
   escrowAddress: `0x${string}`,
   eventName: typeof escrowEvents[number]["name"],
   log: { blockNumber: bigint; transactionHash: `0x${string}`; logIndex: number; args: Record<string, unknown> }
-) {
+): Promise<boolean> {
   switch (eventName) {
     case "Contributed":
-      await handleContributed({
+      return handleContributed({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleContributed>[0]["args"],
       });
-      break;
     case "Voted":
-      await handleVoted({
+      return handleVoted({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleVoted>[0]["args"],
       });
-      break;
     case "MilestoneSubmitted":
-      await handleMilestoneSubmitted({
+      return handleMilestoneSubmitted({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneSubmitted>[0]["args"],
       });
-      break;
     case "MilestoneResolved":
-      await handleMilestoneResolved({
+      return handleMilestoneResolved({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneResolved>[0]["args"],
       });
-      break;
     case "MilestoneClaimed":
-      await handleMilestoneClaimed({
+      return handleMilestoneClaimed({
         contract: escrowAddress,
         blockNumber: log.blockNumber,
         txHash: log.transactionHash,
         logIndex: log.logIndex,
         args: log.args as unknown as Parameters<typeof handleMilestoneClaimed>[0]["args"],
       });
-      break;
+    default:
+      return true;
   }
 }
 
@@ -150,6 +147,7 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
       abi: ProjectEscrowAbi,
       eventName: name,
       pollingInterval: POLLING_INTERVAL,
+      poll: true,
       onLogs: (logs) => {
         void (async () => {
           for (const log of logs as unknown as {
@@ -159,7 +157,45 @@ function startEscrowWatcher(escrowAddress: `0x${string}`) {
             args: Record<string, unknown>;
           }[]) {
             try {
-              await dispatchEvent(escrowAddress, name, log);
+              // Pre-advance cursor to blockNumber - 1 so that if dispatch fails
+              // (e.g. insufficient confirmations) the next backfill will retry.
+              await prisma.indexerCursor.upsert({
+                where: {
+                  contract_eventName: {
+                    contract: escrowAddress.toLowerCase(),
+                    eventName: name,
+                  },
+                },
+                create: {
+                  contract: escrowAddress.toLowerCase(),
+                  eventName: name,
+                  lastBlock: log.blockNumber - 1n,
+                },
+                update: {
+                  lastBlock: log.blockNumber - 1n,
+                },
+              });
+
+              const ok = await dispatchEvent(escrowAddress, name, log);
+              if (ok) {
+                // Successfully processed — advance cursor to blockNumber.
+                await prisma.indexerCursor.upsert({
+                  where: {
+                    contract_eventName: {
+                      contract: escrowAddress.toLowerCase(),
+                      eventName: name,
+                    },
+                  },
+                  create: {
+                    contract: escrowAddress.toLowerCase(),
+                    eventName: name,
+                    lastBlock: log.blockNumber,
+                  },
+                  update: {
+                    lastBlock: log.blockNumber,
+                  },
+                });
+              }
             } catch (err) {
               logger.error(
                 { err, event: name, txHash: log.transactionHash },

@@ -4,6 +4,7 @@ import type { AbiEvent } from "viem";
 import { ProjectFactoryAbi } from "@ember/shared/abis";
 import { indexerEnv } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
+import { prisma } from "../lib/db.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
 import { getCursor } from "../lib/cursor.js";
 
@@ -78,6 +79,7 @@ export async function startFactoryWatcher() {
     abi: ProjectFactoryAbi,
     eventName,
     pollingInterval: POLLING_INTERVAL,
+    poll: true,
     onLogs: (logs) => {
       void (async () => {
         for (const log of logs as unknown as {
@@ -87,13 +89,48 @@ export async function startFactoryWatcher() {
           args: Parameters<typeof handleProjectCreated>[0]["args"];
         }[]) {
           try {
-            await handleProjectCreated({
+            await prisma.indexerCursor.upsert({
+              where: {
+                contract_eventName: {
+                  contract: factoryAddress.toLowerCase(),
+                  eventName,
+                },
+              },
+              create: {
+                contract: factoryAddress.toLowerCase(),
+                eventName,
+                lastBlock: log.blockNumber - 1n,
+              },
+              update: {
+                lastBlock: log.blockNumber - 1n,
+              },
+            });
+
+            const ok = await handleProjectCreated({
               contract: factoryAddress,
               blockNumber: log.blockNumber,
               txHash: log.transactionHash,
               logIndex: log.logIndex,
               args: log.args,
             });
+            if (ok) {
+              await prisma.indexerCursor.upsert({
+                where: {
+                  contract_eventName: {
+                    contract: factoryAddress.toLowerCase(),
+                    eventName,
+                  },
+                },
+                create: {
+                  contract: factoryAddress.toLowerCase(),
+                  eventName,
+                  lastBlock: log.blockNumber,
+                },
+                update: {
+                  lastBlock: log.blockNumber,
+                },
+              });
+            }
           } catch (err) {
             logger.error(
               { err, txHash: log.transactionHash },
