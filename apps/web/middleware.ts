@@ -14,7 +14,7 @@ const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.mo
 function buildCsp(nonce: string, isDev: boolean): string {
   const scriptSrc = isDev
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-    : `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval'`
+    : "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'"
   return [
     "default-src 'self'",
     scriptSrc,
