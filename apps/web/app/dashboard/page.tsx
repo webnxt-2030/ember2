@@ -17,26 +17,45 @@ export default async function DashboardPage() {
 
   const userId = session.user.id
 
+  // Fetch linked wallets so we can query by on-chain identity as well as backerId
+  const wallets = await prisma.wallet.findMany({
+    where: { userId },
+    select: { address: true },
+  })
+  const walletAddresses = wallets.map((w) => w.address.toLowerCase())
+
+  const contributionWhere =
+    walletAddresses.length > 0
+      ? { OR: [{ backerId: userId }, { walletAddress: { in: walletAddresses } }] }
+      : { backerId: userId }
+
   const [contributionsAgg, activeVotes, recentActivity] = await Promise.all([
     prisma.contribution.aggregate({
-      where: { backerId: userId },
+      where: contributionWhere,
       _sum: { amount: true },
       _count: { id: true },
     }),
     prisma.milestone.findMany({
       where: {
         status: 'VOTING',
-        project: { contributions: { some: { backerId: userId } } },
+        project: {
+          contributions: {
+            some:
+              walletAddresses.length > 0
+                ? { OR: [{ backerId: userId }, { walletAddress: { in: walletAddresses } }] }
+                : { backerId: userId },
+          },
+        },
       },
       include: {
         project: { select: { slug: true, title: true } },
-        votes: { where: { walletAddress: { in: [] } } }, // placeholder; we filter client-side or via subquery
+        votes: { where: { walletAddress: { in: walletAddresses } } },
       },
       orderBy: { voteEndAt: 'asc' },
       take: 5,
     }),
     prisma.contribution.findMany({
-      where: { backerId: userId },
+      where: contributionWhere,
       orderBy: { contributedAt: 'desc' },
       take: 5,
       include: { project: { select: { slug: true, title: true } } },
@@ -46,27 +65,10 @@ export default async function DashboardPage() {
   const totalContributed = parseFloat(contributionsAgg._sum.amount?.toString() ?? '0')
   const positionsCount = contributionsAgg._count.id
 
-  // Fetch user's wallets to check which active votes they've already cast
-  const wallets = await prisma.wallet.findMany({
-    where: { userId },
-    select: { address: true },
-  })
-  const walletAddresses = wallets.map((w: { address: string }) => w.address.toLowerCase())
-
-  const activeVotesWithStatus = await Promise.all(
-    activeVotes.map(async (milestone: { id: string; title: string; voteEndAt: Date | null; project: { slug: string; title: string } }) => {
-      const hasVoted = await prisma.milestoneVote.findFirst({
-        where: {
-          milestoneId: milestone.id,
-          walletAddress: { in: walletAddresses },
-        },
-      })
-      return {
-        ...milestone,
-        hasVoted: !!hasVoted,
-      }
-    }),
-  )
+  const activeVotesWithStatus = activeVotes.map((milestone) => ({
+    ...milestone,
+    hasVoted: milestone.votes.length > 0,
+  }))
 
   const formatUsd = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)

@@ -84,6 +84,13 @@ export function AuthNav({ mobile = false, onNavigate }: AuthNavProps) {
         >
           Dashboard
         </Link>
+        <Link
+          href="/dashboard/settings"
+          className="px-4 py-3 text-body-md text-on-surface rounded-xl hover:bg-surface-container-low transition-colors"
+          onClick={() => { onNavigate?.() }}
+        >
+          Settings
+        </Link>
         {isOrgOwner && (
           <Link
             href="/org/dashboard"
@@ -151,6 +158,14 @@ export function AuthNav({ mobile = false, onNavigate }: AuthNavProps) {
             onClick={() => { setMenuOpen(false) }}
           >
             Dashboard
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            role="menuitem"
+            className="block px-4 py-2.5 text-body-md text-on-surface hover:bg-surface-container-low transition-colors"
+            onClick={() => { setMenuOpen(false) }}
+          >
+            Settings
           </Link>
           {isOrgOwner && (
             <Link

@@ -1,6 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useConnection, useSignMessage } from 'wagmi'
+import { useAppKit } from '@reown/appkit/react'
+import { SiweMessage } from 'siwe'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -46,6 +49,68 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
   const [saving, setSaving] = useState(false)
   const [prefs, setPrefs] = useState(emailPreferences)
   const [walletList, setWalletList] = useState(wallets)
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
+
+  const { address, isConnected } = useConnection()
+  const { open } = useAppKit()
+  const { mutateAsync: signMessageAsync } = useSignMessage()
+
+  async function linkWallet() {
+    setLinkError(null)
+    if (!isConnected || !address) {
+      void open()
+      return
+    }
+    setLinking(true)
+    try {
+      const nonceRes = await fetch('/api/auth/wallet/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      })
+      if (!nonceRes.ok) {
+        const err = (await nonceRes.json()) as { message?: string }
+        throw new Error(err.message ?? 'Failed to get nonce')
+      }
+      const { nonce } = (await nonceRes.json()) as { nonce: string }
+
+      const message = new SiweMessage({
+        domain: window.location.host,
+        address,
+        statement: 'Link your wallet to Ember',
+        uri: window.location.origin,
+        version: '1',
+        chainId: 2910,
+        nonce,
+      }).prepareMessage()
+
+      const signature = await signMessageAsync({ message })
+
+      const verifyRes = await fetch('/api/auth/wallet/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, signature }),
+      })
+      if (!verifyRes.ok) {
+        const err = (await verifyRes.json()) as { message?: string }
+        throw new Error(err.message ?? 'Failed to verify wallet')
+      }
+      const result = (await verifyRes.json()) as { alreadyLinked?: boolean; wallet?: Wallet }
+      if (result.alreadyLinked) {
+        setLinkError('This wallet is already linked to your account.')
+      } else {
+        const newWallet = result.wallet
+        if (newWallet) {
+          setWalletList((prev) => [...prev, newWallet])
+        }
+      }
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : 'Failed to link wallet')
+    } finally {
+      setLinking(false)
+    }
+  }
 
   async function saveProfile() {
     setSaving(true)
@@ -125,35 +190,48 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
           <CardTitle>Linked Wallets</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {walletList.length === 0 ? (
+          {walletList.length === 0 && (
             <p className="text-label-md text-on-surface-variant">No wallets linked.</p>
-          ) : (
-            walletList.map((w) => (
-              <div
-                key={w.id}
-                className="flex items-center justify-between p-4 rounded-xl border border-outline-variant bg-surface-container-low"
-              >
-                <div>
-                  <p className="text-label-md text-on-surface font-medium">
-                    {truncateAddress(w.address)}
-                  </p>
-                  {w.isPrimary && (
-                    <span className="text-label-sm text-primary">Primary</span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  {!w.isPrimary && (
-                    <Button variant="outline" size="sm" onClick={() => { void setPrimary(w.address) }}>
-                      Set Primary
-                    </Button>
-                  )}
-                  <Button variant="destructive" size="sm" onClick={() => { void unlinkWallet(w.address) }}>
-                    Unlink
-                  </Button>
-                </div>
-              </div>
-            ))
           )}
+          {walletList.map((w) => (
+            <div
+              key={w.id}
+              className="flex items-center justify-between p-4 rounded-xl border border-outline-variant bg-surface-container-low"
+            >
+              <div>
+                <p className="text-label-md text-on-surface font-medium">
+                  {truncateAddress(w.address)}
+                </p>
+                {w.isPrimary && (
+                  <span className="text-label-sm text-primary">Primary</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                {!w.isPrimary && (
+                  <Button variant="outline" size="sm" onClick={() => { void setPrimary(w.address) }}>
+                    Set Primary
+                  </Button>
+                )}
+                <Button variant="destructive" size="sm" onClick={() => { void unlinkWallet(w.address) }}>
+                  Unlink
+                </Button>
+              </div>
+            </div>
+          ))}
+          <div className="pt-2">
+            <Button
+              onClick={() => { void linkWallet() }}
+              disabled={linking}
+              variant="outline"
+              className="w-full"
+            >
+              <span className="material-symbols-outlined text-[18px] mr-1">add</span>
+              {linking ? 'Linking…' : 'Link Wallet'}
+            </Button>
+            {linkError && (
+              <p className="text-label-sm text-error mt-2">{linkError}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 

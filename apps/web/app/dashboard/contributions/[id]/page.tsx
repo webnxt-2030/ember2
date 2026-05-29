@@ -24,8 +24,19 @@ export default async function ContributionDetailPage({ params }: ContributionDet
 
   const { id } = await params
 
+  const wallets = await prisma.wallet.findMany({
+    where: { userId: session.user.id },
+    select: { address: true },
+  })
+  const walletAddresses = wallets.map((w) => w.address.toLowerCase())
+
+  const where =
+    walletAddresses.length > 0
+      ? { id, OR: [{ backerId: session.user.id }, { walletAddress: { in: walletAddresses } }] }
+      : { id, backerId: session.user.id }
+
   const contribution = await prisma.contribution.findFirst({
-    where: { id, backerId: session.user.id },
+    where,
     include: {
       project: {
         select: {

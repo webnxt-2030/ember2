@@ -25,15 +25,18 @@ export default async function VotesPage() {
   })
   const walletAddresses = wallets.map((w: { address: string }) => w.address.toLowerCase())
 
+  const contributionFilter =
+    walletAddresses.length > 0
+      ? { OR: [{ backerId: userId }, { walletAddress: { in: walletAddresses } }] }
+      : { backerId: userId }
+
   // Active votes: milestones in VOTING for projects the user contributed to
   const activeVotes = await prisma.milestone.findMany({
     where: {
       status: 'VOTING',
       project: {
         contributions: {
-          some: {
-            backerId: userId,
-          },
+          some: contributionFilter,
         },
       },
     },
