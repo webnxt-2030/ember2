@@ -52,11 +52,11 @@ function extractErrorName(msg: string): string | null {
   // Viem often includes the error name directly, e.g.:
   //   "The contract function \"contribute\" reverted with the following reason: ZeroAmount"
   //   "The contract function \"contribute\" reverted with the following signature: 0xe450d38c"
-  const reasonMatch = msg.match(/reverted with the following reason:\s*(\w+)/);
+  const reasonMatch = /reverted with the following reason:\s*(\w+)/.exec(msg);
   if (reasonMatch?.[1]) return reasonMatch[1];
 
   // Some viem versions wrap it in quotes
-  const quotedMatch = msg.match(/"(\w+)"/);
+  const quotedMatch = /"(\w+)"/.exec(msg);
   if (quotedMatch?.[1] && ERROR_MESSAGES[quotedMatch[1]]) return quotedMatch[1];
 
   // Fallback: scan for any known error name as a whole word
