@@ -6,6 +6,8 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { AuditLogsTable } from './audit-logs-table'
 
+export const metadata = { title: 'Audit Logs — Admin' }
+
 export const runtime = 'nodejs'
 
 export default async function AdminAuditLogsPage({

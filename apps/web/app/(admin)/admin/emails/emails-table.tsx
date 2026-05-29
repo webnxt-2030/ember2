@@ -152,9 +152,9 @@ export function EmailsTable({
 
         {error && <p className="text-label-sm text-error mb-4">{error}</p>}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full text-label-md">
-            <thead>
+            <thead className="sticky top-0 bg-surface-container z-10">
               <tr className="border-b border-outline-variant text-on-surface-variant">
                 <th className="text-left py-2 pr-4 font-medium">To</th>
                 <th className="text-left py-2 pr-4 font-medium">Template</th>
@@ -168,10 +168,10 @@ export function EmailsTable({
               {emails.map((e) => (
                 <tr
                   key={e.id}
-                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors"
+                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors even:bg-surface-container-low/30"
                 >
-                  <td className="py-3 pr-4 text-on-surface">{e.to}</td>
-                  <td className="py-3 pr-4 text-on-surface">{e.template}</td>
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[250px]">{e.to}</td>
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[200px]">{e.template}</td>
                   <td className="py-3 pr-4">
                     <Badge status={badgeStatus(e.status)}>{e.status}</Badge>
                   </td>

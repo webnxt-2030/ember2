@@ -57,6 +57,13 @@ export default async function ContributionsPage() {
               <p className="text-label-md text-on-surface-variant mt-2">
                 No contributions yet.
               </p>
+              <a
+                href="/projects"
+                className="inline-flex items-center justify-center gap-2 mt-4 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:bg-primary/90 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">explore</span>
+                Browse projects
+              </a>
             </div>
           ) : (
             <div className="space-y-6">
@@ -77,7 +84,7 @@ export default async function ContributionsPage() {
                   >
                     {firstPicture && (
                       <div className="md:w-48 flex-shrink-0 rounded-lg overflow-hidden aspect-[16/9] bg-surface-container-high">
-                        <img src={firstPicture} alt={c.project.title} className="w-full h-full object-cover" />
+                        <img src={firstPicture} alt={c.project.title} loading="lazy" className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">

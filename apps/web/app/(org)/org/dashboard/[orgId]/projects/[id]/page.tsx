@@ -12,6 +12,8 @@ import { ClaimButton } from '@/components/milestones/claim-button'
 import { PublishButton } from './publish-button'
 import Link from 'next/link'
 
+export const metadata = { title: 'Project — Ember' }
+
 export default async function OrgProjectDetailPage({
   params,
 }: {

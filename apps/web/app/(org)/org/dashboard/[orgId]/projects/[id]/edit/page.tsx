@@ -6,6 +6,8 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { EditProjectForm } from './edit-project-form'
 
+export const metadata = { title: 'Edit Project — Ember' }
+
 export default async function EditProjectPage({
   params,
 }: {

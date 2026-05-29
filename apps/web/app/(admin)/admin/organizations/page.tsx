@@ -58,7 +58,10 @@ export default async function AdminOrgsPage({
         <div className="flex justify-between items-center">
           <h1 className="text-headline-lg text-on-surface">Organizations</h1>
           <Button variant="primary" asChild>
-            <Link href="/admin/organizations/new">New organization</Link>
+            <Link href="/admin/organizations/new">
+              <span className="material-symbols-outlined text-[18px] mr-1">add_business</span>
+              New organization
+            </Link>
           </Button>
         </div>
 
@@ -72,7 +75,7 @@ export default async function AdminOrgsPage({
                 key={s}
                 href={href}
                 className={cn(
-                  'px-3 py-1 rounded-xl text-label-sm transition-colors',
+                  'px-3 py-1 rounded-xl text-label-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none',
                   isActive
                     ? 'bg-primary-fixed text-on-primary-fixed-variant font-semibold'
                     : 'text-on-surface-variant hover:bg-surface-container-low',
@@ -142,7 +145,7 @@ export default async function AdminOrgsPage({
                     <td className="p-4">
                       <Link
                         href={`/admin/organizations/${org.id}`}
-                        className="text-primary text-label-sm hover:underline"
+                        className="text-primary text-label-sm hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none rounded"
                       >
                         View
                       </Link>

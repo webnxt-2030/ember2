@@ -31,13 +31,14 @@ export function ProjectCard({
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 
   return (
-    <Link href={`/projects/${slug}`} className="block group">
+    <Link href={`/projects/${slug}`} className="block group focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none rounded-lg">
       <div className="rounded-lg border border-outline-variant bg-surface overflow-hidden hover:shadow-md transition-shadow">
         <div className="aspect-[16/9] bg-surface-container-high relative">
           {firstPicture ? (
             <img
               src={firstPicture}
               alt={title}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           ) : (

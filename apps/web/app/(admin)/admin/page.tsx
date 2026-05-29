@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/db'
 
+export const metadata = { title: 'Admin Dashboard — Ember' }
+
 function StatCard({
   label,
   value,
