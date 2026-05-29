@@ -5,6 +5,7 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+export const metadata = { title: 'Settings — Admin' }
 export const runtime = 'nodejs'
 
 export default async function AdminSettingsPage() {

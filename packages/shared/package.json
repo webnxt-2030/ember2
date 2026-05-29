@@ -23,6 +23,10 @@
     "./abis": {
       "types": "./src/abis/index.ts",
       "import": "./dist/abis/index.js"
+    },
+    "./contract-errors": {
+      "types": "./src/contract-errors.ts",
+      "import": "./dist/contract-errors.js"
     }
   },
   "main": "./dist/index.js",

@@ -13,6 +13,8 @@ import { SafeMarkdown } from '@/components/safe-markdown'
 import Link from 'next/link'
 import { SubmitForm } from './submit-form'
 
+export const metadata = { title: 'Milestone — Ember' }
+
 export default async function OrgMilestoneDetailPage({
   params,
 }: {

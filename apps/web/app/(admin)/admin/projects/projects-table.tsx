@@ -140,9 +140,9 @@ export function ProjectsTable({
 
         {error && <p className="text-label-sm text-error mb-4">{error}</p>}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full text-label-md">
-            <thead>
+            <thead className="sticky top-0 bg-surface-container z-10">
               <tr className="border-b border-outline-variant text-on-surface-variant">
                 <th className="text-left py-2 pr-4 font-medium">Title</th>
                 <th className="text-left py-2 pr-4 font-medium">Organization</th>
@@ -156,15 +156,15 @@ export function ProjectsTable({
               {projects.map((p) => (
                 <tr
                   key={p.id}
-                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors"
+                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors even:bg-surface-container-low/30"
                 >
                   <td className="py-3 pr-4 text-on-surface">
-                    <span className="font-medium">{p.title}</span>
-                    <span className="block text-label-sm text-on-surface-variant">
+                    <span className="font-medium truncate block max-w-[200px]">{p.title}</span>
+                    <span className="block text-label-sm text-on-surface-variant truncate max-w-[200px]">
                       {p.slug}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 text-on-surface">
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[150px]">
                     {p.organizationTitle}
                   </td>
                   <td className="py-3 pr-4">

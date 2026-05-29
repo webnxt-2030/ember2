@@ -33,3 +33,10 @@ declare module "@ember/shared/abis" {
   export const ProjectEscrowAbi: readonly unknown[];
   export const PositionNFTAbi: readonly unknown[];
 }
+
+declare module "@ember/shared/contract-errors" {
+  export function formatContractError(
+    err: Error | null | undefined,
+    fallback?: string
+  ): string | null;
+}

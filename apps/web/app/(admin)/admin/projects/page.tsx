@@ -6,6 +6,8 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { ProjectsTable } from './projects-table'
 
+export const metadata = { title: 'Projects — Admin' }
+
 export const runtime = 'nodejs'
 
 export default async function AdminProjectsPage({

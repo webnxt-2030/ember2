@@ -6,6 +6,8 @@ import { Container } from '@/components/layout/container'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
+export const metadata = { title: 'Your Organizations — Ember' }
+
 export default async function OrgDashboardPage() {
   const session = await getSession()
   if (!session?.user) redirect('/auth/sign-in')
@@ -49,7 +51,7 @@ export default async function OrgDashboardPage() {
               ).length
               return (
                 <Link href={`/org/dashboard/${org.id}`} key={org.id}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none">
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between">
                         <div>
