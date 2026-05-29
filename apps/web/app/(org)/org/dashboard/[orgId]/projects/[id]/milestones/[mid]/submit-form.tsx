@@ -6,7 +6,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { ProjectEscrowAbi } from '@ember/shared'
+import { ProjectEscrowAbi, formatContractError } from '@ember/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -107,14 +107,7 @@ export function SubmitForm({
     mutate(sim.request)
   }
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null
-    const msg = err.message
-    if (msg.includes('User rejected') || msg.includes('rejected')) {
-      return 'Transaction was rejected in your wallet'
-    }
-    return msg
-  }
+  const formatError = formatContractError
 
   return (
     <Card className="w-full max-w-xl">

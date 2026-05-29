@@ -15,6 +15,7 @@ import {
   ProjectEscrowAbi,
   USDT_DECIMALS,
   usdtAmountSchema,
+  formatContractError,
 } from "@ember/shared";
 
 const USDT_ADDRESS = (process.env.NEXT_PUBLIC_USDT_ADDRESS ??
@@ -211,14 +212,7 @@ export function ContributeStepper({
           : 1
         : 1;
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null;
-    const msg = err.message;
-    if (msg.includes("User rejected") || msg.includes("rejected")) {
-      return "Transaction was rejected in your wallet";
-    }
-    return msg;
-  };
+  const formatError = formatContractError;
 
   return (
     <Card className="w-full max-w-md">

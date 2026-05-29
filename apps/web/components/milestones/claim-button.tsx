@@ -8,7 +8,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
-import { ProjectEscrowAbi } from "@ember/shared";
+import { ProjectEscrowAbi, formatContractError } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 
 interface ClaimButtonProps {
@@ -82,20 +82,7 @@ export function ClaimButton({
     setFlow({ type: "idle" });
   };
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null;
-    const msg = err.message;
-    if (msg.includes("User rejected") || msg.includes("rejected")) {
-      return "Transaction was rejected in your wallet";
-    }
-    if (msg.includes("OnlyOrg")) {
-      return "Only the organization wallet can claim this milestone";
-    }
-    if (msg.includes("MilestoneNotPassed")) {
-      return "Milestone has not passed voting";
-    }
-    return msg;
-  };
+  const formatError = formatContractError;
 
   if (flow.type === "success") {
     return (

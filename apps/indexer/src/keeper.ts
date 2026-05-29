@@ -2,6 +2,7 @@ import { prisma } from "./lib/db.js";
 import { keeperWallet, publicClient } from "./lib/client.js";
 import { logger } from "./lib/logger.js";
 import { ProjectEscrowAbi } from "@ember/shared/abis";
+import { formatContractError } from "@ember/shared/contract-errors";
 
 const KEEPER_INTERVAL_MS = 60_000;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -61,7 +62,8 @@ async function resolveStaleMilestones() {
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("VotingNotEnded")) {
+      const friendly = formatContractError(err instanceof Error ? err : new Error(msg));
+      if (friendly?.includes("Voting has not ended yet")) {
         logger.warn(
           { milestoneId: milestone.id, escrowAddress },
           "Keeper: milestone not ready for resolution yet (VotingNotEnded)"
@@ -73,7 +75,7 @@ async function resolveStaleMilestones() {
         );
       } else {
         logger.error(
-          { err, milestoneId: milestone.id, escrowAddress },
+          { err, milestoneId: milestone.id, escrowAddress, friendly },
           "Keeper: error resolving milestone"
         );
       }

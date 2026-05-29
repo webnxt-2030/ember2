@@ -10,7 +10,7 @@ import {
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { zeroAddress, formatUnits } from "viem";
-import { ProjectEscrowAbi } from "@ember/shared";
+import { ProjectEscrowAbi, formatContractError } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -197,23 +197,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     setPendingChoice(null);
   };
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null;
-    const msg = err.message;
-    if (msg.includes("User rejected") || msg.includes("rejected")) {
-      return "Transaction was rejected in your wallet";
-    }
-    if (msg.includes("AlreadyVoted")) {
-      return "You have already voted on this milestone";
-    }
-    if (msg.includes("NotABacker")) {
-      return "You must be a backer to vote";
-    }
-    if (msg.includes("VotingWindowClosed")) {
-      return "Voting window has closed";
-    }
-    return msg;
-  };
+  const formatError = formatContractError;
 
   if (isLoadingVoteData) {
     return (

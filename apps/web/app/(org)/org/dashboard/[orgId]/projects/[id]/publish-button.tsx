@@ -7,6 +7,7 @@ import {
   useWaitForTransactionReceipt,
 } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
+import { formatContractError } from '@ember/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -125,14 +126,7 @@ export function PublishButton({ projectId }: PublishButtonProps) {
     })
   }
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null
-    const msg = err.message
-    if (msg.includes('User rejected') || msg.includes('rejected')) {
-      return 'Transaction was rejected in your wallet'
-    }
-    return msg
-  }
+  const formatError = formatContractError
 
   if (flow.type === 'success') {
     return (
