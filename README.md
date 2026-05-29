@@ -8,11 +8,11 @@ Backers contribute USDT to escrow contracts and receive an ERC-721 position NFT.
 
 ## Demo
 
-<a href="https://youtu.be/yOX6F8dMN-c" target="_blank" rel="noopener noreferrer">
-  <img src="https://img.youtube.com/vi/yOX6F8dMN-c/maxresdefault.jpg" alt="Watch the Ember demo">
+<a href="https://www.youtube.com/watch?v=MRD01uWmae4" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.youtube.com/vi/MRD01uWmae4/maxresdefault.jpg" alt="Watch the Ember demo">
 </a>
 
-▶️ <a href="https://youtu.be/yOX6F8dMN-c" target="_blank" rel="noopener noreferrer">Watch the demo on YouTube</a>
+▶️ <a href="https://www.youtube.com/watch?v=MRD01uWmae4" target="_blank" rel="noopener noreferrer">Watch the demo on YouTube</a>
 
 ## Architecture
 
