@@ -10,7 +10,7 @@ import {
 } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { zeroAddress, formatUnits } from "viem";
-import { ProjectEscrowAbi } from "@ember/shared";
+import { ProjectEscrowAbi, formatContractError } from "@ember/shared";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -197,23 +197,7 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     setPendingChoice(null);
   };
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null;
-    const msg = err.message;
-    if (msg.includes("User rejected") || msg.includes("rejected")) {
-      return "Transaction was rejected in your wallet";
-    }
-    if (msg.includes("AlreadyVoted")) {
-      return "You have already voted on this milestone";
-    }
-    if (msg.includes("NotABacker")) {
-      return "You must be a backer to vote";
-    }
-    if (msg.includes("VotingWindowClosed")) {
-      return "Voting window has closed";
-    }
-    return msg;
-  };
+  const formatError = formatContractError;
 
   if (isLoadingVoteData) {
     return (
@@ -291,6 +275,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
             <span className="material-symbols-outlined text-[18px]">check</span>
             Vote recorded: {flow.choice}
           </div>
+          <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px]">info</span>
+            Your vote will be reflected in the tally once the indexer confirms the on-chain event.
+          </p>
           <a
             href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
             target="_blank"
@@ -304,6 +292,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
         <div className="space-y-3">
           <p className="text-label-md text-on-surface">
             Cast {pendingChoice} vote with {formatUsd(displayVotingPower)}?
+          </p>
+          <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            Voting requires wallet confirmation and block mining on Morph L2. Tallies may take a few moments to update while the indexer syncs.
           </p>
           <div className="flex gap-3">
             <Button

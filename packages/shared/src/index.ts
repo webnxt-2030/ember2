@@ -7,3 +7,4 @@ export * from "./schemas/index.js";
 // import: schemas/project.ts imports base schemas from schemas/index.ts.
 export * from "./schemas/project.js";
 export * from "./reward-curve.js";
+export * from "./contract-errors.js";

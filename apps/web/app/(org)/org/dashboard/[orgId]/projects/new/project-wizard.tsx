@@ -423,7 +423,7 @@ export function ProjectWizard({ orgId }: { orgId: string }) {
                 onChange={(e) =>
                   { updateField('votingPeriodDays', Number(e.target.value)); }
                 }
-                className="w-full rounded-xl border border-outline-variant bg-surface px-4 py-3 text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
               />
               <div className="flex justify-between text-label-sm text-on-surface-variant mt-1">
                 <span>1 min</span>

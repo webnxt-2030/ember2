@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -178,23 +179,18 @@ export function AuditLogsTable({
             placeholder="email, wallet, target..."
             containerClassName="flex-1 min-w-[200px]"
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-label-sm text-on-surface-variant">Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value)
-              }}
-              className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface focus:border-primary outline-none"
-            >
-              <option value="">All</option>
-              {ACTIVITY_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Type"
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value)
+            }}
+            options={[
+              { value: '', label: 'All' },
+              ...ACTIVITY_TYPES.map((t) => ({ value: t, label: t })),
+            ]}
+            containerClassName="w-[220px]"
+          />
           <Input
             label="From"
             type="date"
@@ -236,9 +232,9 @@ export function AuditLogsTable({
 
         {error && <p className="text-label-sm text-error mb-4">{error}</p>}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full text-label-md">
-            <thead>
+            <thead className="sticky top-0 bg-surface-container z-10">
               <tr className="border-b border-outline-variant text-on-surface-variant">
                 <th className="text-left py-2 pr-4 font-medium">Date</th>
                 <th className="text-left py-2 pr-4 font-medium">Type</th>
@@ -252,7 +248,7 @@ export function AuditLogsTable({
               {logs.map((l) => (
                 <tr
                   key={l.id}
-                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors"
+                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors even:bg-surface-container-low/30"
                 >
                   <td className="py-3 pr-4 text-on-surface whitespace-nowrap">
                     {new Date(l.createdAt).toLocaleString()}
@@ -260,18 +256,18 @@ export function AuditLogsTable({
                   <td className="py-3 pr-4">
                     <Badge status={badgeStatus(l.type)}>{l.type}</Badge>
                   </td>
-                  <td className="py-3 pr-4 text-on-surface">
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[200px]">
                     {l.actorEmail ?? l.actorWallet ?? '—'}
                   </td>
                   <td className="py-3 pr-4 text-on-surface">
-                    {l.targetType ?? '—'}
+                    <span className="truncate block max-w-[150px]">{l.targetType ?? '—'}</span>
                     {l.targetId && (
-                      <span className="block text-label-sm text-on-surface-variant">
+                      <span className="block text-label-sm text-on-surface-variant truncate max-w-[150px]">
                         {l.targetId}
                       </span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 text-on-surface-variant max-w-[300px] truncate">
+                  <td className="py-3 pr-4 text-on-surface-variant max-w-[250px] truncate" title={JSON.stringify(l.metadata)}>
                     {JSON.stringify(l.metadata)}
                   </td>
                   <td className="py-3 text-on-surface-variant whitespace-nowrap">

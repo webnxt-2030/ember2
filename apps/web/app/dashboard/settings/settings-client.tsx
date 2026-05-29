@@ -114,6 +114,7 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
             <p className="text-body-md text-on-surface">{user.email}</p>
           </div>
           <Button onClick={() => void saveProfile()} disabled={saving}>
+            <span className="material-symbols-outlined text-[18px] mr-1">save</span>
             {saving ? 'Saving...' : 'Save Profile'}
           </Button>
         </CardContent>

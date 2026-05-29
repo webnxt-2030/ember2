@@ -6,6 +6,8 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { UsersTable } from './users-table'
 
+export const metadata = { title: 'Users — Admin' }
+
 export const runtime = 'nodejs'
 
 export default async function AdminUsersPage({

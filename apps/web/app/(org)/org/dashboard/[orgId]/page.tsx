@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { OrgProfileForm } from './org-profile-form'
 import Link from 'next/link'
 
+export const metadata = { title: 'Organization Dashboard — Ember' }
+
 export default async function OrgDashboardDetailPage({
   params,
 }: {
@@ -99,12 +101,25 @@ export default async function OrgDashboardDetailPage({
         </div>
         <div className="mt-4">
           {org.projects.length === 0 ? (
-            <p className="text-body-md text-on-surface-variant mt-4">No projects yet.</p>
+            <div className="mt-6 text-center py-12">
+              <span className="material-symbols-outlined text-on-surface-variant text-[48px]">folder_open</span>
+              <p className="text-headline-md text-on-surface mt-4">No projects yet</p>
+              <p className="text-body-md text-on-surface-variant mt-2">
+                Create your first project to start fundraising.
+              </p>
+              <Link
+                href={`/org/dashboard/${orgId}/projects/new`}
+                className="inline-flex items-center justify-center gap-2 mt-6 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:bg-primary/90 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Create project
+              </Link>
+            </div>
           ) : (
             <div className="mt-4 space-y-3">
               {org.projects.map(
                 (p: { id: string; title: string; slug: string; status: string }) => (
-                  <Link key={p.id} href={`/org/dashboard/${orgId}/projects/${p.id}`} className="block">
+                  <Link key={p.id} href={`/org/dashboard/${orgId}/projects/${p.id}`} className="block focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none rounded-xl">
                     <Card className="hover:shadow-sm transition-shadow">
                       <CardContent className="py-4 flex items-center justify-between">
                         <div>

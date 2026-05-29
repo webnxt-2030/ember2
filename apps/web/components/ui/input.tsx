@@ -30,7 +30,7 @@ export function Input({
           'w-full bg-surface-container-lowest border border-outline rounded-xl px-4 py-3',
           'text-body-md text-on-surface placeholder:text-on-surface-variant',
           'focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none',
-          'transition-colors',
+          'transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
           error && 'border-error focus:border-error focus:ring-error/20',
           className,
         )}

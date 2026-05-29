@@ -121,6 +121,13 @@ export default async function VotesPage() {
                 <p className="text-label-md text-on-surface-variant mt-2">
                   No active votes right now.
                 </p>
+                <a
+                  href="/projects"
+                  className="inline-flex items-center justify-center gap-2 mt-4 rounded-xl bg-primary px-4 py-2 text-label-md text-on-primary hover:bg-primary/90 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">explore</span>
+                  Browse projects
+                </a>
               </div>
             ) : (
               <div className="space-y-4">

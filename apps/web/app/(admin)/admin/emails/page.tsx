@@ -6,6 +6,8 @@ import { AuthError, ForbiddenError } from '@/lib/errors'
 import { Container } from '@/components/layout/container'
 import { EmailsTable } from './emails-table'
 
+export const metadata = { title: 'Emails — Admin' }
+
 export const runtime = 'nodejs'
 
 export default async function AdminEmailsPage({

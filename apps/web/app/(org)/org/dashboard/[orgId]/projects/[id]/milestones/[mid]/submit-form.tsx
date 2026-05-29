@@ -6,7 +6,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from 'wagmi'
-import { ProjectEscrowAbi } from '@ember/shared'
+import { ProjectEscrowAbi, formatContractError } from '@ember/shared'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -107,14 +107,7 @@ export function SubmitForm({
     mutate(sim.request)
   }
 
-  const formatError = (err: Error | null | undefined): string | null => {
-    if (!err) return null
-    const msg = err.message
-    if (msg.includes('User rejected') || msg.includes('rejected')) {
-      return 'Transaction was rejected in your wallet'
-    }
-    return msg
-  }
+  const formatError = formatContractError
 
   return (
     <Card className="w-full max-w-xl">
@@ -146,6 +139,10 @@ export function SubmitForm({
               </h3>
               <p className="text-body-md text-on-surface-variant mt-1">
                 Your milestone has been submitted for voting.
+              </p>
+              <p className="text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">info</span>
+                Your milestone will appear for voting once the indexer confirms the on-chain event.
               </p>
             </div>
             <a
@@ -192,16 +189,22 @@ export function SubmitForm({
                   : 'Prepare submission'}
               </Button>
             ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!sim?.request || isWritePending || isConfirming}
-              >
-                {isWritePending
-                  ? 'Confirm in wallet...'
-                  : isConfirming
-                    ? 'Confirming...'
-                    : 'Submit on-chain'}
-              </Button>
+              <>
+                <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  Submitting requires wallet confirmation and block mining on Morph L2. The milestone status will update once the indexer syncs.
+                </p>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!sim?.request || isWritePending || isConfirming}
+                >
+                  {isWritePending
+                    ? 'Confirm in wallet...'
+                    : isConfirming
+                      ? 'Confirming...'
+                      : 'Submit on-chain'}
+                </Button>
+              </>
             )}
           </>
         )}

@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -126,23 +127,18 @@ export function EmailsTable({
             placeholder="recipient or template..."
             containerClassName="flex-1 min-w-[200px]"
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-label-sm text-on-surface-variant">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value)
-              }}
-              className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface focus:border-primary outline-none"
-            >
-              <option value="">All</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Status"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value)
+            }}
+            options={[
+              { value: '', label: 'All' },
+              ...STATUS_OPTIONS.map((s) => ({ value: s, label: s })),
+            ]}
+            containerClassName="w-[160px]"
+          />
           <Button
             onClick={() => {
               void fetchEmails(q, statusFilter, 1)
@@ -156,9 +152,9 @@ export function EmailsTable({
 
         {error && <p className="text-label-sm text-error mb-4">{error}</p>}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full text-label-md">
-            <thead>
+            <thead className="sticky top-0 bg-surface-container z-10">
               <tr className="border-b border-outline-variant text-on-surface-variant">
                 <th className="text-left py-2 pr-4 font-medium">To</th>
                 <th className="text-left py-2 pr-4 font-medium">Template</th>
@@ -172,10 +168,10 @@ export function EmailsTable({
               {emails.map((e) => (
                 <tr
                   key={e.id}
-                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors"
+                  className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors even:bg-surface-container-low/30"
                 >
-                  <td className="py-3 pr-4 text-on-surface">{e.to}</td>
-                  <td className="py-3 pr-4 text-on-surface">{e.template}</td>
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[250px]">{e.to}</td>
+                  <td className="py-3 pr-4 text-on-surface truncate max-w-[200px]">{e.template}</td>
                   <td className="py-3 pr-4">
                     <Badge status={badgeStatus(e.status)}>{e.status}</Badge>
                   </td>
