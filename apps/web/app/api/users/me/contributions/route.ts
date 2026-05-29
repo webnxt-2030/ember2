@@ -23,9 +23,20 @@ export async function GET(req: NextRequest) {
   const { page, pageSize } = parsed.data
   const skip = (page - 1) * pageSize
 
+  const wallets = await prisma.wallet.findMany({
+    where: { userId: session.user.id },
+    select: { address: true },
+  })
+  const walletAddresses = wallets.map((w) => w.address.toLowerCase())
+
+  const where =
+    walletAddresses.length > 0
+      ? { OR: [{ backerId: session.user.id }, { walletAddress: { in: walletAddresses } }] }
+      : { backerId: session.user.id }
+
   const [contributions, total] = await Promise.all([
     prisma.contribution.findMany({
-      where: { backerId: session.user.id },
+      where,
       orderBy: { contributedAt: 'desc' },
       skip,
       take: pageSize,
@@ -43,7 +54,7 @@ export async function GET(req: NextRequest) {
         },
       },
     }),
-    prisma.contribution.count({ where: { backerId: session.user.id } }),
+    prisma.contribution.count({ where }),
   ])
 
   const result = contributions.map((c: { id: string; project: { id: string; slug: string; title: string; pictures: string[]; milestones: { index: number; title: string; bps: number; status: string }[] }; walletAddress: string; amount: { toString: () => string }; m0Share: { toString: () => string }; nftTokenId: string; nftContract: string; txHash: string; blockNumber: bigint; contributedAt: Date }) => ({
