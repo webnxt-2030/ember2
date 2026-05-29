@@ -2,11 +2,17 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StatusDot } from "@/components/ui/status-dot";
+import { ProjectCard } from "@/components/projects/project-card";
+import { listLiveProjects } from "@/lib/db/projects";
 
-export default function HomePage() {
+// Reads live projects from the DB on each request; not statically prerendered at build.
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const { projects } = await listLiveProjects({ page: 1, pageSize: 3 });
+
   return (
     <>
       {/* Section 1: Hero */}
@@ -170,73 +176,31 @@ export default function HomePage() {
             These projects are actively raising right now.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-            {/* Card 1 */}
-            <Card>
-              <div className="mb-3">
-                <Badge status="active">Live</Badge>
-              </div>
-              <h3 className="text-headline-md text-on-surface">
-                Open Source USDT Analytics Dashboard
-              </h3>
-              <p className="text-label-sm text-on-surface-variant mt-1">
-                Data Commons DAO
+          {projects.length === 0 ? (
+            <div className="mt-10 text-center py-12 rounded-lg border border-outline-variant bg-surface">
+              <span className="material-symbols-outlined text-on-surface-variant/30 text-[48px]">
+                rocket_launch
+              </span>
+              <p className="text-body-md text-on-surface-variant mt-2">
+                No live projects yet. Check back soon.
               </p>
-              <p className="text-label-sm text-on-surface mt-4">
-                Target: $24,000
-              </p>
-              <div className="mt-3">
-                <Progress value={67} />
-                <p className="text-label-sm text-on-surface-variant mt-2">
-                  67% funded · 890 backers
-                </p>
-              </div>
-            </Card>
-
-            {/* Card 2 */}
-            <Card>
-              <div className="mb-3">
-                <Badge status="active">Live</Badge>
-              </div>
-              <h3 className="text-headline-md text-on-surface">
-                Decentralized Weather Station Network
-              </h3>
-              <p className="text-label-sm text-on-surface-variant mt-1">
-                ClimateDAO
-              </p>
-              <p className="text-label-sm text-on-surface mt-4">
-                Target: $8,500
-              </p>
-              <div className="mt-3">
-                <Progress value={23} />
-                <p className="text-label-sm text-on-surface-variant mt-2">
-                  23% funded · 312 backers
-                </p>
-              </div>
-            </Card>
-
-            {/* Card 3 */}
-            <Card>
-              <div className="mb-3">
-                <Badge status="active">Live</Badge>
-              </div>
-              <h3 className="text-headline-md text-on-surface">
-                On-chain Grant Management Protocol
-              </h3>
-              <p className="text-label-sm text-on-surface-variant mt-1">
-                Public Goods Foundation
-              </p>
-              <p className="text-label-sm text-on-surface mt-4">
-                Target: $60,000
-              </p>
-              <div className="mt-3">
-                <Progress value={91} />
-                <p className="text-label-sm text-on-surface-variant mt-2">
-                  91% funded · 2,103 backers
-                </p>
-              </div>
-            </Card>
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+              {projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  slug={project.slug}
+                  title={project.title}
+                  summary={project.summary}
+                  pictures={project.pictures}
+                  targetAmount={project.targetAmount.toString()}
+                  totalRaised={project.totalRaised.toString()}
+                  status={project.status as "LIVE" | "COMPLETED" | "PAUSED"}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="mt-10">
             <Button variant="outline" asChild>

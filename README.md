@@ -256,6 +256,77 @@ Rebuilds the Foundry contracts and regenerates the shared ABIs:
 pnpm gen:abis
 ```
 
+---
+
+## 🚰 Funding Your Wallet with Mock USDT (Morph Hoodi Testnet)
+
+To interact with Ember on the testnet, you will need **Testnet ETH** (to pay for gas fees) and **Mock USDT**.
+
+### Step 1: Add the Morph Hoodi Network
+First, ensure your Web3 wallet (e.g., MetaMask) is connected to the Morph Hoodi testnet.
+* **Network Name:** Morph Hoodi
+* **RPC URL:** `https://rpc-hoodi.morph.network`
+* **Chain ID:** `2910`
+* **Currency Symbol:** `ETH`
+* **Block Explorer:** `https://explorer-hoodi.morph.network`
+
+### Step 2: Get Testnet ETH (for Gas)
+You need testnet ETH on the Morph Hoodi network to pay for transaction fees.
+1. Claim testnet ETH from a Morph Hoodi faucet (e.g., via the [Morph Discord](https://discord.com/invite/morphl2) using the `/morph_eth` command in the `#discord-faucet` channel, or from an official Morph testnet faucet).
+2. Alternatively, bridge ETH from a supported L1 testnet (e.g., Sepolia or Holesky) to Morph Hoodi using the [Morph Testnet Bridge](https://bridge-hoodi.morphl2.io/).
+
+### Step 3: Mint Mock USDT via Remix
+Once you have testnet ETH for gas, you can mint Mock USDT by interacting with the deployed contract through [Remix IDE](https://remix.ethereum.org/):
+
+1. Open Remix and create a new file (e.g., `MockUSDT.sol`).
+2. Paste the contract source code provided below.
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MockUSDT is ERC20 {
+    constructor() ERC20("Mock USDT", "USDT") {}
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 6;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+        // Auto-approve for testing: skip allowance check
+        _transfer(from, to, amount);
+        return true;
+    }
+}
+```
+3. In the **Deploy & Run Transactions** plugin, set the Environment to **Injected Provider — MetaMask** (make sure your wallet is connected to the Morph Hoodi network).
+4. Instead of deploying a new contract, navigate down to the **At Address** section.
+5. Enter the Mock USDT Contract Address: 
+   ```text
+   0x37Db08F61B00Fd6FcCc1dD9A7200958161992D9D
+   ```
+6. Click **At Address** to load the deployed contract instance.
+7. Locate the `mint` function in the loaded contract dropdown.
+8. Enter your wallet address in the `to` field, and the amount you want to mint in the `amount` field. *(Note: The contract uses 6 decimals, so minting 100 USDT requires inputting `100000000` — your target amount plus six zeros).*
+9. Click **Transact** and confirm the transaction in your wallet.
+
+### Step 4: Import Mock USDT to Your Wallet
+To view your newly minted Mock USDT in your wallet interface:
+1. Open your wallet and select **Import Tokens** or **Add Custom Token**.
+2. Paste the Mock USDT Contract Address: 
+   ```text
+   0x37Db08F61B00Fd6FcCc1dD9A7200958161992D9D
+   ```
+3. The Token Symbol (`USDT`) and Decimals (`6`) should auto-populate.
+4. Click **Add Custom Token** / **Import** and you are ready to test!
+
+---
+
 ## Documentation
 
 - [`SPEC.md`](./SPEC.md) — Full product specification
