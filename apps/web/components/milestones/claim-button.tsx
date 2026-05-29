@@ -99,7 +99,8 @@ export function ClaimButton({
         >
           View on Morph Explorer
         </a>
-        <p className="text-label-sm text-on-surface-variant">
+        <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+          <span className="material-symbols-outlined text-[14px]">info</span>
           The milestone will show as Claimed once the indexer confirms the on-chain event.
         </p>
       </div>
@@ -111,6 +112,10 @@ export function ClaimButton({
       <div className="space-y-3">
         <p className="text-label-md text-on-surface">
           Claim milestone {milestoneIndex + 1} funds?
+        </p>
+        <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+          <span className="material-symbols-outlined text-[14px]">schedule</span>
+          Claiming requires wallet confirmation and block mining on Morph L2. The milestone status will update once the indexer syncs.
         </p>
         <div className="flex gap-3">
           <Button

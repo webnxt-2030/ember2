@@ -254,6 +254,10 @@ export function ContributeStepper({
               <Stepper steps={steps} currentStep={currentStep} />
             )}
             <div className="mt-2 flex flex-col gap-2">
+              <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">schedule</span>
+                Transactions require wallet confirmation and block mining on Morph L2. The UI updates once the indexer syncs.
+              </p>
               {flow.type === "approve" && (
                 <>
                   <Button
@@ -326,6 +330,10 @@ export function ContributeStepper({
               </h3>
               <p className="text-body-md text-on-surface-variant mt-1">
                 You contributed {amount} USDT
+              </p>
+              <p className="text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">info</span>
+                Your contribution will appear in the project total once the indexer confirms the on-chain event.
               </p>
             </div>
             <a

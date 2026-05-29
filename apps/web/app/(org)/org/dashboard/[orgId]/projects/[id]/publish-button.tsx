@@ -211,16 +211,22 @@ export function PublishButton({ projectId }: PublishButtonProps) {
             {flow.type === 'preparing' ? 'Preparing...' : 'Prepare publish'}
           </Button>
         ) : (
-          <Button
-            onClick={handlePublish}
-            disabled={isSendPending || isConfirming}
-          >
-            {isSendPending
-              ? 'Confirm in wallet...'
-              : isConfirming
-                ? 'Confirming on-chain...'
-                : 'Publish on-chain'}
-          </Button>
+          <>
+            <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">schedule</span>
+              Publishing requires wallet confirmation and block mining on Morph L2. The project will go live once the transaction is indexed.
+            </p>
+            <Button
+              onClick={handlePublish}
+              disabled={isSendPending || isConfirming}
+            >
+              {isSendPending
+                ? 'Confirm in wallet...'
+                : isConfirming
+                  ? 'Confirming on-chain...'
+                  : 'Publish on-chain'}
+            </Button>
+          </>
         )}
       </CardContent>
     </Card>

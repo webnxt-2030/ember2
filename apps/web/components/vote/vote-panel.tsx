@@ -275,6 +275,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
             <span className="material-symbols-outlined text-[18px]">check</span>
             Vote recorded: {flow.choice}
           </div>
+          <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px]">info</span>
+            Your vote will be reflected in the tally once the indexer confirms the on-chain event.
+          </p>
           <a
             href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
             target="_blank"
@@ -288,6 +292,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
         <div className="space-y-3">
           <p className="text-label-md text-on-surface">
             Cast {pendingChoice} vote with {formatUsd(displayVotingPower)}?
+          </p>
+          <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            Voting requires wallet confirmation and block mining on Morph L2. Tallies may take a few moments to update while the indexer syncs.
           </p>
           <div className="flex gap-3">
             <Button

@@ -140,6 +140,10 @@ export function SubmitForm({
               <p className="text-body-md text-on-surface-variant mt-1">
                 Your milestone has been submitted for voting.
               </p>
+              <p className="text-label-sm text-on-surface-variant mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">info</span>
+                Your milestone will appear for voting once the indexer confirms the on-chain event.
+              </p>
             </div>
             <a
               href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
@@ -185,16 +189,22 @@ export function SubmitForm({
                   : 'Prepare submission'}
               </Button>
             ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={!sim?.request || isWritePending || isConfirming}
-              >
-                {isWritePending
-                  ? 'Confirm in wallet...'
-                  : isConfirming
-                    ? 'Confirming...'
-                    : 'Submit on-chain'}
-              </Button>
+              <>
+                <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">schedule</span>
+                  Submitting requires wallet confirmation and block mining on Morph L2. The milestone status will update once the indexer syncs.
+                </p>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!sim?.request || isWritePending || isConfirming}
+                >
+                  {isWritePending
+                    ? 'Confirm in wallet...'
+                    : isConfirming
+                      ? 'Confirming...'
+                      : 'Submit on-chain'}
+                </Button>
+              </>
             )}
           </>
         )}
