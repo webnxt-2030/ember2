@@ -8,9 +8,11 @@ Backers contribute USDT to escrow contracts and receive an ERC-721 position NFT.
 
 ## Demo
 
-[![Watch the Ember demo](https://img.youtube.com/vi/yOX6F8dMN-c/maxresdefault.jpg)](https://youtu.be/yOX6F8dMN-c)
+<a href="https://youtu.be/yOX6F8dMN-c" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.youtube.com/vi/yOX6F8dMN-c/maxresdefault.jpg" alt="Watch the Ember demo">
+</a>
 
-▶️ [Watch the demo on YouTube](https://youtu.be/yOX6F8dMN-c)
+▶️ <a href="https://youtu.be/yOX6F8dMN-c" target="_blank" rel="noopener noreferrer">Watch the demo on YouTube</a>
 
 ## Architecture
 
@@ -67,7 +69,7 @@ See [`docs/features.md`](./docs/features.md) for the per-endpoint feature breakd
 
 ## Flows
 
-All value-moving steps happen **on-chain on Morph L2** (🟣). Ember's web app only ever
+All value-moving steps happen **on-chain on Morph L2** (🟢). Ember's web app only ever
 builds calldata and reads on-chain state; the user's wallet signs and submits every
 transaction, and the indexer mirrors the resulting events back into Postgres.
 
@@ -81,7 +83,7 @@ sequenceDiagram
     autonumber
     participant O  as Org Owner
     participant UI as Ember Web (Next.js)
-    participant M  as Morph L2 🟣
+    participant M  as Morph L2 🟢
     participant IX as Indexer
     participant DB as Postgres
 
@@ -107,7 +109,7 @@ sequenceDiagram
     autonumber
     participant B  as Backer
     participant UI as Ember Web (Next.js)
-    participant M  as Morph L2 🟣
+    participant M  as Morph L2 🟢
     participant IX as Indexer
     participant DB as Postgres
 
@@ -135,7 +137,7 @@ sequenceDiagram
     autonumber
     participant O  as Org Owner
     participant UI as Ember Web (Next.js)
-    participant M  as Morph L2 🟣
+    participant M  as Morph L2 🟢
     participant IX as Indexer
     participant DB as Postgres
     participant B  as Backers
