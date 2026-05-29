@@ -65,8 +65,31 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* Section 2: How it works */}
+      {/* Section 1b: Demo video */}
       <section className="bg-surface-container-low py-16">
+        <Container>
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-label-md text-on-surface-variant">
+              See it in action
+            </p>
+            <h2 className="text-headline-lg text-on-surface mt-2">
+              Watch the Ember demo
+            </h2>
+            <div className="mt-8 aspect-video overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-highest shadow-sm">
+              <iframe
+                className="h-full w-full"
+                src="https://www.youtube.com/embed/MRD01uWmae4"
+                title="Ember demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Section 2: How it works */}
+      <section className="bg-background py-16">
         <Container>
           <h2 className="text-headline-lg text-on-surface">
             How Ember works
@@ -140,7 +163,7 @@ export default function HomePage() {
       </section>
 
       {/* Section 3: Featured live projects */}
-      <section className="bg-background py-16">
+      <section className="bg-surface-container-low py-16">
         <Container>
           <h2 className="text-headline-lg text-on-surface">Live projects</h2>
           <p className="text-body-md text-on-surface-variant mt-2">
@@ -233,13 +256,26 @@ export default function HomePage() {
             Every contribution is protected by a smart contract. Every
             milestone is verified by the backers who funded it.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button
               variant="outline"
               asChild
               className="border-on-primary text-on-primary hover:bg-primary-fixed"
             >
               <Link href="/projects">Browse projects</Link>
+            </Button>
+            <Button
+              variant="outline"
+              asChild
+              className="border-on-primary text-on-primary hover:bg-primary-fixed"
+            >
+              <a
+                href="https://github.com/webnxt-2030/ember2"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View source on GitHub
+              </a>
             </Button>
           </div>
         </Container>

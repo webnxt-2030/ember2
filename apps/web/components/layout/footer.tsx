@@ -35,6 +35,14 @@ export function Footer() {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="https://github.com/webnxt-2030/ember2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-body-md text-on-surface hover:text-primary transition-colors"
+            >
+              GitHub
+            </a>
           </nav>
 
           {/* Right: Legal tagline */}
