@@ -144,6 +144,45 @@ export default function StaffLoginPage() {
         </button>
       </form>
 
+      {/* Demo accounts helper */}
+      <div
+        className="mt-8 rounded-xl border p-4 text-sm"
+        style={{
+          borderColor: "var(--color-outline-variant)",
+          backgroundColor: "var(--color-surface-container-low)",
+          color: "var(--color-on-surface-variant)",
+        }}
+      >
+        <p
+          className="font-semibold mb-2"
+          style={{ color: "var(--color-on-surface)" }}
+        >
+          Demo Accounts
+        </p>
+        <ul className="space-y-1">
+          <li>
+            <span style={{ color: "var(--color-on-surface)" }}>Super Admin:</span>{" "}
+            <code>admin@ember.example</code>
+          </li>
+          <li>
+            <span style={{ color: "var(--color-on-surface)" }}>Org Owner:</span>{" "}
+            <code>owner@ember.example</code>
+          </li>
+          <li>
+            <span style={{ color: "var(--color-on-surface)" }}>Demo Org:</span>{" "}
+            Demo Organization (demo-org)
+          </li>
+          <li>
+            <span style={{ color: "var(--color-on-surface)" }}>Backer:</span>{" "}
+            <code>backer@ember.example</code>
+          </li>
+        </ul>
+        <p className="mt-3">
+          <span style={{ color: "var(--color-on-surface)" }}>All Passwords:</span>{" "}
+          <code>ChangeMeOnFirstLogin!</code>
+        </p>
+      </div>
+
       {/* Back link */}
       <p
         className="mt-8 text-center text-sm"
