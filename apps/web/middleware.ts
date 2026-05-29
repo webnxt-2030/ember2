@@ -22,7 +22,7 @@ function buildCsp(nonce: string, isDev: boolean): string {
     "img-src 'self' data: blob: https:", // wallets show remote logos
     "font-src 'self' https://fonts.gstatic.com",
     `connect-src 'self' ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-hoodi.morph.network wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
-    "frame-src 'none'",
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com", // demo video embed
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
