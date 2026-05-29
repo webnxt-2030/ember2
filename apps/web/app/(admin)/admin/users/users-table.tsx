@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -175,19 +176,13 @@ export function UsersTable({
                   </td>
                   <td className="py-3 pr-4 text-on-surface">{u.orgCount}</td>
                   <td className="py-3">
-                    <select
+                    <Select
                       value={u.role}
                       onChange={(e) => {
                         void handleRoleChange(u.id, e.target.value)
                       }}
-                      className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface focus:border-primary outline-none"
-                    >
-                      {ROLE_OPTIONS.map((r) => (
-                        <option key={r} value={r}>
-                          {r}
-                        </option>
-                      ))}
-                    </select>
+                      options={ROLE_OPTIONS.map((r) => ({ value: r, label: r }))}
+                    />
                   </td>
                 </tr>
               ))}

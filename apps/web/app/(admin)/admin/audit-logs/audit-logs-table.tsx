@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -178,23 +179,18 @@ export function AuditLogsTable({
             placeholder="email, wallet, target..."
             containerClassName="flex-1 min-w-[200px]"
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-label-sm text-on-surface-variant">Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value)
-              }}
-              className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface focus:border-primary outline-none"
-            >
-              <option value="">All</option>
-              {ACTIVITY_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Type"
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value)
+            }}
+            options={[
+              { value: '', label: 'All' },
+              ...ACTIVITY_TYPES.map((t) => ({ value: t, label: t })),
+            ]}
+            containerClassName="w-[220px]"
+          />
           <Input
             label="From"
             type="date"

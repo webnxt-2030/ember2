@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
 import { cn } from '@/lib/cn'
+import { Select } from '@/components/ui/select'
 
 const STATUS_TABS = [
   { value: '', label: 'All' },
@@ -63,8 +64,8 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
       {/* Secondary filters row */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Category / org name text search */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="category-filter" className="text-label-sm text-on-surface-variant">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="category-filter" className="text-label-md text-on-surface font-medium">
             Organization
           </label>
           <input
@@ -73,33 +74,26 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             placeholder="Search org..."
             value={currentCategory}
             onChange={(e) => { updateParam('category', e.target.value); }}
-            className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-44"
+            className="bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-44"
           />
         </div>
 
         {/* Org ID filter (for precise filtering by org) */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="org-select" className="text-label-sm text-on-surface-variant">
-            By Org
-          </label>
-          <select
-            id="org-select"
-            value={currentOrg}
-            onChange={(e) => { updateParam('orgId', e.target.value); }}
-            className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
-          >
-            <option value="">All Organizations</option>
-            {orgOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="By Org"
+          id="org-select"
+          value={currentOrg}
+          onChange={(e) => { updateParam('orgId', e.target.value); }}
+          options={[
+            { value: '', label: 'All Organizations' },
+            ...orgOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+          ]}
+          containerClassName="w-56"
+        />
 
         {/* Min raise */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="min-raise" className="text-label-sm text-on-surface-variant">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="min-raise" className="text-label-md text-on-surface font-medium">
             Min Raise (USDT)
           </label>
           <input
@@ -109,13 +103,13 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             min="0"
             value={currentMinRaise}
             onChange={(e) => { updateParam('minRaise', e.target.value); }}
-            className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
+            className="bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
           />
         </div>
 
         {/* Max raise */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="max-raise" className="text-label-sm text-on-surface-variant">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="max-raise" className="text-label-md text-on-surface font-medium">
             Max Raise (USDT)
           </label>
           <input
@@ -125,7 +119,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
             min="0"
             value={currentMaxRaise}
             onChange={(e) => { updateParam('maxRaise', e.target.value); }}
-            className="bg-surface-container-lowest border border-outline rounded-xl px-3 py-2 text-label-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
+            className="bg-surface-container-lowest border border-outline rounded-xl px-4 py-3 text-body-md text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none w-32"
           />
         </div>
 
