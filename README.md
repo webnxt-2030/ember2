@@ -6,6 +6,12 @@ A milestone-based, onchain crowdfunding dApp on Morph L2.
 
 Backers contribute USDT to escrow contracts and receive an ERC-721 position NFT. Funds release to organizations only when backers approve each milestone by on-chain vote.
 
+## Demo
+
+[![Watch the Ember demo](https://img.youtube.com/vi/yOX6F8dMN-c/maxresdefault.jpg)](https://youtu.be/yOX6F8dMN-c)
+
+▶️ [Watch the demo on YouTube](https://youtu.be/yOX6F8dMN-c)
+
 ## Architecture
 
 - **`apps/web`** — Next.js 16 frontend + API (App Router, Turbopack)
