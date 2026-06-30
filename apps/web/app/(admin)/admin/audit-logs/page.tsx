@@ -84,18 +84,18 @@ export default async function AdminAuditLogsPage({
       <Container>
         <h1 className="text-headline-lg text-on-surface font-bold mb-8">Audit Logs</h1>
         <AuditLogsTable
-          initialLogs={logs.map((l) => ({
-            id: l.id,
-            type: l.type,
-            targetType: l.targetType,
-            targetId: l.targetId,
+          initialLogs={logs.map((l: Record<string, unknown>) => ({
+            id: l.id as string,
+            type: l.type as string,
+            targetType: l.targetType as string | null,
+            targetId: l.targetId as string | null,
             metadata: l.metadata as Record<string, unknown>,
-            ipAddress: l.ipAddress,
-            userAgent: l.userAgent,
-            createdAt: l.createdAt.toISOString(),
-            actorUserId: l.actorUserId,
-            actorWallet: l.actorWallet,
-            actorEmail: l.actor?.email ?? null,
+            ipAddress: l.ipAddress as string | null,
+            userAgent: l.userAgent as string | null,
+            createdAt: (l.createdAt as Date).toISOString(),
+            actorUserId: l.actorUserId as string | null,
+            actorWallet: l.actorWallet as string | null,
+            actorEmail: ((l.actor as { email: string | null } | null)?.email) ?? null,
           }))}
           initialPage={page}
           initialLimit={limit}

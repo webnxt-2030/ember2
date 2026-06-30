@@ -34,7 +34,7 @@ export function OrgSettingsForm({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  const walletChanged = receivingWallet.toLowerCase() !== initialReceivingWallet.toLowerCase()
+  const walletChanged = receivingWallet !== initialReceivingWallet
   const willResetVerification = walletChanged && verifiedStatus === 'VERIFIED'
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -103,8 +103,8 @@ export function OrgSettingsForm({
               label="Receiving wallet address"
               value={receivingWallet}
               onChange={(e) => { setReceivingWallet(e.target.value); }}
-              placeholder="0x..."
-              pattern="^0x[0-9a-fA-F]{40}$"
+              placeholder="G..."
+              pattern="^[G][A-Z2-7]{55}$"
             />
             {willResetVerification && (
               <p className="text-label-sm text-error mt-2">

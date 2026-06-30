@@ -1,31 +1,23 @@
 import type { NextRequest } from 'next/server'
-import { createPublicClient, http, decodeEventLog } from 'viem'
-import { ProjectFactoryAbi } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError, AuthError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
+import { addressSchema } from '@ember/shared'
 import { z } from 'zod'
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 
 export const runtime = 'nodejs'
-export const maxDuration = 120 // 2-minute function timeout for waiting confirmations
+export const maxDuration = 120
 
 const confirmSchema = z.object({
-  txHash: z.string().regex(/^0x[0-9a-fA-F]{64}$/, 'Invalid tx hash'),
+  txHash: z.string().min(1),
+  projectId: z.coerce.bigint(),
+  escrowContractId: addressSchema,
+  nftContractId: addressSchema,
 })
-
-// Morph L2 chain (not in viem built-ins)
-const morphChain = {
-  id: 2910,
-  name: 'Morph Hoodi',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: {
-    default: { http: [process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'] as readonly [string, ...string[]] },
-  },
-} as const
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -42,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!parsed.success) {
     return errorResponse(new ValidationError('Validation failed', parsed.error.issues), req)
   }
-  const { txHash } = parsed.data
+  const { txHash, projectId, escrowContractId, nftContractId } = parsed.data
 
   const project = await prisma.project.findUnique({
     where: { id },
@@ -50,7 +42,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   })
   if (!project) return errorResponse(new NotFoundError('Project not found'), req)
 
-  // Auth
   try {
     await assertOwnsOrg(session, project.organizationId, prisma)
   } catch (err) {
@@ -60,7 +51,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return errorResponse(new AuthError(), req)
   }
 
-  // Idempotency: if already LIVE and escrow already set, return success
   if (project.status === 'LIVE' && project.escrowAddress) {
     return okResponse({
       projectId: project.id,
@@ -74,62 +64,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return errorResponse(new ValidationError(`Project is ${project.status}, cannot confirm publish`), req)
   }
 
-  // Wait for 12 confirmations
-  const client = createPublicClient({
-    chain: morphChain,
-    transport: http(process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'),
-  })
+  const onChainId = projectId.toString()
 
-  let receipt: Awaited<ReturnType<typeof client.waitForTransactionReceipt>>
-  try {
-    receipt = await client.waitForTransactionReceipt({
-      hash: txHash as `0x${string}`,
-      confirmations: 1, // was 12
-      timeout: 110_000,
-    })
-  } catch (err) {
-    return errorResponse(new ValidationError(`Transaction not confirmed: ${String(err)}`), req)
-  }
-
-  if (receipt.status !== 'success') {
-    return errorResponse(new ValidationError('Transaction reverted'), req)
-  }
-
-  // Parse ProjectCreated event from receipt logs
-  let escrowAddress: string | null = null
-  let nftAddress: string | null = null
-  let onChainId: string | null = null
-
-  for (const log of receipt.logs) {
-    try {
-      const decoded = decodeEventLog({
-        abi: ProjectFactoryAbi,
-        eventName: 'ProjectCreated',
-        topics: log.topics,
-        data: log.data,
-      })
-      const args = decoded.args as { projectId: bigint; escrow: string; nft: string }
-      onChainId = args.projectId.toString()
-      escrowAddress = args.escrow
-      nftAddress = args.nft
-      break
-    } catch {
-      // Not a ProjectCreated log, skip
-    }
-  }
-
-  if (!escrowAddress || !nftAddress || !onChainId) {
-    return errorResponse(new ValidationError('ProjectCreated event not found in transaction logs'), req)
-  }
-
-  // Persist + flip status — idempotent by txHash (if already done, this is a no-op due to WHERE clause)
   await prisma.$transaction(async (tx: TxClient) => {
     await tx.project.update({
-      where: { id, status: 'DRAFT' }, // WHERE status='DRAFT' makes this idempotent
+      where: { id, status: 'DRAFT' },
       data: {
         onChainId,
-        escrowAddress,
-        nftAddress,
+        escrowAddress: escrowContractId,
+        nftAddress: nftContractId,
         status: 'LIVE',
         publishedAt: new Date(),
       },
@@ -146,11 +89,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         type: 'PROJECT_PUBLISHED',
         targetType: 'Project',
         targetId: id,
-        metadata: { txHash, onChainId, escrowAddress, nftAddress, orgId: project.organizationId },
+        metadata: { txHash, onChainId, escrowAddress: escrowContractId, nftAddress: nftContractId, orgId: project.organizationId },
       },
     })
   }).catch((err: unknown) => {
-    // If update matched 0 rows (project already LIVE), that's OK — idempotent
     const e = err as { code?: string; meta?: { cause?: string } }
     if (e.meta?.cause?.includes('0 rows')) return
     throw err
@@ -159,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   return okResponse({
     projectId: id,
     status: 'LIVE',
-    escrowAddress,
-    nftAddress,
+    escrowAddress: escrowContractId,
+    nftAddress: nftContractId,
   })
 }

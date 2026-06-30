@@ -94,7 +94,7 @@ export function FilterBar({ orgOptions, className }: FilterBarProps) {
         {/* Min raise */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="min-raise" className="text-label-md text-on-surface font-medium">
-            Min Raise (USDT)
+            Min Raise (USDC)
           </label>
           <input
             id="min-raise"

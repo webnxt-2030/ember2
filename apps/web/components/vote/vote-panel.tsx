@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  useConnection,
-  useReadContract,
-  useSimulateContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
-import { zeroAddress, formatUnits } from "viem";
-import { ProjectEscrowAbi, formatContractError } from "@ember/shared";
+  USDC_DECIMALS,
+  formatContractError,
+} from "@ember/shared";
+import { useStellarWallet } from "@/components/providers/stellar-provider";
+import { scValToBigInt } from "@stellar/stellar-sdk";
+import { readContract, simulateAndSubmit } from "@/lib/stellar/contract";
+import { address, bool, u32 } from "@/lib/stellar/scval";
+import { getExplorerTxUrl } from "@/lib/stellar/config";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
@@ -31,7 +30,7 @@ interface VoteData {
 interface VotePanelProps {
   slug: string;
   milestoneIndex: number;
-  escrowAddress: `0x${string}`;
+  escrowContractId: string;
 }
 
 type VoteChoice = "YES" | "NO";
@@ -39,7 +38,8 @@ type VoteChoice = "YES" | "NO";
 type FlowState =
   | { type: "idle" }
   | { type: "confirming"; choice: VoteChoice }
-  | { type: "success"; hash: `0x${string}`; choice: VoteChoice };
+  | { type: "pending"; choice: VoteChoice }
+  | { type: "success"; hash: string; choice: VoteChoice };
 
 function formatUsd(value: string | number) {
   const num = typeof value === "string" ? parseFloat(value) : value;
@@ -47,6 +47,15 @@ function formatUsd(value: string | number) {
     style: "currency",
     currency: "USD",
   }).format(num);
+}
+
+function formatUnits(value: bigint, decimals: number): string {
+  const divisor = 10n ** BigInt(decimals);
+  const whole = value / divisor;
+  const fraction = value % divisor;
+  const fractionStr = fraction.toString().padStart(decimals, "0");
+  const trimmed = fractionStr.replace(/0+$/, "");
+  return trimmed ? `${String(whole)}.${trimmed}` : whole.toString();
 }
 
 function useCountdown(targetDate: string | null) {
@@ -78,21 +87,30 @@ function useCountdown(targetDate: string | null) {
 
     update();
     const id = setInterval(update, 60000);
-    return () => { clearInterval(id); };
+    return () => {
+      clearInterval(id);
+    };
   }, [targetDate]);
 
   return { remaining, isExpired };
 }
 
-export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProps) {
-  const { address, isConnected } = useConnection();
-  const { open } = useAppKit();
+export function VotePanel({
+  slug,
+  milestoneIndex,
+  escrowContractId,
+}: VotePanelProps) {
+  const { wallet, isConnected, connect } = useStellarWallet();
 
   const [voteData, setVoteData] = useState<VoteData | null>(null);
   const [isLoadingVoteData, setIsLoadingVoteData] = useState(true);
   const [voteDataError, setVoteDataError] = useState<string | null>(null);
   const [flow, setFlow] = useState<FlowState>({ type: "idle" });
   const [pendingChoice, setPendingChoice] = useState<VoteChoice | null>(null);
+  const [onChainVotingPower, setOnChainVotingPower] = useState<bigint | null>(
+    null,
+  );
+  const [contractError, setContractError] = useState<Error | null>(null);
 
   const { remaining, isExpired } = useCountdown(voteData?.voteEndAt ?? null);
 
@@ -102,10 +120,10 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     try {
       const url = new URL(
         `/api/projects/${slug}/milestones/${String(milestoneIndex)}/votes`,
-        window.location.origin
+        window.location.origin,
       );
-      if (address) {
-        url.searchParams.set("wallet", address);
+      if (wallet?.address) {
+        url.searchParams.set("wallet", wallet.address);
       }
       const res = await fetch(url.toString());
       if (!res.ok) {
@@ -118,86 +136,72 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
     } finally {
       setIsLoadingVoteData(false);
     }
-  }, [slug, milestoneIndex, address]);
+  }, [slug, milestoneIndex, wallet?.address]);
 
   useEffect(() => {
     void fetchVoteData();
   }, [fetchVoteData]);
 
-  const { data: onChainVotingPower } = useReadContract({
-    abi: ProjectEscrowAbi,
-    address: escrowAddress,
-    functionName: "votingPowerOf",
-    args: [address ?? zeroAddress],
-    query: {
-      enabled: !!address && !!escrowAddress,
-    },
-  });
+  useEffect(() => {
+    if (!wallet?.address || !escrowContractId) return;
+    readContract(escrowContractId, "voting_power_of", [
+      address(wallet.address),
+    ])
+      .then((result) => {
+        if (result) {
+          setOnChainVotingPower(scValToBigInt(result.retval));
+        }
+      })
+      .catch((err: unknown) => {
+        console.error("Failed to read voting power:", err);
+      });
+  }, [wallet?.address, escrowContractId]);
 
-  const rawOnChainPower = onChainVotingPower != null ? formatUnits(onChainVotingPower, 6) : null;
+  const rawOnChainPower = onChainVotingPower
+    ? formatUnits(onChainVotingPower, USDC_DECIMALS)
+    : null;
   const displayVotingPower = rawOnChainPower ?? voteData?.userVotingPower ?? "0";
   const hasVotingPower = parseFloat(displayVotingPower) > 0;
   const alreadyVoted = voteData?.userVote != null;
 
-  const { data: sim, error: simError } = useSimulateContract({
-    abi: ProjectEscrowAbi,
-    address: escrowAddress,
-    functionName: "vote",
-    args: [BigInt(milestoneIndex), pendingChoice === "YES"],
-    query: {
-      enabled:
-        flow.type === "confirming" &&
-        pendingChoice != null &&
-        !!address &&
-        hasVotingPower &&
-        !alreadyVoted &&
-        !isExpired,
-    },
-  });
-
-  const {
-    mutate: writeContract,
-    isPending: isWritePending,
-    error: writeError,
-    data: hash,
-  } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
-
-  useEffect(() => {
-    if (
-      flow.type === "confirming" &&
-      isSuccess &&
-      hash &&
-      pendingChoice
-    ) {
-      setFlow({ type: "success", hash, choice: pendingChoice });
-      void fetchVoteData();
-    }
-  }, [flow, isSuccess, hash, pendingChoice, fetchVoteData]);
-
   const handleVote = (choice: VoteChoice) => {
     if (!isConnected) {
-      void open();
+      void connect();
       return;
     }
     setPendingChoice(choice);
     setFlow({ type: "confirming", choice });
   };
 
-  const handleSend = () => {
-    if (!sim?.request) return;
-    writeContract(sim.request);
+  const handleSend = async () => {
+    if (!wallet || !pendingChoice || flow.type !== "confirming") return;
+    setFlow({ type: "pending", choice: pendingChoice });
+    setContractError(null);
+    try {
+      const { txHash } = await simulateAndSubmit(
+        wallet,
+        escrowContractId,
+        "vote",
+        [
+          address(wallet.address),
+          u32(milestoneIndex),
+          bool(pendingChoice === "YES"),
+        ],
+      );
+      setFlow({ type: "success", hash: txHash, choice: pendingChoice });
+      void fetchVoteData();
+    } catch (err) {
+      setContractError(err as Error);
+      setFlow({ type: "idle" });
+      setPendingChoice(null);
+    }
   };
 
   const handleReset = () => {
     setFlow({ type: "idle" });
     setPendingChoice(null);
+    setContractError(null);
   };
-
-  const formatError = formatContractError;
 
   if (isLoadingVoteData) {
     return (
@@ -223,23 +227,17 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
 
   return (
     <div className="mt-4 space-y-4">
-      {/* Tally bar */}
       <div className="space-y-1">
         <Progress variant="split" yes={weightYesNum} no={weightNoNum} />
         <div className="flex justify-between text-label-sm">
-          <span className="text-tertiary">
-            YES {formatUsd(weightYesNum)}
-          </span>
-          <span className="text-error">
-            NO {formatUsd(weightNoNum)}
-          </span>
+          <span className="text-tertiary">YES {formatUsd(weightYesNum)}</span>
+          <span className="text-error">NO {formatUsd(weightNoNum)}</span>
         </div>
         <p className="text-label-sm text-on-surface-variant/60">
-          Tallies may lag behind the chain by a few blocks
+          Tallies may lag behind the chain by a few ledgers
         </p>
       </div>
 
-      {/* Countdown */}
       {remaining && (
         <div className="flex items-center gap-2 text-label-sm text-primary">
           <span className="material-symbols-outlined text-[16px]">schedule</span>
@@ -253,7 +251,6 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
         </div>
       )}
 
-      {/* Voting power */}
       {isConnected && (
         <div className="text-label-sm text-on-surface-variant">
           Your voting power:{" "}
@@ -263,7 +260,6 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
         </div>
       )}
 
-      {/* Vote action */}
       {userVote ? (
         <div className="flex items-center gap-2 rounded-lg bg-tertiary-container/20 p-3 text-label-md text-tertiary">
           <span className="material-symbols-outlined text-[18px]">check</span>
@@ -277,56 +273,60 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
           </div>
           <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">info</span>
-            Your vote will be reflected in the tally once the indexer confirms the on-chain event.
+            Your vote will be reflected in the tally once the indexer confirms
+            the on-chain event.
           </p>
           <a
-            href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
+            href={getExplorerTxUrl(flow.hash)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline text-label-md"
           >
-            View on Morph Explorer
+            View on Stellar Explorer
           </a>
         </div>
-      ) : flow.type === "confirming" ? (
+      ) : flow.type === "confirming" || flow.type === "pending" ? (
         <div className="space-y-3">
           <p className="text-label-md text-on-surface">
             Cast {pendingChoice} vote with {formatUsd(displayVotingPower)}?
           </p>
           <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">schedule</span>
-            Voting requires wallet confirmation and block mining on Morph L2. Tallies may take a few moments to update while the indexer syncs.
+            Voting requires wallet confirmation and ledger inclusion on Stellar.
+            Tallies may take a few moments to update while the indexer syncs.
           </p>
           <div className="flex gap-3">
             <Button
-              onClick={handleSend}
-              disabled={!sim?.request || isWritePending || isConfirming}
+              onClick={() => {
+                void handleSend();
+              }}
+              disabled={flow.type === "pending"}
               className="flex-1"
             >
-              {isWritePending
+              {flow.type === "pending"
                 ? "Confirm in wallet..."
-                : isConfirming
-                  ? "Confirming..."
-                  : `Vote ${String(pendingChoice)}`}
+                : `Vote ${String(pendingChoice)}`}
             </Button>
             <Button
               onClick={handleReset}
               variant="outline"
-              disabled={isWritePending || isConfirming}
+              disabled={flow.type === "pending"}
             >
               Cancel
             </Button>
           </div>
-          {formatError(simError ?? writeError) && (
+          {contractError && (
             <p className="text-label-sm text-error">
-              {formatError(simError ?? writeError)}
+              {formatContractError(contractError)}
             </p>
           )}
         </div>
       ) : (
         <div className="flex gap-3">
           <Button
-            onClick={() => { handleVote("YES"); }}
+            onClick={() => {
+              handleVote("YES");
+            }}
             disabled={!isConnected || !hasVotingPower || isExpired}
             variant="outline"
             className="flex-1 border-tertiary text-tertiary hover:bg-tertiary-container/20"
@@ -335,7 +335,9 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
             YES
           </Button>
           <Button
-            onClick={() => { handleVote("NO"); }}
+            onClick={() => {
+              handleVote("NO");
+            }}
             disabled={!isConnected || !hasVotingPower || isExpired}
             variant="outline"
             className="flex-1 border-error text-error hover:bg-error-container/20"
@@ -351,11 +353,15 @@ export function VotePanel({ slug, milestoneIndex, escrowAddress }: VotePanelProp
           Connect your wallet to vote
         </p>
       )}
-      {isConnected && !hasVotingPower && !alreadyVoted && flow.type !== "success" && (
-        <p className="text-label-sm text-on-surface-variant">
-          You have no voting power for this project. Contribute to receive voting rights.
-        </p>
-      )}
+      {isConnected &&
+        !hasVotingPower &&
+        !alreadyVoted &&
+        flow.type !== "success" && (
+          <p className="text-label-sm text-on-surface-variant">
+            You have no voting power for this project. Contribute to receive
+            voting rights.
+          </p>
+        )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * Maps known contract error names to user-friendly messages.
- * Keep in sync with the Solidity contracts.
+ * Keep in sync with the Soroban contracts.
  */
 const ERROR_MESSAGES: Record<string, string> = {
   // ProjectEscrow
@@ -29,8 +29,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 /**
- * Viem error messages contain the raw error dump when a signature can't be decoded.
- * Detect these so we can replace them with a friendly message.
+ * Soroban/Stellar error messages can contain raw dumps — detect these so we
+ * can replace them with a friendly message.
  */
 const UNFRIENDLY_PATTERNS = [
   /Unable to decode signature/,
@@ -38,24 +38,20 @@ const UNFRIENDLY_PATTERNS = [
   /reverted with the following reason/,
   /Contract Call:/,
   /execution reverted/,
-  /Version: viem/,
   /Details: execution reverted/,
-  /Docs: https:\/\/viem\.sh/,
 ];
 
-function looksLikeRawViemMessage(msg: string): boolean {
+function looksLikeUnfriendlyMessage(msg: string): boolean {
   return UNFRIENDLY_PATTERNS.some((p) => p.test(msg));
 }
 
 function extractErrorName(msg: string): string | null {
-  // Try to find a known error name in the message.
-  // Viem often includes the error name directly, e.g.:
+  // Try to find a known error name in the message, e.g.:
   //   "The contract function \"contribute\" reverted with the following reason: ZeroAmount"
-  //   "The contract function \"contribute\" reverted with the following signature: 0xe450d38c"
   const reasonMatch = /reverted with the following reason:\s*(\w+)/.exec(msg);
   if (reasonMatch?.[1]) return reasonMatch[1];
 
-  // Some viem versions wrap it in quotes
+  // Some SDKs wrap the error name in quotes
   const quotedMatch = /"(\w+)"/.exec(msg);
   if (quotedMatch?.[1] && ERROR_MESSAGES[quotedMatch[1]]) return quotedMatch[1];
 
@@ -71,7 +67,7 @@ function extractErrorName(msg: string): string | null {
 /**
  * Format a contract-revert or wallet error into a user-friendly string.
  *
- * @param err     The error thrown by viem/wagmi (or null/undefined).
+ * @param err     The error thrown by the Soroban SDK / wallet (or null/undefined).
  * @param fallback  Optional fallback message when the error can't be interpreted.
  * @returns A human-readable message, or null if there is no error.
  */
@@ -101,9 +97,9 @@ export function formatContractError(
     if (message) return message;
   }
 
-  // If the message is a raw viem dump (un-decoded signature, etc.),
+  // If the message is a raw dump (un-decoded signature, etc.),
   // return the fallback instead of showing the huge stack-like text.
-  if (looksLikeRawViemMessage(msg)) {
+  if (looksLikeUnfriendlyMessage(msg)) {
     return fallback;
   }
 

@@ -55,7 +55,7 @@ const createProjectSchema = z.object({
     })
     .default({}),
   backingLinks: z.array(z.url()).max(5).default([]),
-  targetAmount: z.string().regex(/^\d+(\.\d{1,6})?$/, 'Invalid USDT amount'),
+  targetAmount: z.string().regex(/^\d+(\.\d{1,7})?$/, 'Invalid USDC amount'),
   fundingDeadline: z.string().optional(),
   votingPeriodDays: z.number().int().min(1).max(43200).default(10080),
   rewardCurveType: z

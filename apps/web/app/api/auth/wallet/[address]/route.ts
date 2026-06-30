@@ -15,9 +15,8 @@ export async function DELETE(
     assertRole(session, 'BACKER')
 
     const { address } = await params
-    const normalizedAddress = address.toLowerCase()
 
-    const wallet = await prisma.wallet.findUnique({ where: { address: normalizedAddress } })
+    const wallet = await prisma.wallet.findUnique({ where: { address } })
     if (!wallet) {
       throw new NotFoundError('Wallet')
     }
@@ -47,8 +46,8 @@ export async function DELETE(
     await prisma.wallet.delete({ where: { id: wallet.id } })
 
     await logActivity(
-      { prisma, actorUserId: session.user.id, actorWallet: normalizedAddress, req },
-      { type: 'WALLET_UNLINKED', metadata: { address: normalizedAddress } },
+      { prisma, actorUserId: session.user.id, actorWallet: address, req },
+      { type: 'WALLET_UNLINKED', metadata: { address } },
     )
 
     return okResponse({ deleted: true })

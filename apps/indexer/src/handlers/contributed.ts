@@ -1,33 +1,32 @@
-import { formatUnits } from "viem";
-import { publicClient, indexerEnv } from "../lib/client.js";
+import { USDC_DECIMALS } from "@ember/shared/soroban";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
 import type { ContributedArgs } from "../types.js";
 
+function formatUnits(value: bigint, decimals: number): string {
+  const divisor = 10n ** BigInt(decimals);
+  const whole = value / divisor;
+  const fraction = value % divisor;
+  const fractionStr = fraction.toString().padStart(decimals, "0");
+  const trimmed = fractionStr.replace(/0+$/, "");
+  return trimmed ? `${String(whole)}.${trimmed}` : whole.toString();
+}
+
 export async function handleContributed(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: ContributedArgs;
 }) {
-  const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
+  const { contract, ledgerSequence, txHash, eventIndex, args: eventArgs } = args;
   const { backer, amount, tokenId, m0Share } = eventArgs;
-  const decimalAmount = formatUnits(amount, 6);
-  const decimalM0Share = formatUnits(m0Share, 6);
-
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "Contributed: waiting for confirmations"
-    );
-    return false;
-  }
+  const decimalAmount = formatUnits(amount, USDC_DECIMALS);
+  const decimalM0Share = formatUnits(m0Share, USDC_DECIMALS);
 
   const project = await prisma.project.findFirst({
-    where: { escrowAddress: contract.toLowerCase() },
+    where: { escrowAddress: contract },
     select: { id: true },
   });
   if (!project) {
@@ -36,13 +35,13 @@ export async function handleContributed(args: {
   }
 
   const backerUser = await prisma.user.findFirst({
-    where: { wallets: { some: { address: backer.toLowerCase() } } },
+    where: { wallets: { some: { address: backer } } },
     select: { id: true, email: true },
   });
 
   await prisma.$transaction(async (tx) => {
     const existing = await tx.contribution.findUnique({
-      where: { txHash: txHash.toLowerCase() },
+      where: { txHash },
     });
     if (existing) {
       logger.debug({ txHash }, "Contributed: already indexed");
@@ -53,14 +52,14 @@ export async function handleContributed(args: {
       data: {
         projectId: project.id,
         backerId: backerUser?.id ?? null,
-        walletAddress: backer.toLowerCase(),
+        walletAddress: backer,
         amount: decimalAmount,
         m0Share: decimalM0Share,
         nftTokenId: tokenId.toString(),
-        nftContract: contract.toLowerCase(),
-        txHash: txHash.toLowerCase(),
-        logIndex,
-        blockNumber,
+        nftContract: contract,
+        txHash,
+        logIndex: eventIndex,
+        blockNumber: BigInt(ledgerSequence),
         contributedAt: new Date(),
       },
     });
@@ -73,8 +72,8 @@ export async function handleContributed(args: {
     });
 
     await tx.milestone.updateMany({
-      where: { projectId: project.id, index: 0, status: 'PENDING' },
-      data: { status: 'AUTO_RELEASED' },
+      where: { projectId: project.id, index: 0, status: "PENDING" },
+      data: { status: "AUTO_RELEASED" },
     });
 
     await tx.emailNotification.createMany({
@@ -85,7 +84,7 @@ export async function handleContributed(args: {
               template: "CONTRIBUTION_RECEIVED",
               payload: {
                 projectId: project.id,
-                backerAddress: backer.toLowerCase(),
+                backerAddress: backer,
                 amount: decimalAmount,
                 tokenId: tokenId.toString(),
               },
@@ -102,13 +101,13 @@ export async function handleContributed(args: {
           userId: backerUser.id,
           type: "CONTRIBUTION_RECEIVED",
           title: "Contribution Received",
-          message: `Your contribution of ${decimalAmount} USDT has been received.`,
+          message: `Your contribution of ${decimalAmount} USDC has been received.`,
           linkUrl: `/dashboard/contributions`,
         },
       });
     }
 
-    await updateCursor(tx, contract, "Contributed", blockNumber);
+    await updateCursor(tx, contract, "Contributed", BigInt(ledgerSequence));
   });
 
   logger.info({ projectId: project.id, txHash }, "Contributed: indexed");

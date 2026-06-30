@@ -1,30 +1,20 @@
-import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
 import type { MilestoneClaimedArgs } from "../types.js";
 
 export async function handleMilestoneClaimed(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: MilestoneClaimedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
-  const { milestoneIndex, amount } = eventArgs;
-
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "MilestoneClaimed: waiting for confirmations"
-    );
-    return false;
-  }
+  const { contract, ledgerSequence, txHash, args: eventArgs } = args;
+  const { milestoneIndex } = eventArgs;
 
   const project = await prisma.project.findFirst({
-    where: { escrowAddress: contract.toLowerCase() },
+    where: { escrowAddress: contract },
     select: { id: true },
   });
   if (!project) {
@@ -36,12 +26,12 @@ export async function handleMilestoneClaimed(args: {
     await tx.milestone.updateMany({
       where: {
         projectId: project.id,
-        index: Number(milestoneIndex),
+        index: milestoneIndex,
       },
       data: {
         status: "CLAIMED",
         claimedAt: new Date(),
-        claimedTxHash: txHash.toLowerCase(),
+        claimedTxHash: txHash,
       },
     });
 
@@ -58,7 +48,7 @@ export async function handleMilestoneClaimed(args: {
         template: "MILESTONE_CLAIMED" as const,
         payload: {
           projectId: project.id,
-          milestoneIndex: Number(milestoneIndex),
+          milestoneIndex,
           name: c.backer.name ?? c.backer.email,
         },
         status: "QUEUED" as const,
@@ -82,11 +72,11 @@ export async function handleMilestoneClaimed(args: {
       await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
-    await updateCursor(tx, contract, "MilestoneClaimed", blockNumber);
+    await updateCursor(tx, contract, "MilestoneClaimed", BigInt(ledgerSequence));
   });
 
   logger.info(
-    { projectId: project.id, milestoneIndex, amount, txHash },
+    { projectId: project.id, milestoneIndex, txHash },
     "MilestoneClaimed: indexed"
   );
   return true;

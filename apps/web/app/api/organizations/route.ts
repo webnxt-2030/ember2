@@ -17,7 +17,7 @@ const createOrgSchema = z.object({
   slug: slugSchema,
   description: z.string().max(1000).optional(),
   website: z.url().optional(),
-  receivingWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid Ethereum address'),
+  receivingWallet: z.string().regex(/^[G][A-Z2-7]{55}$/, 'Invalid Stellar address'),
   ownerEmails: z.array(z.email()).min(1).max(10),
 })
 

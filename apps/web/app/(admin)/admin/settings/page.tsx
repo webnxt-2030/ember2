@@ -19,9 +19,10 @@ export default async function AdminSettingsPage() {
   }
 
   const settings = [
-    { label: 'Factory Contract', value: process.env.NEXT_PUBLIC_PROJECT_FACTORY_ADDRESS ?? '—' },
-    { label: 'USDT Contract', value: process.env.NEXT_PUBLIC_USDT_ADDRESS ?? '—' },
-    { label: 'Morph Explorer', value: process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? '—' },
+    { label: 'Factory Contract', value: process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ID ?? '—' },
+    { label: 'USDC Contract', value: process.env.NEXT_PUBLIC_USDC_CONTRACT_ID ?? '—' },
+    { label: 'Stellar Explorer', value: process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL ?? '—' },
+    { label: 'Stellar RPC', value: process.env.NEXT_PUBLIC_STELLAR_RPC_URL ?? '—' },
     { label: 'Resend Webhook Secret', value: process.env.RESEND_WEBHOOK_SECRET ? '••••••••' : '—' },
     { label: 'Redis URL', value: process.env.REDIS_URL ? '••••••••' : '—' },
     { label: 'Database URL', value: process.env.DATABASE_URL ? '••••••••' : '—' },

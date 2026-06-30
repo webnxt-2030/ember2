@@ -65,15 +65,15 @@ export default async function AdminProjectsPage({
       <Container>
         <h1 className="text-headline-lg text-on-surface font-bold mb-8">Projects</h1>
         <ProjectsTable
-          initialProjects={projects.map((p) => ({
-            id: p.id,
-            slug: p.slug,
-            title: p.title,
-            status: p.status,
-            targetAmount: p.targetAmount.toString(),
-            totalRaised: p.totalRaised.toString(),
-            createdAt: p.createdAt.toISOString(),
-            organizationTitle: p.organization.title,
+          initialProjects={projects.map((p: Record<string, unknown>) => ({
+            id: p.id as string,
+            slug: p.slug as string,
+            title: p.title as string,
+            status: p.status as string,
+            targetAmount: p.targetAmount as string,
+            totalRaised: p.totalRaised as string,
+            createdAt: (p.createdAt as Date).toISOString(),
+            organizationTitle: (p.organization as Record<string, unknown>).title as string,
           }))}
           initialPage={page}
           initialLimit={limit}

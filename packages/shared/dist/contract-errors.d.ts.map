@@ -1,0 +1,1 @@
+{"version":3,"file":"contract-errors.d.ts","sourceRoot":"","sources":["../src/contract-errors.ts"],"names":[],"mappings":"AAkEA;;;;;;GAMG;AACH,wBAAgB,mBAAmB,CACjC,GAAG,EAAE,KAAK,GAAG,IAAI,GAAG,SAAS,EAC7B,QAAQ,SAAqF,GAC5F,MAAM,GAAG,IAAI,CA+Bf;AAED;;;GAGG;AACH,wBAAgB,uBAAuB,CACrC,QAAQ,CAAC,EAAE,MAAM,GAChB,CAAC,GAAG,EAAE,KAAK,GAAG,IAAI,GAAG,SAAS,KAAK,MAAM,GAAG,IAAI,CAElD"}
