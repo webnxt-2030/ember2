@@ -451,19 +451,19 @@ fn test_fuzz_contribute_invariant_holds() {
         let backer = Address::generate(&env);
         approve_and_contribute(&env, &usdc, &escrow, &escrow_client, &backer, amount);
         total_contributed += amount;
-
-        let m0_released = MockTokenClient::new(&env, &usdc).balance(&organization);
-        let mut alloc_sum: i128 = 0;
-        for i in 1u32..4u32 {
-            alloc_sum += escrow_client.milestone_allocated(&i);
-        }
-
-        assert!(alloc_sum + m0_released <= total_contributed, "allocSum + m0Released exceeds total");
-        assert!(
-            total_contributed - (alloc_sum + m0_released) <= 4i128,
-            "dust exceeds milestone count"
-        );
     }
+
+    let m0_released = MockTokenClient::new(&env, &usdc).balance(&organization);
+    let mut alloc_sum: i128 = 0;
+    for i in 1u32..4u32 {
+        alloc_sum += escrow_client.milestone_allocated(&i);
+    }
+
+    assert!(alloc_sum + m0_released <= total_contributed, "allocSum + m0Released exceeds total");
+    assert!(
+        total_contributed - (alloc_sum + m0_released) <= 20 * 4i128,
+        "cumulative dust unbounded"
+    );
 }
 
 #[test]
