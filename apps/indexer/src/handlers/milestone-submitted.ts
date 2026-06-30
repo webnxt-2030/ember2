@@ -1,30 +1,20 @@
-import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
 import type { MilestoneSubmittedArgs } from "../types.js";
 
 export async function handleMilestoneSubmitted(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: MilestoneSubmittedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
+  const { contract, ledgerSequence, txHash, args: eventArgs } = args;
   const { milestoneIndex, updateURI, voteEndAt } = eventArgs;
 
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "MilestoneSubmitted: waiting for confirmations"
-    );
-    return false;
-  }
-
   const project = await prisma.project.findFirst({
-    where: { escrowAddress: contract.toLowerCase() },
+    where: { escrowAddress: contract },
     select: { id: true, slug: true, title: true },
   });
   if (!project) {
@@ -33,17 +23,17 @@ export async function handleMilestoneSubmitted(args: {
   }
 
   const milestone = await prisma.milestone.findFirst({
-    where: { projectId: project.id, index: Number(milestoneIndex) },
+    where: { projectId: project.id, index: milestoneIndex },
     select: { title: true },
   });
 
-  const voteEndAtDate = new Date(Number(voteEndAt) * 1000);
+  const voteEndAtDate = new Date(voteEndAt * 1000);
 
   await prisma.$transaction(async (tx) => {
     await tx.milestone.updateMany({
       where: {
         projectId: project.id,
-        index: Number(milestoneIndex),
+        index: milestoneIndex,
       },
       data: {
         status: "VOTING",
@@ -68,7 +58,7 @@ export async function handleMilestoneSubmitted(args: {
         template: "MILESTONE_VOTE_OPEN" as const,
         payload: {
           projectId: project.id,
-          milestoneIndex: Number(milestoneIndex),
+          milestoneIndex,
           name: c.backer.name ?? c.backer.email,
         },
         status: "QUEUED" as const,
@@ -92,7 +82,7 @@ export async function handleMilestoneSubmitted(args: {
       await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
-    await updateCursor(tx, contract, "MilestoneSubmitted", blockNumber);
+    await updateCursor(tx, contract, "MilestoneSubmitted", BigInt(ledgerSequence));
   });
 
   logger.info(

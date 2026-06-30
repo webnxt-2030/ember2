@@ -1,11 +1,14 @@
 import type { NextRequest } from 'next/server'
-import { SiweMessage } from 'siwe'
+import { Keypair } from '@stellar/stellar-sdk'
 import { getSession } from '@/lib/auth/session'
 import { assertRole } from '@/lib/auth/permissions'
 import { ValidationError, ConflictError, AuthError } from '@/lib/errors'
 import { errorResponse, okResponse } from '@/lib/api-response'
 import { prisma } from '@/lib/db'
 import { logActivity } from '@/lib/activity-log'
+
+const MESSAGE_REGEX =
+  /^(.+) wants you to sign in with your Stellar account:\n([GC][A-Z2-7]{55})\n\n(.+)\n\nURI: (.+)\nNetwork: (.+)\nNonce: ([A-Za-z0-9]+)$/
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,20 +22,24 @@ export async function POST(req: NextRequest) {
       throw new ValidationError('message and signature are required')
     }
 
-    let siweMessage: SiweMessage
-    try {
-      siweMessage = new SiweMessage(message)
-    } catch {
-      throw new ValidationError('Invalid SIWE message format')
+    const match = MESSAGE_REGEX.exec(message)
+    if (!match) {
+      throw new ValidationError('Invalid sign-in message format')
+    }
+    if (match.length < 7) {
+      throw new ValidationError('Invalid sign-in message format')
+    }
+    const address = match[2]
+    const nonce = match[6]
+
+    if (!address || !nonce) {
+      throw new ValidationError('Invalid sign-in message format')
     }
 
-    const address = siweMessage.address.toLowerCase()
-
-    // Look up the nonce in Verification table
     const verification = await prisma.verification.findFirst({
       where: {
         identifier: `wallet-nonce:${address}`,
-        value: siweMessage.nonce,
+        value: nonce,
         expiresAt: { gt: new Date() },
       },
     })
@@ -41,16 +48,24 @@ export async function POST(req: NextRequest) {
       throw new AuthError('Nonce not found or expired')
     }
 
-    // Verify the SIWE signature
-    const result = await siweMessage.verify({ signature })
-    if (!result.success) {
+    // Verify Ed25519 signature
+    let isValid = false
+    try {
+      const keypair = Keypair.fromPublicKey(address)
+      isValid = keypair.verify(
+        Buffer.from(message, 'utf-8'),
+        Buffer.from(signature, 'base64'),
+      )
+    } catch {
       throw new AuthError('Invalid signature')
     }
 
-    // Delete the nonce (single-use)
+    if (!isValid) {
+      throw new AuthError('Invalid signature')
+    }
+
     await prisma.verification.delete({ where: { id: verification.id } })
 
-    // Check if wallet already linked to another user
     const existing = await prisma.wallet.findUnique({ where: { address } })
     if (existing && existing.userId !== session.user.id) {
       throw new ConflictError('Wallet is already linked to another account')
@@ -59,19 +74,17 @@ export async function POST(req: NextRequest) {
       return okResponse({ wallet: existing, alreadyLinked: true })
     }
 
-    // Count existing wallets to determine isPrimary
     const walletCount = await prisma.wallet.count({ where: { userId: session.user.id } })
 
     const wallet = await prisma.wallet.create({
       data: {
         userId: session.user.id,
         address,
-        isPrimary: walletCount === 0, // first wallet is primary
+        isPrimary: walletCount === 0,
         verifiedAt: new Date(),
       },
     })
 
-    // Back-fill past contributions made from this wallet before it was linked
     await prisma.contribution.updateMany({
       where: { walletAddress: address, backerId: null },
       data: { backerId: session.user.id },

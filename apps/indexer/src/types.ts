@@ -1,48 +1,48 @@
 export interface ContributedArgs {
-  backer: `0x${string}`;
+  backer: string;
   amount: bigint;
-  tokenId: bigint;
+  tokenId: number;
   m0Share: bigint;
 }
 
 export interface VotedArgs {
-  milestoneIndex: bigint;
-  voter: `0x${string}`;
+  milestoneIndex: number;
+  voter: string;
   yes: boolean;
   weight: bigint;
 }
 
 export interface MilestoneSubmittedArgs {
-  milestoneIndex: bigint;
+  milestoneIndex: number;
   updateURI: string;
-  voteEndAt: bigint;
+  voteEndAt: number;
 }
 
 export interface MilestoneResolvedArgs {
-  milestoneIndex: bigint;
+  milestoneIndex: number;
   passed: boolean;
   weightYes: bigint;
   weightNo: bigint;
 }
 
 export interface MilestoneClaimedArgs {
-  milestoneIndex: bigint;
+  milestoneIndex: number;
   amount: bigint;
 }
 
 export interface ProjectCreatedArgs {
-  projectId: bigint;
-  organization: `0x${string}`;
-  creator: `0x${string}`;
-  escrow: `0x${string}`;
-  nft: `0x${string}`;
-  milestoneBps: readonly bigint[];
+  projectId: number;
+  organization: string;
+  creator: string;
+  escrow: string;
+  nft: string;
+  milestoneBps: readonly number[];
   votingPeriod: number;
 }
 
 export interface EventHandlerContext {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
 }

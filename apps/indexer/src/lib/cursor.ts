@@ -2,35 +2,39 @@ import { prisma } from "./db.js";
 
 type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
+/**
+ * On the Stellar branch the `lastBlock` column stores the latest processed
+ * Stellar ledger sequence. The column name is kept to avoid a schema migration.
+ */
 export async function updateCursor(
   tx: TxClient,
-  contract: `0x${string}`,
+  contract: string,
   eventName: string,
-  blockNumber: bigint
+  lastLedger: bigint
 ) {
   await tx.indexerCursor.upsert({
     where: {
       contract_eventName: {
-        contract: contract.toLowerCase(),
+        contract,
         eventName,
       },
     },
     create: {
-      contract: contract.toLowerCase(),
+      contract,
       eventName,
-      lastBlock: blockNumber,
+      lastBlock: lastLedger,
     },
     update: {
-      lastBlock: blockNumber,
+      lastBlock: lastLedger,
     },
   });
 }
 
-export async function getCursor(contract: `0x${string}`, eventName: string) {
+export async function getCursor(contract: string, eventName: string) {
   const cursor = await prisma.indexerCursor.findUnique({
     where: {
       contract_eventName: {
-        contract: contract.toLowerCase(),
+        contract,
         eventName,
       },
     },

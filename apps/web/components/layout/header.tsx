@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { AuthNav } from './auth-nav'
 
-// AppKit's useAppKit hook only works client-side, so load the wallet button without SSR
-// to avoid "call createAppKit before useAppKit" during static prerendering.
+// The wallet button uses client-only Stellar wallet state, so load it without SSR
+// to avoid hydration mismatches during static prerendering.
 const ConnectButton = dynamic(
   () => import('@/components/wallet/connect-button').then((m) => m.ConnectButton),
   { ssr: false },

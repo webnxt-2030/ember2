@@ -1,13 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  useConnection,
-  useSendTransaction,
-  useWaitForTransactionReceipt,
-} from 'wagmi'
-import { useAppKit } from '@reown/appkit/react'
 import { formatContractError } from '@ember/shared'
+import { useStellarWallet } from '@/components/providers/stellar-provider'
+import { simulateAndSubmit } from '@/lib/stellar/contract'
+import { address, string, u32, vec } from '@/lib/stellar/scval'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -19,48 +16,37 @@ interface PublishButtonProps {
 type FlowState =
   | { type: 'idle' }
   | { type: 'preparing' }
-  | { type: 'ready'; to: `0x${string}`; calldata: `0x${string}`; chainId: number }
+  | { type: 'pending' }
   | { type: 'finalizing' }
   | { type: 'success' }
 
 interface PublishApiResponse {
-  to: `0x${string}`
-  calldata: `0x${string}`
+  factoryContractId: string
+  organization: string
+  milestoneBps: number[]
+  votingPeriodSeconds: number
   projectURI: string
-  chainId: number
+  networkPassphrase: string
 }
 
 export function PublishButton({ projectId }: PublishButtonProps) {
-  const { isConnected } = useConnection()
-  const { open } = useAppKit()
+  const { wallet, isConnected, connect } = useStellarWallet()
   const [error, setError] = useState<string | null>(null)
   const [flow, setFlow] = useState<FlowState>({ type: 'idle' })
+  const [txHash, setTxHash] = useState<string | null>(null)
 
-  const {
-    mutate,
-    isPending: isSendPending,
-    error: sendError,
-    data: hash,
-  } = useSendTransaction()
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({ hash })
-
-  // Triggered once the on-chain tx is mined (1 confirmation)
+  // Triggered once the on-chain tx is submitted
   useEffect(() => {
-    if (isConfirmed && hash && flow.type !== 'finalizing' && flow.type !== 'success') {
-      setFlow({ type: 'finalizing' })
-
-      // Fire confirmation in the background so ActivityLog is still recorded
+    if (flow.type === 'finalizing' && txHash) {
       fetch(`/api/projects/${projectId}/publish/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash: hash }),
+        body: JSON.stringify({ txHash }),
       }).catch(() => {
         // Background confirmation failed; indexer will eventually reconcile
       })
     }
-  }, [isConfirmed, hash, flow.type, projectId])
+  }, [flow.type, txHash, projectId])
 
   // Poll project status until it flips to LIVE, then reload
   useEffect(() => {
@@ -90,6 +76,15 @@ export function PublishButton({ projectId }: PublishButtonProps) {
 
   async function handlePrepare() {
     setError(null)
+    if (!isConnected) {
+      await connect()
+      return
+    }
+    if (!wallet) {
+      setError('Wallet not connected')
+      return
+    }
+
     setFlow({ type: 'preparing' })
     try {
       const res = await fetch(`/api/projects/${projectId}/publish`, {
@@ -102,31 +97,26 @@ export function PublishButton({ projectId }: PublishButtonProps) {
         setFlow({ type: 'idle' })
         return
       }
-      setFlow({
-        type: 'ready',
-        to: data.to,
-        calldata: data.calldata,
-        chainId: data.chainId,
-      })
-    } catch {
-      setError('Network error. Please try again.')
+
+      setFlow({ type: 'pending' })
+      const { txHash: hash } = await simulateAndSubmit(
+        wallet,
+        data.factoryContractId,
+        'create_project',
+        [
+          address(data.organization),
+          vec(data.milestoneBps.map((bps) => u32(bps))),
+          u32(data.votingPeriodSeconds),
+          string(data.projectURI),
+        ],
+      )
+      setTxHash(hash)
+      setFlow({ type: 'finalizing' })
+    } catch (err) {
+      setError(formatContractError(err as Error) ?? 'Network error. Please try again.')
       setFlow({ type: 'idle' })
     }
   }
-
-  function handlePublish() {
-    if (flow.type !== 'ready') return
-    if (!isConnected) {
-      void open()
-      return
-    }
-    mutate({
-      to: flow.to,
-      data: flow.calldata,
-    })
-  }
-
-  const formatError = formatContractError
 
   if (flow.type === 'success') {
     return (
@@ -157,7 +147,7 @@ export function PublishButton({ projectId }: PublishButtonProps) {
     )
   }
 
-  if (flow.type === 'finalizing') {
+  if (flow.type === 'finalizing' || flow.type === 'pending') {
     return (
       <Card className="w-full max-w-xl">
         <CardContent className="pt-6 text-center">
@@ -177,9 +167,13 @@ export function PublishButton({ projectId }: PublishButtonProps) {
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
           </div>
-          <h3 className="text-headline-sm text-on-surface">Finalizing publish</h3>
+          <h3 className="text-headline-sm text-on-surface">
+            {flow.type === 'pending' ? 'Confirm in wallet...' : 'Finalizing publish'}
+          </h3>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Transaction confirmed. Waiting for on-chain data to sync...
+            {flow.type === 'pending'
+              ? 'Please approve the transaction in your wallet.'
+              : 'Transaction submitted. Waiting for on-chain data to sync...'}
           </p>
         </CardContent>
       </Card>
@@ -197,37 +191,13 @@ export function PublishButton({ projectId }: PublishButtonProps) {
         </p>
 
         {error && <p className="text-label-sm text-error">{error}</p>}
-        {formatError(sendError) && (
-          <p className="text-label-sm text-error">
-            {formatError(sendError)}
-          </p>
-        )}
 
-        {flow.type === 'idle' || flow.type === 'preparing' ? (
-          <Button
-            onClick={() => void handlePrepare()}
-            disabled={flow.type === 'preparing'}
-          >
-            {flow.type === 'preparing' ? 'Preparing...' : 'Prepare publish'}
-          </Button>
-        ) : (
-          <>
-            <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">schedule</span>
-              Publishing requires wallet confirmation and block mining on Morph L2. The project will go live once the transaction is indexed.
-            </p>
-            <Button
-              onClick={handlePublish}
-              disabled={isSendPending || isConfirming}
-            >
-              {isSendPending
-                ? 'Confirm in wallet...'
-                : isConfirming
-                  ? 'Confirming on-chain...'
-                  : 'Publish on-chain'}
-            </Button>
-          </>
-        )}
+        <Button
+          onClick={() => void handlePrepare()}
+          disabled={flow.type === 'preparing'}
+        >
+          {flow.type === 'preparing' ? 'Preparing...' : 'Publish on-chain'}
+        </Button>
       </CardContent>
     </Card>
   )

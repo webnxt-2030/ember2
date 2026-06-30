@@ -6,7 +6,7 @@ vi.mock('@ember/shared', async () => {
   return {
     addressSchema: z
       .string()
-      .regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid Ethereum address'),
+      .regex(/^[GC][A-Z2-7]{55}$/, 'Invalid Stellar address'),
   }
 })
 
@@ -33,10 +33,10 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
       project: { slug: 'my-project', title: 'My Project' },
     } as unknown as Awaited<ReturnType<typeof getContributionByNft>>)
 
-    const req = makeRequest('0xabc1230000000000000000000000000000000000', '42')
+    const req = makeRequest('GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM', '42')
     const res = await GET(req, {
       params: Promise.resolve({
-        contract: '0xabc1230000000000000000000000000000000000',
+        contract: 'GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM',
         tokenId: '42',
       }),
     })
@@ -49,11 +49,11 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
       name: 'Ember Position #42',
       description: 'Contribution to My Project on Ember.',
       image:
-        'https://ember.app/og/nft/0xabc1230000000000000000000000000000000000/42',
+        'https://ember.app/og/nft/GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM/42',
       attributes: [
         { trait_type: 'Project', value: 'my-project' },
-        { trait_type: 'Amount (USDT)', value: '100.500000' },
-        { trait_type: 'M0 Share (USDT)', value: '25.250000' },
+        { trait_type: 'Amount (USDC)', value: '100.5000000' },
+        { trait_type: 'M0 Share (USDC)', value: '25.2500000' },
         { trait_type: 'Contributed At', value: '2026-05-01T00:00:00.000Z' },
       ],
     })
@@ -62,10 +62,10 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
   it('returns 404 when NFT is not found', async () => {
     mockedGetContributionByNft.mockResolvedValue(null)
 
-    const req = makeRequest('0xabc1230000000000000000000000000000000000', '99')
+    const req = makeRequest('GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM', '99')
     const res = await GET(req, {
       params: Promise.resolve({
-        contract: '0xabc1230000000000000000000000000000000000',
+        contract: 'GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM',
         tokenId: '99',
       }),
     })
@@ -89,12 +89,12 @@ describe('GET /api/nft/[contract]/[tokenId]', () => {
 
   it('returns 404 for non-numeric tokenId', async () => {
     const req = makeRequest(
-      '0xabc1230000000000000000000000000000000000',
+      'GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM',
       'abc',
     )
     const res = await GET(req, {
       params: Promise.resolve({
-        contract: '0xabc1230000000000000000000000000000000000',
+        contract: 'GCXAJ7TAOAVL2ZQ6JZXKWZYAHGQ2XRLDNFMQDG2BJX6CAQZM2ANFBBRM',
         tokenId: 'abc',
       }),
     })

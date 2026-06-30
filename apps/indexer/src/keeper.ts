@@ -1,7 +1,8 @@
+import { Contract, TransactionBuilder, xdr } from "@stellar/stellar-sdk";
+import SorobanRpc from "@stellar/stellar-sdk/rpc";
 import { prisma } from "./lib/db.js";
-import { keeperWallet, publicClient } from "./lib/client.js";
+import { keeperKeypair, sorobanServer, horizonServer, indexerEnv } from "./lib/client.js";
 import { logger } from "./lib/logger.js";
-import { ProjectEscrowAbi } from "@ember/shared/abis";
 import { formatContractError } from "@ember/shared/contract-errors";
 
 const KEEPER_INTERVAL_MS = 60_000;
@@ -9,6 +10,61 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const RESOLVE_BUFFER_MS = 60_000;
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
+
+async function loadOrCreateAccount() {
+  try {
+    return await horizonServer.loadAccount(keeperKeypair.publicKey());
+  } catch (err: unknown) {
+    logger.error(
+      { err, address: keeperKeypair.publicKey() },
+      "Keeper: failed to load account; ensure it is funded with XLM"
+    );
+    throw err;
+  }
+}
+
+async function submitResolveMilestone(escrowContractId: string, milestoneIndex: number) {
+  const account = await loadOrCreateAccount();
+  const contract = new Contract(escrowContractId);
+
+  const tx = new TransactionBuilder(account, {
+    fee: "100",
+    networkPassphrase: indexerEnv.STELLAR_NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call("resolve_milestone", xdr.ScVal.scvU32(milestoneIndex)))
+    .setTimeout(30)
+    .build();
+
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call,
+     @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
+  const simulated = await sorobanServer.simulateTransaction(tx);
+  if (!SorobanRpc.Api.isSimulationSuccess(simulated)) {
+    throw new Error(`Simulation failed: ${JSON.stringify(simulated)}`);
+  }
+
+  const prepared = SorobanRpc.assembleTransaction(tx, simulated).build();
+  prepared.sign(keeperKeypair);
+
+  const result = await sorobanServer.sendTransaction(prepared);
+  if (result.status !== "PENDING") {
+    throw new Error(`Transaction failed: ${result.status}`);
+  }
+
+  let txResult = await sorobanServer.getTransaction(result.hash);
+  const start = Date.now();
+  while (txResult.status === "NOT_FOUND" && Date.now() - start < 30_000) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    txResult = await sorobanServer.getTransaction(result.hash);
+  }
+
+  if (txResult.status !== "SUCCESS") {
+    throw new Error(`Transaction not successful: ${txResult.status}`);
+  }
+
+  return result.hash as string;
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call,
+     @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
+}
 
 async function resolveStaleMilestones() {
   const staleMilestones = await prisma.milestone.findMany({
@@ -36,46 +92,31 @@ async function resolveStaleMilestones() {
   );
 
   for (const milestone of staleMilestones) {
-    const escrowAddress = milestone.project.escrowAddress as `0x${string}`;
+    const escrowContractId = milestone.project.escrowAddress;
+    if (!escrowContractId) continue;
 
     try {
-      const hash = await keeperWallet.writeContract({
-        address: escrowAddress,
-        abi: ProjectEscrowAbi,
-        functionName: "resolveMilestone",
-        args: [BigInt(milestone.index)],
-        gas: 200_000n,
-      });
-
-      const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
-      if (receipt.status === "success") {
-        logger.info(
-          { milestoneId: milestone.id, escrowAddress, txHash: hash },
-          "Keeper: resolved milestone"
-        );
-      } else {
-        logger.warn(
-          { milestoneId: milestone.id, txHash: hash },
-          "Keeper: resolveMilestone reverted"
-        );
-      }
-    } catch (err) {
+      const txHash: string = await submitResolveMilestone(escrowContractId, milestone.index);
+      logger.info(
+        { milestoneId: milestone.id, escrowContractId, txHash },
+        "Keeper: resolved milestone"
+      );
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const friendly = formatContractError(err instanceof Error ? err : new Error(msg));
+      const friendly = formatContractError(err instanceof Error ? err : new Error(String(err)));
       if (friendly?.includes("Voting has not ended yet")) {
         logger.warn(
-          { milestoneId: milestone.id, escrowAddress },
-          "Keeper: milestone not ready for resolution yet (VotingNotEnded)"
+          { milestoneId: milestone.id, escrowContractId },
+          "Keeper: milestone not ready for resolution yet"
         );
-      } else if (msg.includes("gas required exceeds allowance") || msg.includes("insufficient funds")) {
+      } else if (msg.includes("insufficient funds") || msg.includes("low reserve")) {
         logger.error(
-          { milestoneId: milestone.id, escrowAddress },
-          "Keeper: keeper wallet may be out of gas. Fund the keeper address."
+          { milestoneId: milestone.id, escrowContractId },
+          "Keeper: keeper account may be out of XLM. Fund the keeper address."
         );
       } else {
         logger.error(
-          { err, milestoneId: milestone.id, escrowAddress, friendly },
+          { err, milestoneId: milestone.id, escrowContractId, friendly },
           "Keeper: error resolving milestone"
         );
       }
@@ -169,18 +210,16 @@ async function sweepComingSoonMilestones() {
 export async function startKeeper() {
   logger.info({ intervalMs: KEEPER_INTERVAL_MS }, "Keeper: starting");
 
-  const balance = await publicClient.getBalance({
-    address: keeperWallet.account.address,
-  });
-  if (balance === 0n) {
-    logger.error(
-      { address: keeperWallet.account.address },
-      "Keeper: wallet has zero native balance. Keeper transactions will fail."
-    );
-  } else {
+  try {
+    const account = await horizonServer.loadAccount(keeperKeypair.publicKey());
     logger.info(
-      { address: keeperWallet.account.address, balance: balance.toString() },
-      "Keeper: wallet balance"
+      { address: keeperKeypair.publicKey(), balance: account.balances },
+      "Keeper: account loaded"
+    );
+  } catch {
+    logger.error(
+      { address: keeperKeypair.publicKey() },
+      "Keeper: could not load account; ensure it is funded"
     );
   }
 

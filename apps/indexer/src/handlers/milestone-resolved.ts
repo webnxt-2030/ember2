@@ -1,31 +1,21 @@
-import { formatUnits } from "viem";
-import { publicClient, indexerEnv } from "../lib/client.js";
+import { formatUsdc } from "../lib/format.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
 import type { MilestoneResolvedArgs } from "../types.js";
 
 export async function handleMilestoneResolved(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: MilestoneResolvedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
+  const { contract, ledgerSequence, txHash, args: eventArgs } = args;
   const { milestoneIndex, passed, weightYes, weightNo } = eventArgs;
 
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "MilestoneResolved: waiting for confirmations"
-    );
-    return false;
-  }
-
   const project = await prisma.project.findFirst({
-    where: { escrowAddress: contract.toLowerCase() },
+    where: { escrowAddress: contract },
     select: { id: true },
   });
   if (!project) {
@@ -37,12 +27,12 @@ export async function handleMilestoneResolved(args: {
     await tx.milestone.updateMany({
       where: {
         projectId: project.id,
-        index: Number(milestoneIndex),
+        index: milestoneIndex,
       },
       data: {
         status: passed ? "PASSED" : "FAILED",
-        weightYes: formatUnits(weightYes, 6),
-        weightNo: formatUnits(weightNo, 6),
+        weightYes: formatUsdc(weightYes),
+        weightNo: formatUsdc(weightNo),
         passed,
       },
     });
@@ -60,7 +50,7 @@ export async function handleMilestoneResolved(args: {
         template: "MILESTONE_VOTE_OUTCOME" as const,
         payload: {
           projectId: project.id,
-          milestoneIndex: Number(milestoneIndex),
+          milestoneIndex,
           passed,
           name: c.backer.name ?? c.backer.email,
         },
@@ -85,7 +75,7 @@ export async function handleMilestoneResolved(args: {
       await tx.inAppNotification.createMany({ data: inAppRows });
     }
 
-    await updateCursor(tx, contract, "MilestoneResolved", blockNumber);
+    await updateCursor(tx, contract, "MilestoneResolved", BigInt(ledgerSequence));
   });
 
   logger.info(

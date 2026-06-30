@@ -1,17 +1,19 @@
 "use client";
 
-import { useAppKit } from "@reown/appkit/react";
-import { useConnection, useDisconnect } from "wagmi";
+import { useStellarWallet } from "@/components/providers/stellar-provider";
 import { Button } from "@/components/ui/button";
 
 interface ConnectButtonProps {
   className?: string;
 }
 
+function truncateStellarAddress(address: string) {
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+}
+
 export function ConnectButton({ className }: ConnectButtonProps) {
-  const { open } = useAppKit();
-  const { address, isConnected, isConnecting } = useConnection();
-  const { mutate: disconnect } = useDisconnect();
+  const { wallet, isConnected, isConnecting, connect, disconnect } =
+    useStellarWallet();
 
   if (isConnecting) {
     return (
@@ -22,17 +24,29 @@ export function ConnectButton({ className }: ConnectButtonProps) {
     );
   }
 
-  if (isConnected && address) {
+  if (isConnected && wallet) {
     return (
-      <Button variant="ghost" className={className ?? ""} onClick={() => { disconnect(); }}>
+      <Button
+        variant="ghost"
+        className={className ?? ""}
+        onClick={() => {
+          void disconnect();
+        }}
+      >
         <span className="material-symbols-outlined text-[18px] mr-1">account_balance_wallet</span>
-        {address.slice(0, 6)}...{address.slice(-4)}
+        {truncateStellarAddress(wallet.address)}
       </Button>
     );
   }
 
   return (
-    <Button variant="ghost" className={className ?? ""} onClick={() => { void open(); }}>
+    <Button
+      variant="ghost"
+      className={className ?? ""}
+      onClick={() => {
+        void connect();
+      }}
+    >
       <span className="material-symbols-outlined text-[18px] mr-1">account_balance_wallet</span>
       Connect Wallet
     </Button>

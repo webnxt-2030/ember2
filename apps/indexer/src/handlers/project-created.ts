@@ -1,4 +1,3 @@
-import { publicClient, indexerEnv } from "../lib/client.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
@@ -15,14 +14,14 @@ const escrowEventNames = [
 
 async function initEscrowCursors(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-  escrowAddress: `0x${string}`,
-  blockNumber: bigint
+  escrowAddress: string,
+  ledgerSequence: number
 ) {
   for (const eventName of escrowEventNames) {
     const existing = await tx.indexerCursor.findUnique({
       where: {
         contract_eventName: {
-          contract: escrowAddress.toLowerCase(),
+          contract: escrowAddress,
           eventName,
         },
       },
@@ -30,9 +29,9 @@ async function initEscrowCursors(
     if (!existing) {
       await tx.indexerCursor.create({
         data: {
-          contract: escrowAddress.toLowerCase(),
+          contract: escrowAddress,
           eventName,
-          lastBlock: blockNumber,
+          lastBlock: BigInt(ledgerSequence),
         },
       });
     }
@@ -40,37 +39,28 @@ async function initEscrowCursors(
 }
 
 export async function handleProjectCreated(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: ProjectCreatedArgs;
 }) {
-  const { contract, blockNumber, txHash, args: eventArgs } = args;
+  const { contract, ledgerSequence, txHash, args: eventArgs } = args;
   const { projectId, escrow, nft } = eventArgs;
-
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "ProjectCreated: waiting for confirmations"
-    );
-    return false;
-  }
 
   await prisma.$transaction(async (tx) => {
     await tx.project.updateMany({
       where: { onChainId: projectId.toString() },
       data: {
-        escrowAddress: escrow.toLowerCase(),
-        nftAddress: nft.toLowerCase(),
+        escrowAddress: escrow,
+        nftAddress: nft,
         status: "LIVE",
         publishedAt: new Date(),
       },
     });
 
-    await updateCursor(tx, contract, "ProjectCreated", blockNumber);
-    await initEscrowCursors(tx, escrow, blockNumber);
+    await updateCursor(tx, contract, "ProjectCreated", BigInt(ledgerSequence));
+    await initEscrowCursors(tx, escrow, ledgerSequence);
   });
 
   addEscrowWatcher(escrow);

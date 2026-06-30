@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-  useSimulateContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from 'wagmi'
-import { ProjectEscrowAbi, formatContractError } from '@ember/shared'
+import { useState } from 'react'
+import { formatContractError } from '@ember/shared'
+import { useStellarWallet } from '@/components/providers/stellar-provider'
+import { simulateAndSubmit } from '@/lib/stellar/contract'
+import { string, u32 } from '@/lib/stellar/scval'
+import { getExplorerTxUrl } from '@/lib/stellar/config'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -14,59 +13,31 @@ interface SubmitFormProps {
   projectId: string
   orgId: string
   milestoneIndex: number
-  escrowAddress: `0x${string}`
+  escrowContractId: string
 }
 
 type FlowState =
   | { type: 'idle' }
   | { type: 'submitting' }
-  | { type: 'ready' }
-  | { type: 'success'; hash: `0x${string}` }
+  | { type: 'pending' }
+  | { type: 'success'; hash: string }
 
 interface SubmitApiResponse {
-  to: string
-  calldata: `0x${string}`
+  escrowContractId: string
   milestoneIndex: number
   updateUri: string
-  chainId: number
+  networkPassphrase: string
 }
 
 export function SubmitForm({
   projectId,
   milestoneIndex,
-  escrowAddress,
+  escrowContractId,
 }: SubmitFormProps) {
+  const { wallet } = useStellarWallet()
   const [updateNote, setUpdateNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [flow, setFlow] = useState<FlowState>({ type: 'idle' })
-  const [updateUri, setUpdateUri] = useState<string>('')
-
-  const { data: sim, error: simError } = useSimulateContract({
-    abi: ProjectEscrowAbi,
-    address: escrowAddress,
-    functionName: 'submitMilestone',
-    args: [BigInt(milestoneIndex), updateUri || ''],
-    query: {
-      enabled: flow.type === 'ready' && !!updateUri,
-    },
-  })
-
-  const {
-    mutate,
-    isPending: isWritePending,
-    error: writeError,
-    data: hash,
-  } = useWriteContract()
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({ hash })
-
-  useEffect(() => {
-    if (isConfirmed && hash && flow.type !== 'success') {
-      setFlow({ type: 'success', hash })
-    }
-  }, [isConfirmed, hash, flow.type])
-
   async function handlePrepare() {
     setError(null)
     if (!updateNote.trim()) {
@@ -94,20 +65,26 @@ export function SubmitForm({
         setFlow({ type: 'idle' })
         return
       }
-      setUpdateUri(data.updateUri)
-      setFlow({ type: 'ready' })
-    } catch {
-      setError('Network error. Please try again.')
+      setFlow({ type: 'pending' })
+
+      if (!wallet) {
+        setError('Wallet not connected')
+        setFlow({ type: 'idle' })
+        return
+      }
+
+      const { txHash } = await simulateAndSubmit(
+        wallet,
+        escrowContractId,
+        'submit_milestone',
+        [u32(milestoneIndex), string(data.updateUri)],
+      )
+      setFlow({ type: 'success', hash: txHash })
+    } catch (err) {
+      setError(formatContractError(err as Error) ?? 'Network error. Please try again.')
       setFlow({ type: 'idle' })
     }
   }
-
-  function handleSubmit() {
-    if (!sim?.request) return
-    mutate(sim.request)
-  }
-
-  const formatError = formatContractError
 
   return (
     <Card className="w-full max-w-xl">
@@ -146,12 +123,12 @@ export function SubmitForm({
               </p>
             </div>
             <a
-              href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
+              href={getExplorerTxUrl(flow.hash)}
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline text-label-md"
             >
-              View on Morph Explorer
+              View on Stellar Explorer
             </a>
           </div>
         ) : (
@@ -173,11 +150,6 @@ export function SubmitForm({
             </div>
 
             {error && <p className="text-label-sm text-error">{error}</p>}
-            {formatError(simError ?? writeError) && (
-              <p className="text-label-sm text-error">
-                {formatError(simError ?? writeError)}
-              </p>
-            )}
 
             {flow.type === 'idle' || flow.type === 'submitting' ? (
               <Button
@@ -186,24 +158,15 @@ export function SubmitForm({
               >
                 {flow.type === 'submitting'
                   ? 'Preparing...'
-                  : 'Prepare submission'}
+                  : 'Submit on-chain'}
               </Button>
             ) : (
               <>
                 <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">schedule</span>
-                  Submitting requires wallet confirmation and block mining on Morph L2. The milestone status will update once the indexer syncs.
+                  Submitting requires wallet confirmation and ledger inclusion on Stellar. The milestone status will update once the indexer syncs.
                 </p>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!sim?.request || isWritePending || isConfirming}
-                >
-                  {isWritePending
-                    ? 'Confirm in wallet...'
-                    : isConfirming
-                      ? 'Confirming...'
-                      : 'Submit on-chain'}
-                </Button>
+                <Button disabled>Confirm in wallet...</Button>
               </>
             )}
           </>

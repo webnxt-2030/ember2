@@ -21,7 +21,7 @@ const updateSchema = z.object({
   description: z.string().max(1000).optional(),
   logoUrl: z.url().optional().nullable(),
   website: z.url().optional().nullable(),
-  receivingWallet: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
+  receivingWallet: z.string().regex(/^[G][A-Z2-7]{55}$/).optional(),
 })
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -195,7 +195,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const walletChanged =
     receivingWallet !== undefined &&
-    receivingWallet.toLowerCase() !== org.receivingWallet.toLowerCase()
+    receivingWallet !== org.receivingWallet
 
   const updated = await prisma.organization.update({
     where: { id },

@@ -1,31 +1,21 @@
-import { formatUnits } from "viem";
-import { publicClient, indexerEnv } from "../lib/client.js";
+import { formatUsdc } from "../lib/format.js";
 import { prisma } from "../lib/db.js";
 import { logger } from "../lib/logger.js";
 import { updateCursor } from "../lib/cursor.js";
 import type { VotedArgs } from "../types.js";
 
 export async function handleVoted(args: {
-  contract: `0x${string}`;
-  blockNumber: bigint;
-  txHash: `0x${string}`;
-  logIndex: number;
+  contract: string;
+  ledgerSequence: number;
+  txHash: string;
+  eventIndex: number;
   args: VotedArgs;
 }) {
-  const { contract, blockNumber, txHash, logIndex, args: eventArgs } = args;
+  const { contract, ledgerSequence, txHash, eventIndex, args: eventArgs } = args;
   const { milestoneIndex, voter, yes, weight } = eventArgs;
 
-  const currentBlock = await publicClient.getBlockNumber();
-  if (currentBlock - blockNumber < indexerEnv.INDEXER_CONFIRMATIONS) {
-    logger.debug(
-      { contract, txHash, currentBlock, eventBlock: blockNumber },
-      "Voted: waiting for confirmations"
-    );
-    return false;
-  }
-
   const project = await prisma.project.findFirst({
-    where: { escrowAddress: contract.toLowerCase() },
+    where: { escrowAddress: contract },
     select: { id: true },
   });
   if (!project) {
@@ -34,27 +24,24 @@ export async function handleVoted(args: {
   }
 
   const milestone = await prisma.milestone.findUnique({
-    where: { projectId_index: { projectId: project.id, index: Number(milestoneIndex) } },
+    where: { projectId_index: { projectId: project.id, index: milestoneIndex } },
     select: { id: true },
   });
   if (!milestone) {
-    logger.warn(
-      { contract, milestoneIndex },
-      "Voted: milestone not found"
-    );
+    logger.warn({ contract, milestoneIndex }, "Voted: milestone not found");
     return false;
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.milestoneVote.upsert({
-      where: { txHash_logIndex: { txHash: txHash.toLowerCase(), logIndex } },
+      where: { txHash_logIndex: { txHash, logIndex: eventIndex } },
       create: {
         milestoneId: milestone.id,
-        walletAddress: voter.toLowerCase(),
+        walletAddress: voter,
         choice: yes ? "YES" : "NO",
-        weight: formatUnits(weight, 6),
-        txHash: txHash.toLowerCase(),
-        logIndex,
+        weight: formatUsdc(weight),
+        txHash,
+        logIndex: eventIndex,
         votedAt: new Date(),
       },
       update: {},
@@ -63,14 +50,14 @@ export async function handleVoted(args: {
     await tx.milestone.updateMany({
       where: {
         projectId: project.id,
-        index: Number(milestoneIndex),
+        index: milestoneIndex,
       },
       data: yes
-        ? { weightYes: { increment: formatUnits(weight, 6) } }
-        : { weightNo: { increment: formatUnits(weight, 6) } },
+        ? { weightYes: { increment: formatUsdc(weight) } }
+        : { weightNo: { increment: formatUsdc(weight) } },
     });
 
-    await updateCursor(tx, contract, "Voted", blockNumber);
+    await updateCursor(tx, contract, "Voted", BigInt(ledgerSequence));
   });
 
   logger.info(

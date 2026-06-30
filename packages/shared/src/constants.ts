@@ -1,11 +1,13 @@
-export const MORPH_CHAIN_ID = 2910;
-export const MORPH_TESTNET_CHAIN_ID = 2910;
+export const STELLAR_NETWORK = "TESTNET" as const;
+export const STELLAR_NETWORK_PASSPHRASE =
+  "Test SDF Network ; September 2015" as const;
 
-export const USDT_ADDRESS = "0x5178020dF6Cce016fF5c169Ce7167F10421C29F5" as const;
-export const USDT_DECIMALS = 6;
+export const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
+export const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
+export const STELLAR_EXPLORER_URL = "https://stellar.expert/explorer/testnet";
 
-export const MORPH_RPC_URL = "https://rpc-hoodi.morph.network";
-export const MORPH_EXPLORER_URL = "https://explorer-hoodi.morph.network";
+export const USDC_CONTRACT_ID = "" as const;
+export const USDC_DECIMALS = 7;
 
 export const DEFAULT_VOTING_PERIOD_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const MIN_VOTING_PERIOD_SECONDS = 60 * 60 * 24 * 3; // 3 days

@@ -1,11 +1,15 @@
-# Ember — Deployment Runbook
+# Ember — Deployment Runbook (Stellar branch)
+
+This runbook covers deploying the Stellar/Soroban version of Ember. The Morph EVM
+version remains on the `develop` branch; all Stellar work lives on
+`develop-stellar`.
 
 ## Railway Project Layout
 
 | Service | Type | Notes |
 |---|---|---|
 | `web` | Next.js (Node) | Exposes HTTP. Volume `uploads` mounted at `/data/uploads`. |
-| `indexer` | Node.js process | No public port. Higher restart retries (10) because chain-event reconnect can take longer than a web server. Needs `FACTORY_ADDRESS` before starting. |
+| `indexer` | Node.js process | No public port. Higher restart retries (10) because chain-event reconnect can take longer than a web server. Needs `FACTORY_CONTRACT_ID` before starting. |
 | `postgres` | Railway Postgres plugin | Provides `DATABASE_URL`. |
 | `redis` | Railway Redis plugin | Provides `REDIS_URL`. |
 
@@ -59,7 +63,7 @@ Requires:
 Deploy in this order:
 
 1. **`web`** — deploy first; it serves the app and exposes `/api/health` for Railway health checks.
-2. **`indexer`** — deploy after `FACTORY_ADDRESS` is set (see [Smart Contract Deployment](#smart-contract-deployment)).
+2. **`indexer`** — deploy after `FACTORY_CONTRACT_ID` is set (see [Smart Contract Deployment](#smart-contract-deployment)).
 
 ### 6. Verify
 
@@ -70,20 +74,65 @@ Deploy in this order:
 
 ## Smart Contract Deployment (one-time)
 
+Prerequisites: [Rust](https://rustup.rs/), the `wasm32-unknown-unknown` target,
+and the [Stellar CLI](https://soroban.stellar.org/docs/getting-started/setup).
+
 ```bash
-cd contracts
-forge build
-forge script script/DeployFactory.s.sol \
-  --rpc-url $MORPH_RPC_URL \
-  --private-key $DEPLOYER_PRIVATE_KEY \
-  --broadcast \
-  --verify
+cd contracts-stellar
+rustup target add wasm32-unknown-unknown
+cargo build --target wasm32-unknown-unknown --release
+```
+
+### Install WASM hashes
+
+Each contract must be installed on the network before the factory can deploy
+instances of escrow/NFT contracts.
+
+```bash
+export STELLAR_NETWORK=testnet
+export SOURCE_ACCOUNT=S... # your deployer secret key
+
+stellar contract install \
+  --wasm target/wasm32-unknown-unknown/release/ember_escrow.wasm \
+  --source-account $SOURCE_ACCOUNT \
+  --network $STELLAR_NETWORK
+# note escrow_wasm_hash
+
+stellar contract install \
+  --wasm target/wasm32-unknown-unknown/release/ember_position_nft.wasm \
+  --source-account $SOURCE_ACCOUNT \
+  --network $STELLAR_NETWORK
+# note nft_wasm_hash
+```
+
+### Deploy the factory
+
+```bash
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/ember_factory.wasm \
+  --source-account $SOURCE_ACCOUNT \
+  --network $STELLAR_NETWORK \
+  -- \
+  --admin G... \
+  --usdc C... \
+  --app_base_uri https://app.ember.example/metadata/ \
+  --escrow_wasm_hash <escrow_wasm_hash> \
+  --nft_wasm_hash <nft_wasm_hash>
 ```
 
 After deploy:
-1. Copy the deployed `ProjectFactory` address from the Forge output.
-2. Set `NEXT_PUBLIC_FACTORY_ADDRESS=0x…` on both `web` and `indexer` services in Railway.
+1. Copy the deployed factory contract ID from the CLI output.
+2. Set `FACTORY_CONTRACT_ID=C...` on both `web` and `indexer` services in Railway.
 3. Deploy the `indexer` service.
+
+### Generate TypeScript bindings
+
+```bash
+pnpm gen:soroban
+```
+
+This invokes `stellar-cli contract bindings typescript` for each contract and
+writes the generated clients to `packages/shared/src/soroban/`.
 
 ---
 
@@ -124,14 +173,15 @@ Run migrations before the new app version starts (configure as a pre-deploy comm
 | `EMAIL_FROM` | `Ember <no-reply@ember.example>` | |
 | `RESEND_WEBHOOK_SECRET` | `whsec_…` | |
 | `INDEXER_API_KEY` | `<random 32 chars>` | Must match `indexer`'s `INDEXER_API_KEY`. |
-| `NEXT_PUBLIC_REOWN_PROJECT_ID` | | From cloud.reown.com. |
 | `NEXT_PUBLIC_APP_NAME` | `Ember` | |
 | `NEXT_PUBLIC_APP_URL` | `https://app.ember.example` | |
-| `NEXT_PUBLIC_MORPH_CHAIN_ID` | `2818` | |
-| `NEXT_PUBLIC_MORPH_RPC_URL` | `https://rpc.morphl2.io` | |
-| `NEXT_PUBLIC_MORPH_EXPLORER_URL` | `https://explorer.morphl2.io` | |
-| `NEXT_PUBLIC_USDT_ADDRESS` | `0xc7d67a9cbb121b3b0b9c053dd9f469523243379a` | |
-| `NEXT_PUBLIC_FACTORY_ADDRESS` | `0x…` | Set after smart contract deploy. |
+| `NEXT_PUBLIC_STELLAR_NETWORK` | `TESTNET` | `TESTNET`, `PUBLIC`, or `FUTURENET`. |
+| `NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE` | `Test SDF Network ; September 2015` | |
+| `NEXT_PUBLIC_STELLAR_RPC_URL` | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint. |
+| `NEXT_PUBLIC_STELLAR_HORIZON_URL` | `https://horizon-testnet.stellar.org` | Horizon endpoint. |
+| `NEXT_PUBLIC_STELLAR_EXPLORER_URL` | `https://stellar.expert/explorer/testnet` | |
+| `NEXT_PUBLIC_USDC_CONTRACT_ID` | `C...` | USDC (or test token) contract ID. |
+| `NEXT_PUBLIC_FACTORY_CONTRACT_ID` | `C...` | Set after smart contract deploy. |
 | `STORAGE_DRIVER` | `railway-volume` | |
 | `STORAGE_ROOT` | `/data/uploads` | |
 | `MAX_UPLOAD_BYTES` | `5242880` | |
@@ -142,13 +192,15 @@ Run migrations before the new app version starts (configure as a pre-deploy comm
 
 | Variable | Example | Notes |
 |---|---|---|
-| `KEEPER_PRIVATE_KEY` | `0x…` | Used for automated `resolveMilestone()` calls. |
-| `INDEXER_CONFIRMATIONS` | `12` | Blocks to wait before processing an event. |
+| `KEEPER_PRIVATE_KEY` | `S...` | Used for automated `resolve_milestone()` calls. |
+| `INDEXER_CONFIRMATIONS` | `12` | Ledgers to wait before processing an event. |
 | `INDEXER_API_KEY` | `<random 32 chars>` | Must match `web`'s `INDEXER_API_KEY`. |
-| `NEXT_PUBLIC_FACTORY_ADDRESS` | `0x…` | Set after smart contract deploy. |
-| `NEXT_PUBLIC_MORPH_CHAIN_ID` | `2818` | |
-| `NEXT_PUBLIC_MORPH_RPC_URL` | `https://rpc.morphl2.io` | |
-| `NEXT_PUBLIC_USDT_ADDRESS` | `0xc7d67a9cbb121b3b0b9c053dd9f469523243379a` | |
+| `FACTORY_CONTRACT_ID` | `C...` | Set after smart contract deploy. |
+| `STELLAR_NETWORK_PASSPHRASE` | `Test SDF Network ; September 2015` | |
+| `STELLAR_RPC_URL` | `https://soroban-testnet.stellar.org` | |
+| `STELLAR_HORIZON_URL` | `https://horizon-testnet.stellar.org` | |
+| `NEXT_PUBLIC_STELLAR_RPC_URL` | `https://soroban-testnet.stellar.org` | |
+| `NEXT_PUBLIC_USDC_CONTRACT_ID` | `C...` | |
 
 ---
 

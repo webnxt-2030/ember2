@@ -213,7 +213,7 @@ export default async function OrgMilestoneDetailPage({
                 projectId={id}
                 orgId={orgId}
                 milestoneIndex={milestoneIndex}
-                escrowAddress={project.escrowAddress as `0x${string}`}
+                escrowContractId={project.escrowAddress ?? ''}
               />
             )}
 
@@ -226,8 +226,8 @@ export default async function OrgMilestoneDetailPage({
                   <ClaimButton
                     projectId={project.id}
                     milestoneIndex={milestone.index}
-                    escrowAddress={project.escrowAddress as `0x${string}`}
-                    orgWallet={project.organization.receivingWallet as `0x${string}`}
+                escrowContractId={project.escrowAddress}
+                    orgWallet={project.organization.receivingWallet}
                   />
                 </CardContent>
               </Card>
@@ -245,7 +245,7 @@ export default async function OrgMilestoneDetailPage({
                   </div>
                   {milestone.claimedTxHash && (
                     <a
-                      href={`${String(process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL)}/tx/${milestone.claimedTxHash}`}
+                      href={`${String(process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL)}/tx/${milestone.claimedTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline text-label-md mt-2 block"
