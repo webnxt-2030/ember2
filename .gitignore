@@ -46,6 +46,9 @@ contracts/broadcast/
 !contracts/broadcast/*/31337/
 !contracts/broadcast/**/dry-run/
 
+# Soroban / Stellar
+contracts-stellar/target/
+
 # Prisma
 apps/web/prisma/migrations/*.sql.bak
 # Generated Prisma client for the indexer (produced by web's postinstall)
