@@ -66,7 +66,7 @@ export async function getContractEvents(
         {
           type: "contract",
           contractIds: [contractId],
-          topics: [[xdr.ScVal.scvSymbol(eventName)]],
+          topics: [[xdr.ScVal.scvSymbol(eventName).toXDR("base64")]],
         },
       ],
     });

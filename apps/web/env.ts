@@ -13,7 +13,6 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
   RESEND_WEBHOOK_SECRET: z.string().min(1),
-  KEEPER_PRIVATE_KEY: z.string().regex(/^S[A-Z2-7]{55}$/),
   INDEXER_CONFIRMATIONS: z.coerce.number().int().min(1).default(12),
   STORAGE_DRIVER: z.enum(["railway-volume", "minio", "s3"]),
   STORAGE_ROOT: z.string().optional(),
