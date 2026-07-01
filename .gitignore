@@ -48,6 +48,13 @@ contracts/broadcast/
 
 # Soroban / Stellar
 contracts-stellar/target/
+contracts-stellar/Cargo.lock
+contracts-stellar/contracts/*/test_snapshots/
+*.wasm
+
+# Downloaded CLI artifacts
+stellar.tar.gz
+*.tar.gz
 
 # Prisma
 apps/web/prisma/migrations/*.sql.bak
