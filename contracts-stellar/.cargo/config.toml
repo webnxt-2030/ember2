@@ -1,8 +1,5 @@
-[build]
-target = "wasm32-unknown-unknown"
-
 [target.wasm32-unknown-unknown]
 rustflags = [
- "-C", "target-feature=-reference-types,-multivalue",
+  "-C", "target-feature=-reference-types,-multivalue",
   "-C", "link-arg=-zstack-size=1000000",
 ]
