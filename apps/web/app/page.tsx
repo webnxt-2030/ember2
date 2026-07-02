@@ -22,7 +22,7 @@ export default async function HomePage() {
             {/* Left col */}
             <div className="col-span-12 lg:col-span-7">
               <p className="text-label-md text-on-surface-variant">
-                Milestone Crowdfunding on Morph L2
+                Milestone Crowdfunding on Stellar
               </p>
               <h1 className="text-display-lg text-on-surface mt-4">
                 Fund the future, one milestone at a time.
@@ -117,7 +117,7 @@ export default async function HomePage() {
                 Back a project
               </h3>
               <p className="text-body-md text-on-surface-variant">
-                Funds go directly into an escrow contract on Morph L2. The
+                Funds go directly into a Stellar escrow contract. The
                 creator can&apos;t touch them until milestones are verified.
               </p>
             </div>
