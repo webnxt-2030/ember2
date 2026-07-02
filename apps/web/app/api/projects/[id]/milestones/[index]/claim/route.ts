@@ -1,11 +1,11 @@
 import type { NextRequest } from 'next/server'
-import { encodeFunctionData } from 'viem'
-import { ProjectEscrowAbi, cuidSchema } from '@ember/shared'
+import { cuidSchema } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
+import { env } from '@/env'
 import { z } from 'zod'
 
 const paramsSchema = z.object({
@@ -54,15 +54,9 @@ export async function POST(
     return errorResponse(new ValidationError('Project escrow not deployed'), req)
   }
 
-  const calldata = encodeFunctionData({
-    abi: ProjectEscrowAbi,
-    functionName: 'claimMilestone',
-    args: [BigInt(parsed.data.index)],
-  })
-
   return okResponse({
-    to: project.escrowAddress,
-    calldata,
-    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2910),
+    escrowContractId: project.escrowAddress,
+    milestoneIndex: parsed.data.index,
+    networkPassphrase: env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
   })
 }

@@ -5,12 +5,9 @@ import { rateLimit } from '@/lib/rate-limit'
 // Must be Node.js runtime: ioredis depends on Node.js net/tls (not available in Edge runtime)
 export const runtime = 'nodejs'
 
-const MORPH_RPC = process.env.NEXT_PUBLIC_MORPH_RPC_URL ?? 'https://rpc-hoodi.morph.network'
+const STELLAR_RPC = process.env.NEXT_PUBLIC_STELLAR_RPC_URL ?? 'https://soroban-testnet.stellar.org'
+const STELLAR_HORIZON = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL ?? 'https://horizon-testnet.stellar.org'
 
-// Content Security Policy. Next injects inline bootstrap/hydration <script> tags, so a
-// strict script-src must allow them: in production via a per-request nonce (Next applies
-// it to its scripts automatically when the CSP is on the request headers); in dev we relax
-// to 'unsafe-inline'/'unsafe-eval' because Turbopack HMR uses inline scripts and eval.
 function buildCsp(nonce: string, isDev: boolean): string {
   const scriptSrc = isDev
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
@@ -18,11 +15,11 @@ function buildCsp(nonce: string, isDev: boolean): string {
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Tailwind inline + Material Symbols
-    "img-src 'self' data: blob: https:", // wallets show remote logos
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https:",
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' ${process.env.NEXT_PUBLIC_APP_URL ?? ''} ${MORPH_RPC} wss://${MORPH_RPC.replace('https://', '')} https://rpc-hoodi.morph.network wss://relay.walletconnect.com https://relay.walletconnect.com https://api.web3modal.com https://api.web3modal.org https://explorer-api.walletconnect.com https://pulse.walletconnect.org https://*.reown.com wss://www.walletlink.org`,
-    "frame-src https://www.youtube.com https://www.youtube-nocookie.com", // demo video embed
+    `connect-src 'self' ${process.env.NEXT_PUBLIC_APP_URL ?? ''} ${STELLAR_RPC} ${STELLAR_HORIZON}`,
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

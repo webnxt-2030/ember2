@@ -61,7 +61,7 @@ export async function GET(
   let userVote: { choice: string; weight: string } | null = null
   let userVotingPower = '0'
 
-  if (wallet && /^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+  if (wallet && /^[G][A-Z2-7]{55}$/.test(wallet)) {
     const vote = await prisma.milestoneVote.findUnique({
       where: {
         milestoneId_walletAddress: {

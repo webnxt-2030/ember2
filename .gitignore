@@ -7,6 +7,7 @@ node_modules/
 .next/
 build/
 out/
+dist/
 
 # Environment variables
 .env
@@ -45,6 +46,16 @@ contracts/cache/
 contracts/broadcast/
 !contracts/broadcast/*/31337/
 !contracts/broadcast/**/dry-run/
+
+# Soroban / Stellar
+contracts-stellar/target/
+contracts-stellar/Cargo.lock
+contracts-stellar/contracts/*/test_snapshots/
+*.wasm
+
+# Downloaded CLI artifacts
+stellar.tar.gz
+*.tar.gz
 
 # Prisma
 apps/web/prisma/migrations/*.sql.bak

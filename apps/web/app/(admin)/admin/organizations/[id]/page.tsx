@@ -61,10 +61,10 @@ export default async function AdminOrgDetailPage({ params }: { params: Promise<{
 
   if (!org) notFound()
 
-  const members = org.members.map((m) => ({
-    userId: m.userId,
-    email: m.user.email,
-    name: m.user.name,
+  const members = org.members.map((m: Record<string, unknown>) => ({
+    userId: m.userId as string,
+    email: (m.user as Record<string, unknown>).email as string,
+    name: (m.user as Record<string, unknown>).name as string | null,
   }))
 
   return (

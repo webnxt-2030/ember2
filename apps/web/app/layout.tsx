@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Ember — Milestone Crowdfunding",
-  description: "Trust-minimized milestone-based crowdfunding on Morph L2",
+  description: "Trust-minimized milestone-based crowdfunding on Stellar",
 };
 
 export default function RootLayout({

@@ -172,7 +172,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
                 {project.escrowAddress ? (
                   <ContributeStepper
-                    escrowAddress={project.escrowAddress as `0x${string}`}
+                    escrowContractId={project.escrowAddress}
                     projectId={project.id}
                   />
                 ) : (

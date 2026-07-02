@@ -1,88 +1,72 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  useConnection,
-  useSimulateContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { useAppKit } from "@reown/appkit/react";
-import { ProjectEscrowAbi, formatContractError } from "@ember/shared";
+import { useState } from "react";
+import { formatContractError } from "@ember/shared";
+import { useStellarWallet } from "@/components/providers/stellar-provider";
+import { simulateAndSubmit } from "@/lib/stellar/contract";
+import { u32 } from "@/lib/stellar/scval";
+import { getExplorerTxUrl } from "@/lib/stellar/config";
 import { Button } from "@/components/ui/button";
 
 interface ClaimButtonProps {
   projectId: string;
   milestoneIndex: number;
-  escrowAddress: `0x${string}`;
-  orgWallet: `0x${string}`;
+  escrowContractId: string;
+  orgWallet: string;
   onClaimed?: () => void;
 }
 
 type FlowState =
   | { type: "idle" }
   | { type: "confirming" }
-  | { type: "success"; hash: `0x${string}` };
+  | { type: "pending" }
+  | { type: "success"; hash: string };
 
 export function ClaimButton({
   projectId: _projectId,
   milestoneIndex,
-  escrowAddress,
+  escrowContractId,
   orgWallet,
   onClaimed,
 }: ClaimButtonProps) {
-  const { address, isConnected } = useConnection();
-  const { open } = useAppKit();
+  const { wallet, isConnected, connect } = useStellarWallet();
   const [flow, setFlow] = useState<FlowState>({ type: "idle" });
+  const [error, setError] = useState<Error | null>(null);
 
-  const isCorrectWallet = isConnected && address?.toLowerCase() === orgWallet.toLowerCase();
-
-  const { data: sim, error: simError } = useSimulateContract({
-    abi: ProjectEscrowAbi,
-    address: escrowAddress,
-    functionName: "claimMilestone",
-    args: [BigInt(milestoneIndex)],
-    query: {
-      enabled: flow.type === "confirming" && isCorrectWallet,
-    },
-  });
-
-  const {
-    mutate: writeContract,
-    isPending: isWritePending,
-    error: writeError,
-    data: hash,
-  } = useWriteContract();
-
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
-
-  useEffect(() => {
-    if (flow.type === "confirming" && isSuccess && hash) {
-      setFlow({ type: "success", hash });
-      onClaimed?.();
-    }
-  }, [flow, isSuccess, hash, onClaimed]);
+  const isCorrectWallet =
+    isConnected && wallet?.address === orgWallet;
 
   const handleClaim = () => {
     if (!isConnected) {
-      void open();
+      void connect();
       return;
     }
     setFlow({ type: "confirming" });
   };
 
-  const handleSend = () => {
-    if (!sim?.request) return;
-    writeContract(sim.request);
+  const handleSend = async () => {
+    if (!wallet || flow.type !== "confirming") return;
+    setFlow({ type: "pending" });
+    setError(null);
+    try {
+      const { txHash } = await simulateAndSubmit(
+        wallet,
+        escrowContractId,
+        "claim_milestone",
+        [u32(milestoneIndex)],
+      );
+      setFlow({ type: "success", hash: txHash });
+      onClaimed?.();
+    } catch (err) {
+      setError(err as Error);
+      setFlow({ type: "idle" });
+    }
   };
 
   const handleReset = () => {
     setFlow({ type: "idle" });
+    setError(null);
   };
-
-  const formatError = formatContractError;
 
   if (flow.type === "success") {
     return (
@@ -92,22 +76,23 @@ export function ClaimButton({
           Claim submitted
         </div>
         <a
-          href={`${process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL ?? ''}/tx/${flow.hash}`}
+          href={getExplorerTxUrl(flow.hash)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary hover:underline text-label-md"
         >
-          View on Morph Explorer
+          View on Stellar Explorer
         </a>
         <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
           <span className="material-symbols-outlined text-[14px]">info</span>
-          The milestone will show as Claimed once the indexer confirms the on-chain event.
+          The milestone will show as Claimed once the indexer confirms the
+          on-chain event.
         </p>
       </div>
     );
   }
 
-  if (flow.type === "confirming") {
+  if (flow.type === "confirming" || flow.type === "pending") {
     return (
       <div className="space-y-3">
         <p className="text-label-md text-on-surface">
@@ -115,31 +100,32 @@ export function ClaimButton({
         </p>
         <p className="text-label-sm text-on-surface-variant flex items-center gap-1">
           <span className="material-symbols-outlined text-[14px]">schedule</span>
-          Claiming requires wallet confirmation and block mining on Morph L2. The milestone status will update once the indexer syncs.
+          Claiming requires wallet confirmation and ledger inclusion on Stellar.
+          The milestone status will update once the indexer syncs.
         </p>
         <div className="flex gap-3">
           <Button
-            onClick={handleSend}
-            disabled={!sim?.request || isWritePending || isConfirming}
+            onClick={() => {
+              void handleSend();
+            }}
+            disabled={flow.type === "pending"}
             className="flex-1"
           >
-            {isWritePending
+            {flow.type === "pending"
               ? "Confirm in wallet..."
-              : isConfirming
-                ? "Confirming..."
-                : "Claim funds"}
+              : "Claim funds"}
           </Button>
           <Button
             onClick={handleReset}
             variant="outline"
-            disabled={isWritePending || isConfirming}
+            disabled={flow.type === "pending"}
           >
             Cancel
           </Button>
         </div>
-        {formatError(simError ?? writeError) && (
+        {error && (
           <p className="text-label-sm text-error">
-            {formatError(simError ?? writeError)}
+            {formatContractError(error)}
           </p>
         )}
       </div>
@@ -159,7 +145,8 @@ export function ClaimButton({
       </Button>
       {isConnected && !isCorrectWallet && (
         <p className="text-label-sm text-error">
-          Connect the organization wallet ({orgWallet.slice(0, 6)}...{orgWallet.slice(-4)}) to claim.
+          Connect the organization wallet ({orgWallet.slice(0, 4)}...
+          {orgWallet.slice(-4)}) to claim.
         </p>
       )}
     </div>

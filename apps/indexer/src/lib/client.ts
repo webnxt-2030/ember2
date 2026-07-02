@@ -1,25 +1,19 @@
-import { createPublicClient, createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+/* eslint-disable @typescript-eslint/no-unsafe-call,
+   @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+import { Keypair, Horizon } from "@stellar/stellar-sdk";
+import SorobanRpc from "@stellar/stellar-sdk/rpc";
 import { indexerEnv } from "./env.js";
 
-const morphChain = {
-  id: indexerEnv.MORPH_CHAIN_ID,
-  name: "Morph Hoodi",
-  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-  rpcUrls: {
-    default: { http: [indexerEnv.MORPH_RPC_URL] as const },
-  },
-} as const;
+export const sorobanServer = new SorobanRpc.Server(
+  indexerEnv.STELLAR_RPC_URL,
+  { allowHttp: indexerEnv.STELLAR_RPC_URL.startsWith("http://") }
+);
 
-export const publicClient = createPublicClient({
-  chain: morphChain,
-  transport: http(indexerEnv.MORPH_RPC_URL),
-});
+export const horizonServer = new Horizon.Server(
+  indexerEnv.STELLAR_HORIZON_URL,
+  { allowHttp: indexerEnv.STELLAR_HORIZON_URL.startsWith("http://") }
+);
 
-export const keeperWallet = createWalletClient({
-  account: privateKeyToAccount(indexerEnv.KEEPER_PRIVATE_KEY as `0x${string}`),
-  chain: morphChain,
-  transport: http(indexerEnv.MORPH_RPC_URL),
-});
+export const keeperKeypair = Keypair.fromSecret(indexerEnv.KEEPER_PRIVATE_KEY);
 
 export { indexerEnv } from "./env.js";

@@ -4,6 +4,7 @@ declare module "@ember/shared" {
   export * from "./constants.js";
   export * from "./types/index.js";
   export * from "./abis/index.js";
+  export * from "./soroban/index.js";
   export * from "./schemas/index.js";
   export * from "./reward-curve.js";
 }
@@ -14,12 +15,13 @@ declare module "@ember/shared/logger" {
 }
 
 declare module "@ember/shared/constants" {
-  export const MORPH_CHAIN_ID: 2910;
-  export const MORPH_TESTNET_CHAIN_ID: 2910;
-  export const USDT_ADDRESS: `0x${string}`;
-  export const USDT_DECIMALS: 6;
-  export const MORPH_RPC_URL: string;
-  export const MORPH_EXPLORER_URL: string;
+  export const STELLAR_NETWORK: "TESTNET";
+  export const STELLAR_NETWORK_PASSPHRASE: string;
+  export const STELLAR_RPC_URL: string;
+  export const STELLAR_HORIZON_URL: string;
+  export const STELLAR_EXPLORER_URL: string;
+  export const USDC_CONTRACT_ID: string;
+  export const USDC_DECIMALS: 7;
   export const DEFAULT_VOTING_PERIOD_SECONDS: number;
   export const MIN_VOTING_PERIOD_SECONDS: number;
   export const MAX_VOTING_PERIOD_SECONDS: number;
@@ -32,6 +34,21 @@ declare module "@ember/shared/abis" {
   export const ProjectFactoryAbi: readonly unknown[];
   export const ProjectEscrowAbi: readonly unknown[];
   export const PositionNFTAbi: readonly unknown[];
+}
+
+declare module "@ember/shared/soroban" {
+  export const STELLAR_NETWORK: string;
+  export const STELLAR_NETWORK_PASSPHRASE: string;
+  export const STELLAR_RPC_URL: string;
+  export const STELLAR_HORIZON_URL: string;
+  export const STELLAR_EXPLORER_URL: string;
+  export const USDC_CONTRACT_ID: string;
+  export const USDC_DECIMALS: number;
+  export const FACTORY_CONTRACT_ID: string;
+  export const projectFactoryMethods: readonly string[];
+  export const projectEscrowMethods: readonly string[];
+  export const positionNftMethods: readonly string[];
+  export const STELLAR_NETWORK_LABEL: string;
 }
 
 declare module "@ember/shared/contract-errors" {

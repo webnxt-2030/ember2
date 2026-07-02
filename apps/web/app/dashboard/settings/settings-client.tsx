@@ -1,9 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useConnection, useSignMessage } from 'wagmi'
-import { useAppKit } from '@reown/appkit/react'
-import { SiweMessage } from 'siwe'
+import { useStellarWallet } from '@/components/providers/stellar-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -43,6 +41,24 @@ const EMAIL_TEMPLATES: { key: string; label: string; essential: boolean }[] = [
   { key: 'ADMIN_INVITATION', label: 'Admin invitation', essential: true },
 ]
 
+function buildSignInMessage({
+  domain,
+  address,
+  statement,
+  uri,
+  nonce,
+  network,
+}: {
+  domain: string
+  address: string
+  statement: string
+  uri: string
+  nonce: string
+  network: string
+}) {
+  return `${domain} wants you to sign in with your Stellar account:\n${address}\n\n${statement}\n\nURI: ${uri}\nNetwork: ${network}\nNonce: ${nonce}`
+}
+
 export function SettingsClient({ user, wallets, emailPreferences }: SettingsClientProps) {
   const [name, setName] = useState(user.name ?? '')
   const [image, setImage] = useState(user.image ?? '')
@@ -52,14 +68,12 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
   const [linking, setLinking] = useState(false)
   const [linkError, setLinkError] = useState<string | null>(null)
 
-  const { address, isConnected } = useConnection()
-  const { open } = useAppKit()
-  const { mutateAsync: signMessageAsync } = useSignMessage()
+  const { wallet, isConnected, connect } = useStellarWallet()
 
   async function linkWallet() {
     setLinkError(null)
-    if (!isConnected || !address) {
-      void open()
+    if (!isConnected || !wallet) {
+      await connect()
       return
     }
     setLinking(true)
@@ -67,7 +81,7 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
       const nonceRes = await fetch('/api/auth/wallet/nonce', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address: wallet.address }),
       })
       if (!nonceRes.ok) {
         const err = (await nonceRes.json()) as { message?: string }
@@ -75,17 +89,19 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
       }
       const { nonce } = (await nonceRes.json()) as { nonce: string }
 
-      const message = new SiweMessage({
+      const message = buildSignInMessage({
         domain: window.location.host,
-        address,
+        address: wallet.address,
         statement: 'Link your wallet to Ember',
         uri: window.location.origin,
-        version: '1',
-        chainId: 2910,
         nonce,
-      }).prepareMessage()
+        network: 'TESTNET',
+      })
 
-      const signature = await signMessageAsync({ message })
+      if (!wallet.signMessage) {
+        throw new Error('Wallet does not support message signing')
+      }
+      const signature = await wallet.signMessage(message)
 
       const verifyRes = await fetch('/api/auth/wallet/verify', {
         method: 'POST',
@@ -162,7 +178,7 @@ export function SettingsClient({ user, wallets, emailPreferences }: SettingsClie
   }
 
   function truncateAddress(addr: string) {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+    return `${addr.slice(0, 4)}...${addr.slice(-4)}`
   }
 
   return (

@@ -1,14 +1,17 @@
 import { z } from 'zod'
 
-// Ethereum address (42 chars, 0x prefix, hex)
+// Stellar address: 56-character StrKey (public key G... or contract C...)
 export const addressSchema = z
   .string()
-  .regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid Ethereum address')
+  .regex(/^[GC][A-Z2-7]{55}$/, 'Invalid Stellar address')
 
-// USDT amount as string (≤6 decimal places)
-export const usdtAmountSchema = z
+// Stellar USDC amount as string (≤7 decimal places)
+export const usdcAmountSchema = z
   .string()
-  .regex(/^\d+(\.\d{1,6})?$/, 'Invalid USDT amount (max 6 decimal places)')
+  .regex(/^\d+(\.\d{1,7})?$/, 'Invalid USDC amount (max 7 decimal places)')
+
+// @deprecated kept for transitional imports; prefer usdcAmountSchema
+export const usdtAmountSchema = usdcAmountSchema
 
 // Milestone basis points array: 2-20 items, each ≥0, sum = 10000
 export const milestoneBpsSchema = z

@@ -15,10 +15,9 @@ export async function PATCH(
     assertRole(session, 'BACKER')
 
     const { address } = await params
-    const normalizedAddress = address.toLowerCase()
 
     const wallet = await prisma.wallet.findUnique({
-      where: { address: normalizedAddress },
+      where: { address },
     })
     if (!wallet) {
       throw new NotFoundError('Wallet')
@@ -42,8 +41,8 @@ export async function PATCH(
     })
 
     await logActivity(
-      { prisma, actorUserId: session.user.id, actorWallet: normalizedAddress, req },
-      { type: 'WALLET_SET_PRIMARY', metadata: { address: normalizedAddress } },
+      { prisma, actorUserId: session.user.id, actorWallet: address, req },
+      { type: 'WALLET_SET_PRIMARY', metadata: { address } },
     )
 
     return okResponse({ wallet: { id: wallet.id, address: wallet.address, isPrimary: true } })

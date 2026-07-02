@@ -64,14 +64,14 @@ export default async function AdminUsersPage({
       <Container>
         <h1 className="text-headline-lg text-on-surface font-bold mb-8">Users</h1>
         <UsersTable
-          initialUsers={users.map((u) => ({
-            id: u.id,
-            email: u.email,
-            name: u.name,
-            role: u.role,
-            createdAt: u.createdAt.toISOString(),
-            wallets: u.wallets,
-            orgCount: u.orgMemberships.length,
+          initialUsers={users.map((u: Record<string, unknown>) => ({
+            id: u.id as string,
+            email: u.email as string,
+            name: u.name as string | null,
+            role: u.role as string,
+            createdAt: (u.createdAt as Date).toISOString(),
+            wallets: u.wallets as { id: string; address: string; isPrimary: boolean; verifiedAt: string }[],
+            orgCount: (u.orgMemberships as unknown[]).length,
           }))}
           initialPage={page}
           initialLimit={limit}

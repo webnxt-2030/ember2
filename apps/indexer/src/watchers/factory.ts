@@ -1,160 +1,154 @@
-import { publicClient } from "../lib/client.js";
-import { getAbiItem } from "viem";
-import type { AbiEvent } from "viem";
-import { ProjectFactoryAbi } from "@ember/shared/abis";
+import type { xdr } from "@stellar/stellar-sdk";
 import { indexerEnv } from "../lib/env.js";
 import { logger } from "../lib/logger.js";
-import { prisma } from "../lib/db.js";
 import { handleProjectCreated } from "../handlers/project-created.js";
 import { getCursor } from "../lib/cursor.js";
+import {
+  getContractEvents,
+  getLatestLedger,
+  parseEventSymbol,
+  parseAddress,
+  parseU32,
+  parseVec,
+} from "../lib/events.js";
 
 const POLLING_INTERVAL = 1_000;
-const MAX_BLOCK_RANGE = 5000n;
+const MAX_LEDGER_RANGE = 1_000;
+const FALLBACK_LEDGER_RANGE = 100;
 
-const factoryAddress = indexerEnv.FACTORY_ADDRESS as `0x${string}`;
+const factoryContractId = indexerEnv.FACTORY_CONTRACT_ID;
 
 let factoryStopFn: (() => void) | null = null;
 
-async function backfillFactory(fromBlock: bigint, toBlock: bigint) {
+async function backfillFactory(fromLedger: number, toLedger: number) {
   logger.info(
-    { factory: factoryAddress, fromBlock, toBlock },
+    { factory: factoryContractId, fromLedger, toLedger },
     "Factory: backfilling ProjectCreated events"
   );
 
-  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as AbiEvent;
   let totalEvents = 0;
-
-  for (let batchFrom = fromBlock; batchFrom <= toBlock; batchFrom += MAX_BLOCK_RANGE) {
-    const batchTo = batchFrom + MAX_BLOCK_RANGE - 1n > toBlock
-      ? toBlock
-      : batchFrom + MAX_BLOCK_RANGE - 1n;
-
-    const events = await publicClient.getLogs({
-      address: factoryAddress,
-      event: eventItem,
-      fromBlock: batchFrom,
-      toBlock: batchTo,
-      strict: true,
-    }) as unknown as {
-      blockNumber: bigint;
-      transactionHash: `0x${string}`;
-      logIndex: number;
-      args: Parameters<typeof handleProjectCreated>[0]["args"];
-    }[];
+  for (let batchFrom = fromLedger; batchFrom <= toLedger; batchFrom += MAX_LEDGER_RANGE) {
+    const batchTo = Math.min(batchFrom + MAX_LEDGER_RANGE - 1, toLedger);
+    const events = await getContractEvents(
+      factoryContractId,
+      "project_created",
+      batchFrom,
+      batchTo
+    );
 
     for (const event of events) {
+      if (parseEventSymbol(event.topics[0]) !== "project_created") continue;
+      const parsed = parseProjectCreated(event);
+      if (!parsed) continue;
       await handleProjectCreated({
-        contract: factoryAddress,
-        blockNumber: event.blockNumber,
-        txHash: event.transactionHash,
-        logIndex: event.logIndex,
-        args: event.args,
+        contract: factoryContractId,
+        ledgerSequence: event.ledgerSequence,
+        txHash: event.txHash,
+        eventIndex: event.eventIndex,
+        args: parsed,
       });
     }
-
     totalEvents += events.length;
   }
 
   logger.info(
-    { factory: factoryAddress, count: totalEvents },
+    { factory: factoryContractId, count: totalEvents },
     "Factory: backfill complete"
   );
 }
 
+function parseProjectCreated(event: {
+  topics: xdr.ScVal[];
+  value: xdr.ScVal;
+}) {
+  try {
+    const topics = event.topics;
+    if (topics.length < 2) return null;
+    const projectId = parseU32(topics[1]);
+    const data = event.value.vec();
+    if (!data || data.length < 6) return null;
+
+    const organization = parseAddress(data[0]);
+    const creator = parseAddress(data[1]);
+    const escrow = parseAddress(data[2]);
+    const nft = parseAddress(data[3]);
+    if (!organization || !creator || !escrow || !nft) {
+      logger.error("Factory: failed to parse addresses in ProjectCreated event");
+      return null;
+    }
+
+    return {
+      projectId,
+      organization,
+      creator,
+      escrow,
+      nft,
+      milestoneBps: (parseVec(data[4], parseU32) as number[]).filter(
+        (n): n is number => typeof n === "number"
+      ),
+      votingPeriod: parseU32(data[5]),
+    };
+  } catch (err) {
+    logger.error({ err }, "Factory: failed to parse ProjectCreated event");
+    return null;
+  }
+}
+
 export async function startFactoryWatcher() {
-  logger.info({ factory: factoryAddress }, "Factory watcher: starting");
+  logger.info({ factory: factoryContractId }, "Factory watcher: starting");
 
-  const lastCursorBlock = await getCursor(factoryAddress, "ProjectCreated");
-  const fromBlock = lastCursorBlock ? lastCursorBlock + 1n : undefined;
-  const toBlock = await publicClient.getBlockNumber();
+  const lastCursorLedger = await getCursor(factoryContractId, "ProjectCreated");
+  const toLedger = await getLatestLedger();
+  const fromLedger = lastCursorLedger
+    ? Number(lastCursorLedger) + 1
+    : Math.max(toLedger - FALLBACK_LEDGER_RANGE, 1);
 
-  if (fromBlock && fromBlock <= toBlock) {
-    await backfillFactory(fromBlock, toBlock);
+  if (fromLedger <= toLedger) {
+    await backfillFactory(fromLedger, toLedger);
   }
 
-  const eventName = "ProjectCreated" as const;
-  const eventItem = getAbiItem({ abi: ProjectFactoryAbi, name: "ProjectCreated" }) as AbiEvent;
-  const cursor = await getCursor(factoryAddress, eventName);
-  let lastBlock = cursor ?? toBlock;
+  let lastLedger = (await getCursor(factoryContractId, "ProjectCreated")) ?? BigInt(toLedger);
   const abort = new AbortController();
 
   const poll = async () => {
     while (!abort.signal.aborted) {
       try {
-        const currentBlock = await publicClient.getBlockNumber();
-        if (currentBlock > lastBlock) {
-          const logs = await publicClient.getLogs({
-            address: factoryAddress,
-            event: eventItem,
-            fromBlock: lastBlock + 1n,
-            toBlock: currentBlock,
-            strict: true,
-          });
+        const currentLedger = await getLatestLedger();
+        if (currentLedger > Number(lastLedger)) {
+          const events = await getContractEvents(
+            factoryContractId,
+            "project_created",
+            Number(lastLedger) + 1,
+            currentLedger
+          );
 
-          for (const log of logs as unknown as {
-            blockNumber: bigint;
-            transactionHash: `0x${string}`;
-            logIndex: number;
-            args: Parameters<typeof handleProjectCreated>[0]["args"];
-          }[]) {
+          for (const event of events) {
+            if (parseEventSymbol(event.topics[0]) !== "project_created") continue;
+            const parsed = parseProjectCreated(event);
+            if (!parsed) continue;
             try {
-              await prisma.indexerCursor.upsert({
-                where: {
-                  contract_eventName: {
-                    contract: factoryAddress.toLowerCase(),
-                    eventName,
-                  },
-                },
-                create: {
-                  contract: factoryAddress.toLowerCase(),
-                  eventName,
-                  lastBlock: log.blockNumber - 1n,
-                },
-                update: {
-                  lastBlock: log.blockNumber - 1n,
-                },
+              await handleProjectCreated({
+                contract: factoryContractId,
+                ledgerSequence: event.ledgerSequence,
+                txHash: event.txHash,
+                eventIndex: event.eventIndex,
+                args: parsed,
               });
-
-              const ok = await handleProjectCreated({
-                contract: factoryAddress,
-                blockNumber: log.blockNumber,
-                txHash: log.transactionHash,
-                logIndex: log.logIndex,
-                args: log.args,
-              });
-              if (ok) {
-                await prisma.indexerCursor.upsert({
-                  where: {
-                    contract_eventName: {
-                      contract: factoryAddress.toLowerCase(),
-                      eventName,
-                    },
-                  },
-                  create: {
-                    contract: factoryAddress.toLowerCase(),
-                    eventName,
-                    lastBlock: log.blockNumber,
-                  },
-                  update: {
-                    lastBlock: log.blockNumber,
-                  },
-                });
-                lastBlock = log.blockNumber;
-              }
+              lastLedger = BigInt(event.ledgerSequence);
             } catch (err) {
               logger.error(
-                { err, txHash: log.transactionHash },
+                { err, txHash: event.txHash },
                 "Factory: error handling ProjectCreated"
               );
             }
           }
 
-          if (logs.length === 0) {
-            lastBlock = currentBlock;
+          if (events.length === 0) {
+            lastLedger = BigInt(currentLedger);
           }
         }
       } catch (err) {
-        logger.error({ err, factory: factoryAddress }, "Factory: polling error");
+        logger.error({ err, factory: factoryContractId }, "Factory: polling error");
       }
 
       await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
@@ -168,7 +162,7 @@ export async function startFactoryWatcher() {
     factoryStopFn = null;
   };
 
-  logger.info({ factory: factoryAddress }, "Factory watcher: started");
+  logger.info({ factory: factoryContractId }, "Factory watcher: started");
 }
 
 export function stopFactoryWatcher() {

@@ -188,8 +188,8 @@ export default async function OrgProjectDetailPage({
                           <ClaimButton
                             projectId={project.id}
                             milestoneIndex={m.index}
-                            escrowAddress={project.escrowAddress as `0x${string}`}
-                            orgWallet={project.organization.receivingWallet as `0x${string}`}
+                            escrowContractId={project.escrowAddress}
+                            orgWallet={project.organization.receivingWallet}
                           />
                         </div>
                       )}

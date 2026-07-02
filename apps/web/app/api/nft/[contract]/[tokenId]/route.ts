@@ -23,7 +23,7 @@ export async function GET(
   }
 
   const contribution = await getContributionByNft(
-    parsed.data.contract.toLowerCase(),
+    parsed.data.contract,
     parsed.data.tokenId,
   )
 
@@ -41,8 +41,8 @@ export async function GET(
     image: `${appUrl}/og/nft/${contract}/${tokenId}`,
     attributes: [
       { trait_type: 'Project', value: contribution.project.slug },
-      { trait_type: 'Amount (USDT)', value: amount.toFixed(6) },
-      { trait_type: 'M0 Share (USDT)', value: m0Share.toFixed(6) },
+      { trait_type: 'Amount (USDC)', value: amount.toFixed(7) },
+      { trait_type: 'M0 Share (USDC)', value: m0Share.toFixed(7) },
       { trait_type: 'Contributed At', value: contribution.contributedAt.toISOString() },
     ],
   }

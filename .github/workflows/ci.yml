@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [develop, main]
+    branches: [develop, develop-stellar, main]
   pull_request:
-    branches: [develop, main]
+    branches: [develop, develop-stellar, main]
 
 jobs:
   lint-typecheck:
@@ -46,6 +46,7 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: cp apps/web/.env.ci apps/web/.env
       - run: pnpm -w build
 
   audit:
@@ -117,3 +118,65 @@ jobs:
         run: pnpm gen:abis
       - name: Check no uncommitted ABI changes
         run: git diff --exit-code packages/shared/src/abis/ || (echo "ABIs are out of date — run pnpm gen:abis and commit" && exit 1)
+
+  soroban-test:
+    name: Soroban Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts-stellar
+      - name: Run cargo test
+        run: |
+          cd contracts-stellar
+          cargo test
+
+  soroban-build:
+    name: Soroban WASM Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts-stellar
+      - name: Build WASM
+        run: |
+          cd contracts-stellar
+          cargo build --target wasm32-unknown-unknown --release
+
+  soroban-gen-bindings:
+    name: Generate Soroban Bindings
+    runs-on: ubuntu-latest
+    needs: [soroban-build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts-stellar
+      - name: Install Stellar CLI
+        run: cargo install stellar-cli --locked --no-default-features
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Build WASM
+        run: pnpm build:contracts
+      - name: Generate bindings
+        run: pnpm gen:soroban
+      - name: Check no uncommitted binding changes
+        run: git diff --exit-code packages/shared/src/soroban/ || (echo "Soroban bindings are out of date — run pnpm gen:soroban and commit" && exit 1)

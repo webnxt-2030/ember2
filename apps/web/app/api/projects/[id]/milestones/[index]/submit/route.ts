@@ -1,6 +1,4 @@
 import type { NextRequest } from 'next/server'
-import { encodeFunctionData } from 'viem'
-import { ProjectEscrowAbi } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
@@ -8,6 +6,7 @@ import { NotFoundError, ValidationError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
 import { logActivity } from '@/lib/activity-log'
 import { z } from 'zod'
+import { env } from '@/env'
 
 export const runtime = 'nodejs'
 
@@ -100,7 +99,7 @@ export async function POST(
     )
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ember.app'
+  const appUrl = env.NEXT_PUBLIC_APP_URL || 'https://ember.app'
   const updateUri = `${appUrl}/api/projects/${id}/milestones/${String(milestoneIndex)}/update-note`
   const updateNote = parsed.data.updateNote ?? null
 
@@ -119,17 +118,10 @@ export async function POST(
     },
   )
 
-  const calldata = encodeFunctionData({
-    abi: ProjectEscrowAbi,
-    functionName: 'submitMilestone',
-    args: [BigInt(milestoneIndex), updateUri],
-  })
-
   return okResponse({
-    to: project.escrowAddress,
-    calldata,
+    escrowContractId: project.escrowAddress,
     milestoneIndex,
     updateUri,
-    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2910),
+    networkPassphrase: env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
   })
 }

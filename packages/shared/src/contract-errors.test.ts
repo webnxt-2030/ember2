@@ -41,11 +41,11 @@ describe("formatContractError", () => {
     ).toBe("Voting window has closed");
   });
 
-  it("replaces raw viem dumps with the fallback", () => {
+  it("replaces raw error dumps with the fallback", () => {
     const raw =
       'The contract function "contribute" reverted with the following signature: 0xe450d38c. ' +
       'Unable to decode signature "0xe450d38c" as it was not found on the provided ABI. ' +
-      "Contract Call: address: 0x3AbB... Details: execution reverted Version: viem@2.50.4";
+      "Contract Call: address: C... Details: execution reverted";
 
     expect(formatContractError(new Error(raw))).toBe(
       "Transaction failed. Please try again or contact support if the problem persists."

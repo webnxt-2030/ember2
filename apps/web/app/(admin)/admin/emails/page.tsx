@@ -69,15 +69,15 @@ export default async function AdminEmailsPage({
       <Container>
         <h1 className="text-headline-lg text-on-surface font-bold mb-8">Emails</h1>
         <EmailsTable
-          initialEmails={emails.map((e) => ({
-            id: e.id,
-            to: e.to,
-            template: e.template,
-            status: e.status,
-            resendId: e.resendId,
-            error: e.error,
-            sentAt: e.sentAt?.toISOString() ?? null,
-            createdAt: e.createdAt.toISOString(),
+          initialEmails={emails.map((e: Record<string, unknown>) => ({
+            id: e.id as string,
+            to: e.to as string,
+            template: e.template as string,
+            status: e.status as string,
+            resendId: e.resendId as string | null,
+            error: e.error as string | null,
+            sentAt: (e.sentAt as Date | null)?.toISOString() ?? null,
+            createdAt: (e.createdAt as Date).toISOString(),
           }))}
           initialPage={page}
           initialLimit={limit}

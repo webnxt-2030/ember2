@@ -13,7 +13,6 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
   RESEND_WEBHOOK_SECRET: z.string().min(1),
-  KEEPER_PRIVATE_KEY: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
   INDEXER_CONFIRMATIONS: z.coerce.number().int().min(1).default(12),
   STORAGE_DRIVER: z.enum(["railway-volume", "minio", "s3"]),
   STORAGE_ROOT: z.string().optional(),
@@ -29,14 +28,15 @@ const serverSchema = z.object({
 });
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_REOWN_PROJECT_ID: z.string().min(1),
   NEXT_PUBLIC_APP_NAME: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.url(),
-  NEXT_PUBLIC_MORPH_CHAIN_ID: z.coerce.number().int().positive(),
-  NEXT_PUBLIC_MORPH_RPC_URL: z.url(),
-  NEXT_PUBLIC_MORPH_EXPLORER_URL: z.url(),
-  NEXT_PUBLIC_USDT_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/),
-  NEXT_PUBLIC_FACTORY_ADDRESS: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
+  NEXT_PUBLIC_STELLAR_NETWORK: z.enum(["TESTNET", "PUBLIC", "FUTURENET"]).default("TESTNET"),
+  NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE: z.string().min(1),
+  NEXT_PUBLIC_STELLAR_RPC_URL: z.url(),
+  NEXT_PUBLIC_STELLAR_HORIZON_URL: z.url(),
+  NEXT_PUBLIC_STELLAR_EXPLORER_URL: z.url(),
+  NEXT_PUBLIC_USDC_CONTRACT_ID: z.string().regex(/^[CG][A-Z2-7]{55}$/),
+  NEXT_PUBLIC_FACTORY_CONTRACT_ID: z.string().regex(/^[CG][A-Z2-7]{55}$/).optional(),
 });
 
 function validateEnv() {
@@ -52,14 +52,15 @@ function validateEnv() {
   }
 
   const clientParsed = clientSchema.safeParse({
-    NEXT_PUBLIC_REOWN_PROJECT_ID: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_MORPH_CHAIN_ID: process.env.NEXT_PUBLIC_MORPH_CHAIN_ID,
-    NEXT_PUBLIC_MORPH_RPC_URL: process.env.NEXT_PUBLIC_MORPH_RPC_URL,
-    NEXT_PUBLIC_MORPH_EXPLORER_URL: process.env.NEXT_PUBLIC_MORPH_EXPLORER_URL,
-    NEXT_PUBLIC_USDT_ADDRESS: process.env.NEXT_PUBLIC_USDT_ADDRESS,
-    NEXT_PUBLIC_FACTORY_ADDRESS: process.env.NEXT_PUBLIC_FACTORY_ADDRESS,
+    NEXT_PUBLIC_STELLAR_NETWORK: process.env.NEXT_PUBLIC_STELLAR_NETWORK,
+    NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE: process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
+    NEXT_PUBLIC_STELLAR_RPC_URL: process.env.NEXT_PUBLIC_STELLAR_RPC_URL,
+    NEXT_PUBLIC_STELLAR_HORIZON_URL: process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL,
+    NEXT_PUBLIC_STELLAR_EXPLORER_URL: process.env.NEXT_PUBLIC_STELLAR_EXPLORER_URL,
+    NEXT_PUBLIC_USDC_CONTRACT_ID: process.env.NEXT_PUBLIC_USDC_CONTRACT_ID,
+    NEXT_PUBLIC_FACTORY_CONTRACT_ID: process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ID,
   });
 
   if (!clientParsed.success) {

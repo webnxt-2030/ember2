@@ -24,6 +24,10 @@
       "types": "./src/abis/index.ts",
       "import": "./dist/abis/index.js"
     },
+    "./soroban": {
+      "types": "./src/soroban/index.ts",
+      "import": "./dist/soroban/index.js"
+    },
     "./contract-errors": {
       "types": "./src/contract-errors.ts",
       "import": "./dist/contract-errors.js"

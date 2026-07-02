@@ -1,11 +1,10 @@
 import type { NextRequest } from 'next/server'
-import { encodeFunctionData } from 'viem'
-import { ProjectFactoryAbi } from '@ember/shared'
 import { getSession } from '@/lib/auth/session'
 import { assertOwnsOrg } from '@/lib/auth/permissions'
 import { okResponse, errorResponse } from '@/lib/api-response'
 import { NotFoundError, ValidationError, ForbiddenError } from '@/lib/errors'
 import { prisma } from '@/lib/db'
+import { env } from '@/env'
 
 export const runtime = 'nodejs'
 
@@ -39,29 +38,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     )
   }
 
-  // Build projectURI
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://ember.app'
+  const factoryContractId = env.NEXT_PUBLIC_FACTORY_CONTRACT_ID
+  if (!factoryContractId) {
+    return errorResponse(new ValidationError('Factory contract ID not configured'), req)
+  }
+
+  const appUrl = env.NEXT_PUBLIC_APP_URL || 'https://ember.app'
   const projectURI = `${appUrl}/api/projects/${id}/metadata`
 
-  // Encode calldata for ProjectFactory.createProject
-  const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_ADDRESS
-  if (!factoryAddress) return errorResponse(new ValidationError('Factory address not configured'), req)
-
-  const calldata = encodeFunctionData({
-    abi: ProjectFactoryAbi,
-    functionName: 'createProject',
-    args: [
-      project.organization.receivingWallet as `0x${string}`,
-      project.milestoneBps as readonly number[],
-      project.votingPeriodDays * 60,
-      projectURI,
-    ],
-  })
-
   return okResponse({
-    to: factoryAddress,
-    calldata,
+    factoryContractId,
+    organization: project.organization.receivingWallet,
+    milestoneBps: project.milestoneBps,
+    votingPeriodSeconds: project.votingPeriodDays * 24 * 60 * 60,
     projectURI,
-    chainId: Number(process.env.NEXT_PUBLIC_MORPH_CHAIN_ID ?? 2910),
+    networkPassphrase: env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE,
   })
 }

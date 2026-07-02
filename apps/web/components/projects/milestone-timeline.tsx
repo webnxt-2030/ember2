@@ -151,7 +151,7 @@ export function MilestoneTimeline({ milestones, slug, escrowAddress }: Milestone
                 <VotePanel
                   slug={slug}
                   milestoneIndex={milestone.index}
-                  escrowAddress={escrowAddress}
+                  escrowContractId={escrowAddress}
                 />
               )}
             </div>

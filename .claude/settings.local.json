@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo build *)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'ci: provide dummy env vars for web build *)"
+    ]
+  }
+}
